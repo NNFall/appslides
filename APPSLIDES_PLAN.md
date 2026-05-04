@@ -166,12 +166,12 @@
 ## Runtime Lock-in — 2026-04-27
 
 - Active backend endpoint is fixed:
-  - `http://185.171.83.116:8010`
+  - `http://185.171.83.116:8011`
 - Flutter client no longer allows changing backend URL locally.
 - Remote deployment target is fixed to:
   - host `185.171.83.116`
   - app dir `/root/appslides`
-  - Docker host port `8010`
+  - Docker host port `8011`
 - Billing implementation direction is now concrete:
   - `YooKassa` test mode through backend billing APIs
   - `X-AppSlides-Client-Id` is the persistent client key for subscriptions, limits and payments

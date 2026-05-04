@@ -1255,11 +1255,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       }
     }
 
-    if (summary.testMode) {
-      buffer.writeln();
-      buffer.writeln('_Тестовый режим YooKassa включён._');
-    }
-
     buffer.writeln();
     buffer.writeln(
       'Переходя к оплате, вы соглашаетесь с [офертой](${summary.offerUrl}).',

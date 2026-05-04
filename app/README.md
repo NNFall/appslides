@@ -34,7 +34,7 @@
 ## Current Runtime
 
 - Mobile/web client is now hard-wired to the remote backend:
-  - `http://185.171.83.116:8010`
+  - `http://185.171.83.116:8011`
 - Local URL switching inside the app is intentionally removed.
 - The chat now drives billing from the same conversation:
   - `/balance` loads live subscription state from backend;
@@ -123,7 +123,7 @@ app/
   - ведет persistent-index локальных файлов
   - открывает и удаляет локальные файлы
 - backend endpoint теперь зафиксирован:
-  - приложение всегда использует `http://185.171.83.116:8010`
+  - приложение всегда использует `http://185.171.83.116:8011`
   - локальное переключение URL из `Settings` отключено
   - в `Settings` оставлена только проверка `/v1/health`
 - в среде разработки установлен Flutter SDK:

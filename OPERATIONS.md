@@ -20,7 +20,7 @@ After every large or important change:
 - Server IP: `185.171.83.116`
 - SSH user: `root`
 - Remote app dir: `/root/appslides`
-- Public backend endpoint: `http://185.171.83.116:8010`
+- Public backend endpoint: `http://185.171.83.116:8011`
 - Docker service: `appslides_backend`
 
 ## Standard Git Flow
@@ -57,7 +57,7 @@ The deploy script:
 - uploads `backend/`, `telegram_admin_bot/`, `templates/`, `docker-compose.yml` and `.env`
 - keeps persistent data outside the container
 - rebuilds and restarts Docker Compose
-- expects the public port to remain `8010`
+- expects the public port to remain `8011`
 
 ## Local Validation Before Push
 
@@ -87,7 +87,7 @@ python -c "import telegram_admin_bot.main; print('admin bot import ok')"
 
 ## Notes
 
-- The mobile/web client is hard-wired to `http://185.171.83.116:8010`.
+- The mobile/web client is hard-wired to `http://185.171.83.116:8011`.
 - Local backend URL switching inside the app is intentionally disabled.
 - YooKassa is currently integrated in backend test mode and driven through the chat `/balance` flow.
 - Successful payment should now be reflected both on app resume and on later summary/generation checks because the backend auto-syncs unfinished payments.

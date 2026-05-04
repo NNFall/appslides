@@ -277,7 +277,7 @@ def wait_for_health(remote: RemoteHost, remote_dir: str, host_port: int, timeout
     raise RuntimeError(f'Health check did not pass in time.\nLOGS:\n{logs_out}\n{logs_err}')
 
 
-def choose_host_port(remote: RemoteHost, preferred_port: int = 8010) -> int:
+def choose_host_port(remote: RemoteHost, preferred_port: int = 8011) -> int:
     exit_code, out, _ = remote.run(
         f"ss -ltn '( sport = :{preferred_port} )' | sed -n '2,$p'",
         check=False,
