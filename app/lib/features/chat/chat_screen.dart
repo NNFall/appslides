@@ -1124,7 +1124,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       _lastBillingTimeoutPaymentId = payment.paymentId;
       _appendBotMessage(
         '⌛ **Оплата ещё не подтверждена**\n'
-        'Я автоматически проверял статус 15 минут. Если ты уже оплатил, нажми **«Проверить оплату»** или открой счёт снова.',
+        'Я автоматически проверял статус 30 минут каждые 20 секунд. Если ты уже оплатил, нажми **«Проверить оплату»** или открой счёт снова.',
         keyboard: _buildPendingPaymentKeyboard(payment),
       );
     }
