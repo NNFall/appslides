@@ -6,7 +6,11 @@ from typing import Literal
 
 from src.domain.billing_plans import BillingPlan, get_plan, list_plans
 from src.integrations.admin_notifier import AdminNotifier
-from src.integrations.yookassa_gateway import YooKassaGateway, YooKassaPaymentInfo
+from src.integrations.yookassa_gateway import (
+    YooKassaGateway,
+    YooKassaGatewayError,
+    YooKassaPaymentInfo,
+)
 from src.repositories import billing as billing_repo
 
 
@@ -102,6 +106,18 @@ class BillingService:
                         client_id=client_id,
                         payment_method_id=active.payment_method_id,
                     )
+                except YooKassaGatewayError as exc:
+                    await self._notifier.notify_renewal_error(
+                        client_id=client_id,
+                        plan_key=plan.key,
+                        plan_title=plan.title,
+                        tokens=plan.limit,
+                        amount_rub=plan.price_rub,
+                        status='error',
+                        payment_id='-',
+                        reason=exc.reason,
+                    )
+                    raise RuntimeError(exc.user_message) from exc
                 except Exception as exc:  # noqa: BLE001
                     await self._notifier.notify_renewal_error(
                         client_id=client_id,
@@ -157,13 +173,16 @@ class BillingService:
                     summary=summary,
                 )
 
-        payment = await asyncio.to_thread(
-            self._gateway.create_redirect_payment,
-            plan=plan,
-            client_id=client_id,
-            return_url=self._return_url or self._offer_url,
-            save_payment_method=plan.recurring,
-        )
+        try:
+            payment = await asyncio.to_thread(
+                self._gateway.create_redirect_payment,
+                plan=plan,
+                client_id=client_id,
+                return_url=self._return_url or self._offer_url,
+                save_payment_method=plan.recurring,
+            )
+        except YooKassaGatewayError as exc:
+            raise RuntimeError(exc.user_message) from exc
         billing_repo.create_payment(
             client_id=client_id,
             provider='yookassa',
@@ -262,6 +281,21 @@ class BillingService:
                     client_id=subscription.client_id,
                     payment_method_id=payment_method_id,
                 )
+            except YooKassaGatewayError as exc:
+                next_try = billing_repo.postpone_autorenew_attempt(subscription.id, days=1)
+                await self._notifier.notify_auto_renew_error(
+                    client_id=subscription.client_id,
+                    plan_key=plan.key,
+                    plan_title=plan.title,
+                    tokens=plan.limit,
+                    amount_rub=plan.price_rub,
+                    status='error',
+                    payment_id='-',
+                    reason=exc.reason,
+                    next_try=next_try,
+                )
+                processed += 1
+                continue
             except Exception as exc:  # noqa: BLE001
                 next_try = billing_repo.postpone_autorenew_attempt(subscription.id, days=1)
                 await self._notifier.notify_auto_renew_error(

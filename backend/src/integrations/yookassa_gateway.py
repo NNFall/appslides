@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from typing import Any
 
 from yookassa import Configuration, Payment
+from yookassa.domain.exceptions.api_error import ApiError
+from yookassa.domain.exceptions.forbidden_error import ForbiddenError
 
 from src.domain.billing_plans import BillingPlan
 
@@ -15,6 +17,20 @@ class YooKassaPaymentInfo:
     status: str
     confirmation_url: str | None
     payment_method_id: str | None
+
+
+class YooKassaGatewayError(RuntimeError):
+    def __init__(
+        self,
+        *,
+        user_message: str,
+        reason: str,
+        code: str = 'gateway_error',
+    ) -> None:
+        super().__init__(reason)
+        self.user_message = user_message
+        self.reason = reason
+        self.code = code
 
 
 class YooKassaGateway:
@@ -107,7 +123,28 @@ class YooKassaGateway:
     def _payment_create(self, payload: dict[str, Any]):
         self._configure()
         idempotence_key = str(uuid.uuid4())
-        return Payment.create(payload, idempotence_key)
+        try:
+            return Payment.create(payload, idempotence_key)
+        except ForbiddenError as exc:
+            description = self._extract_api_error_description(exc)
+            if 'recurring payments' in description.lower():
+                raise YooKassaGatewayError(
+                    user_message='Автосписания YooKassa для этого магазина пока не включены. Попробуйте позже или выберите разовый тариф.',
+                    reason=description,
+                    code='recurring_not_enabled',
+                ) from exc
+            raise YooKassaGatewayError(
+                user_message='YooKassa отклонила платеж. Проверьте настройки магазина и повторите попытку позже.',
+                reason=description,
+                code='forbidden',
+            ) from exc
+        except ApiError as exc:
+            description = self._extract_api_error_description(exc)
+            raise YooKassaGatewayError(
+                user_message='Не удалось создать платеж YooKassa. Повторите попытку позже.',
+                reason=description,
+                code='api_error',
+            ) from exc
 
     def _configure(self) -> None:
         if not self.is_configured:
@@ -148,3 +185,15 @@ class YooKassaGateway:
             confirmation_url=getattr(confirmation, 'confirmation_url', None),
             payment_method_id=getattr(payment_method, 'id', None),
         )
+
+    @staticmethod
+    def _extract_api_error_description(exc: ApiError) -> str:
+        content = getattr(exc, 'content', None) or {}
+        if isinstance(content, dict):
+            description = str(content.get('description', '')).strip()
+            if description:
+                return description
+            code = str(content.get('code', '')).strip()
+            if code:
+                return code
+        return str(exc) or exc.__class__.__name__
