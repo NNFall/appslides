@@ -277,6 +277,29 @@ def wait_for_health(remote: RemoteHost, remote_dir: str, host_port: int, timeout
     raise RuntimeError(f'Health check did not pass in time.\nLOGS:\n{logs_out}\n{logs_err}')
 
 
+def ensure_services_running(remote: RemoteHost, remote_dir: str, expected_services: tuple[str, ...]) -> None:
+    _, out, err = remote.run(
+        f"cd '{remote_dir}' && docker compose ps --status running --services",
+        check=False,
+    )
+    running = {line.strip() for line in out.splitlines() if line.strip()}
+    missing = [service for service in expected_services if service not in running]
+    if not missing:
+        return
+
+    _, logs_out, logs_err = remote.run(
+        f"cd '{remote_dir}' && docker compose logs --tail=200",
+        check=False,
+    )
+    raise RuntimeError(
+        'Required services are not running after deploy: '
+        f'{", ".join(missing)}\n'
+        f'RUNNING: {sorted(running)}\n'
+        f'PS/STDERR:\n{err}\n'
+        f'LOGS:\n{logs_out}\n{logs_err}'
+    )
+
+
 def choose_host_port(remote: RemoteHost, preferred_port: int = 8011) -> int:
     exit_code, out, _ = remote.run(
         f"ss -ltn '( sport = :{preferred_port} )' | sed -n '2,$p'",
@@ -311,6 +334,7 @@ def main() -> int:
         remote_env = build_remote_env(local_env, host_port)
         deploy(remote, args.remote_dir, remote_env)
         health_payload = wait_for_health(remote, args.remote_dir, host_port)
+        ensure_services_running(remote, args.remote_dir, ('appslides_backend', 'appslides_admin_bot'))
         _, ps_out, _ = remote.run(f"cd '{args.remote_dir}' && docker compose ps")
         print(f'Host port: {host_port}')
         print('Health check OK:')
