@@ -14,7 +14,7 @@
 - SQLite is mounted outside the container:
   - `/root/appslides/data/appslides.db`
 - Fonts are not uploaded separately; the container uses system font fallbacks.
-- Billing target for the current MVP is `YooKassa` in test mode, wired through backend APIs and chat-style client flow.
+- Billing target for the current MVP is `YooKassa` in live mode, wired through backend APIs and chat-style client flow.
 - Billing summary/generation checks now auto-sync unfinished YooKassa payments, so a paid subscription can become active without the user manually reopening a specific payment poll route.
 - Backend now forwards legacy-style admin notifications into the separate Telegram admin bot using `ADMIN_BOT_TOKEN + ADMIN_IDS`.
 - Current notification events mirrored from the legacy Telegram bot:

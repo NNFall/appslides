@@ -38,7 +38,7 @@
 - Local URL switching inside the app is intentionally removed.
 - The chat now drives billing from the same conversation:
   - `/balance` loads live subscription state from backend;
-  - plan selection opens YooKassa checkout in test mode;
+  - plan selection opens YooKassa checkout in live mode;
   - payment status is polled back into the chat every `10 seconds` for up to `15 minutes`;
   - returning to the app from YooKassa triggers an immediate payment re-check;
   - if the user was blocked on the template step, successful payment resumes presentation creation automatically;
