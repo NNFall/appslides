@@ -71,14 +71,6 @@ def _build_tag_link(tag: str) -> str | None:
     return f'{base}{separator}tag={tag}'
 
 
-def _build_promo_link(code: str) -> str:
-    base = config.promo_share_base_url.strip().rstrip('/')
-    if not base:
-        return f'appslides://promo/redeem?code={code}'
-    separator = '&' if '?' in base else '?'
-    return f'{base}{separator}code={code}'
-
-
 @router.message(Command('botstats'))
 async def botstats(message: Message) -> None:
     if not await _is_admin(message.from_user.id):
@@ -283,13 +275,13 @@ async def genpromo(message: Message) -> None:
     max_uses = int(parts[2]) if len(parts) > 2 else 1
     code = secrets.token_hex(4)
     admin_repo.create_promo_code(code, tokens, max_uses)
-    promo_link = _build_promo_link(code)
+    promo_command = f'/promo {code}'
     await message.answer(
         f'Промокод: <code>{html.escape(code)}</code>\n'
         f'Генерации: {tokens}\n'
         f'Использований: {max_uses}\n\n'
-        f'<a href="{html.escape(promo_link, quote=True)}">Открыть промокод в приложении</a>\n'
-        f'<code>{html.escape(promo_link)}</code>',
+        'Отправь пользователю эту команду:\n'
+        f'<code>{html.escape(promo_command)}</code>',
         parse_mode='HTML',
         disable_web_page_preview=True,
     )

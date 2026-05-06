@@ -141,7 +141,6 @@ def build_remote_env(local_env: dict[str, str], host_port: int) -> str:
         'ADMIN_BOT_USERNAME',
         'ADMIN_IDS',
         'APP_SHARE_URL',
-        'PROMO_SHARE_BASE_URL',
         'MAILER_TEMPLATE_INDEX',
     )
     for key in passthrough_keys:

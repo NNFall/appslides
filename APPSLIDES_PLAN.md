@@ -39,7 +39,7 @@
   - `/sub_off`
   - `/sub_check`
   - `/sub_cancel`
-  - `/genpromo`
+  - `/genpromo` в admin-боте теперь отдаёт готовую копируемую команду `/promo CODE` для пересылки пользователю
   - `/admin_add`
   - `/admin_del`
   - `/admin_list`
@@ -75,6 +75,8 @@
   - [x] `sub_on`, `sub_off`, `sub_check`, `sub_cancel` adapted to `client_id` instead of Telegram `user_id`;
   - [x] template listing and upload-replacement flow restored;
   - [x] promo code creation restored on the new backend schema;
+  - [x] promo redemption flow simplified to manual `/promo CODE` input in the app;
+  - [x] new installs now use shortened `client_id` format `as_<10 hex>` while keeping existing stored IDs intact;
   - [x] ad-tag schema and tag-statistics support restored for the new backend database;
   - [x] shared admin schema added into the main `appslides` SQLite storage;
   - [x] admin bot dockerized and added into the production compose stack;
@@ -678,8 +680,8 @@ backend/
 - [ ] Спроектировать `jobs`
 - [ ] Спроектировать `payments/receipts`
 - [x] Добавить промокоды
-  - `/genpromo` в admin-боте теперь отдаёт готовую deep link-ссылку `appslides://promo/redeem?code=...`
-  - мобильный клиент автоматически обрабатывает ссылку и гасит код через backend
+  - `/genpromo` в admin-боте теперь отдаёт готовую копируемую команду `/promo CODE` для пересылки пользователю
+  - мобильный клиент гасит промокод через ручной ввод этой команды в чате
 
 Результат этапа:
 

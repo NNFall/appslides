@@ -330,18 +330,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       return;
     }
 
-    if (!_isBillingReturnUri(uri) && !_isPromoRedeemUri(uri)) {
+    if (!_isBillingReturnUri(uri)) {
       return;
     }
 
     _billingReturnInFlight = true;
     _lastHandledBillingReturnKey = uriKey;
     try {
-      if (_isBillingReturnUri(uri)) {
-        await _handleBillingReturn();
-      } else {
-        await _handlePromoRedeemUri(uri);
-      }
+      await _handleBillingReturn();
     } finally {
       _billingReturnInFlight = false;
     }
@@ -353,11 +349,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         uri.path == '/return';
   }
 
-  bool _isPromoRedeemUri(Uri uri) {
-    return uri.scheme == 'appslides' &&
-        uri.host == 'promo' &&
-        uri.path == '/redeem';
-  }
 
   Future<void> _handleBillingReturn() async {
     final billingController = _billingController;
@@ -391,18 +382,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
   }
 
-  Future<void> _handlePromoRedeemUri(Uri uri) async {
-    final code = uri.queryParameters['code']?.trim() ?? '';
-    if (code.isEmpty) {
-      _appendBotMessage(
-        '❌ В ссылке нет промокода. Попроси отправить её ещё раз.',
-        keyboard: _mainMenuOnlyKeyboard(),
-      );
-      return;
-    }
-
-    await _redeemPromoCode(code);
-  }
 
   Future<void> _submitComposer() async {
     final raw = _composerController.text.trim();
@@ -555,7 +534,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       '4. Получи **PPTX** и **PDF**.\n\n'
       'Для конвертации используй отдельные кнопки **PDF / DOCX / PPTX**.\n\n'
       'Команда `/files` показывает локально сохранённые файлы.\n\n'
-      '**ID устройства:** `$clientId`\n\n'
+      '**ID пользователя:** `$clientId`\n\n'
       'Если что-то не работает, напиши в поддержку:\n'
       '$supportLink',
       keyboard: [

@@ -39,15 +39,16 @@
 - The chat now drives billing from the same conversation:
   - `/balance` loads live subscription state from backend;
   - plan selection opens YooKassa checkout in live mode;
-  - payment status is polled back into the chat every `10 seconds` for up to `15 minutes`;
+  - payment status is polled back into the chat every `20 seconds` for up to `30 minutes`;
   - returning to the app from YooKassa triggers an immediate payment re-check;
   - if the user was blocked on the template step, successful payment resumes presentation creation automatically;
   - temporary polling transport errors do not immediately break the wait flow;
   - generation is blocked when balance is exhausted.
 - The app sends a persistent `X-AppSlides-Client-Id` header on backend requests so billing and generation limits are tied to the installed client.
-- Promo activation is now wired through deep links:
-  - `appslides://promo/redeem?code=...`
-  - the chat redeems the code automatically and confirms added generations in the feed.
+- New installs now generate shorter client IDs in the format `as_<10 hex>` for cleaner admin/support workflows. Existing installs keep their stored ID until app data is cleared.
+- Promo activation in the mobile client is now manual only:
+  - the user enters `/promo CODE` in chat;
+  - the backend redeems the code and the chat confirms added generations.
 - Operational workflow for `git -> push -> server deploy` is documented in `../OPERATIONS.md`.
 
 Здесь будет Flutter-клиент `AppSlides`.
