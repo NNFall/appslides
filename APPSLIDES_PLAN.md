@@ -677,7 +677,9 @@ backend/
 - [ ] Спроектировать `plans/subscriptions/entitlements`
 - [ ] Спроектировать `jobs`
 - [ ] Спроектировать `payments/receipts`
-- [ ] Добавить промокоды
+- [x] Добавить промокоды
+  - `/genpromo` в admin-боте теперь отдаёт готовую deep link-ссылку `appslides://promo/redeem?code=...`
+  - мобильный клиент автоматически обрабатывает ссылку и гасит код через backend
 
 Результат этапа:
 

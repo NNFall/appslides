@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import html
 import os
 import secrets
 import shutil
@@ -68,6 +69,10 @@ def _build_tag_link(tag: str) -> str | None:
         return None
     separator = '&' if '?' in base else '?'
     return f'{base}{separator}tag={tag}'
+
+
+def _build_promo_link(code: str) -> str:
+    return f'appslides://promo/redeem?code={code}'
 
 
 @router.message(Command('botstats'))
@@ -274,9 +279,15 @@ async def genpromo(message: Message) -> None:
     max_uses = int(parts[2]) if len(parts) > 2 else 1
     code = secrets.token_hex(4)
     admin_repo.create_promo_code(code, tokens, max_uses)
+    promo_link = _build_promo_link(code)
     await message.answer(
-        f'Промокод: {code}\nГенерации: {tokens}\nИспользований: {max_uses}\n'
-        'Флоу активации в мобильном клиенте будет привязан отдельно.'
+        f'Промокод: <code>{html.escape(code)}</code>\n'
+        f'Генерации: {tokens}\n'
+        f'Использований: {max_uses}\n\n'
+        f'<a href="{html.escape(promo_link, quote=True)}">Открыть промокод в приложении</a>\n'
+        f'<code>{html.escape(promo_link)}</code>',
+        parse_mode='HTML',
+        disable_web_page_preview=True,
     )
 
 

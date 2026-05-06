@@ -45,6 +45,9 @@
   - temporary polling transport errors do not immediately break the wait flow;
   - generation is blocked when balance is exhausted.
 - The app sends a persistent `X-AppSlides-Client-Id` header on backend requests so billing and generation limits are tied to the installed client.
+- Promo activation is now wired through deep links:
+  - `appslides://promo/redeem?code=...`
+  - the chat redeems the code automatically and confirms added generations in the feed.
 - Operational workflow for `git -> push -> server deploy` is documented in `../OPERATIONS.md`.
 
 Здесь будет Flutter-клиент `AppSlides`.

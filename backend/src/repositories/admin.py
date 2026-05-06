@@ -28,6 +28,14 @@ class PromoCode:
     created_at: str
 
 
+@dataclass(frozen=True)
+class PromoRedeemResult:
+    code: str
+    tokens: int
+    used: int
+    max_uses: int
+
+
 def add_admin(user_id: int) -> None:
     with _LOCK:
         with closing(connect()) as conn:
@@ -382,6 +390,73 @@ def create_promo_code(code: str, tokens: int, max_uses: int) -> None:
             conn.commit()
 
 
+def redeem_promo_code(client_id: str, code: str) -> PromoRedeemResult:
+    normalized_code = code.strip()
+    if not normalized_code:
+        raise ValueError('Промокод пустой.')
+
+    with _LOCK:
+        with closing(connect()) as conn:
+            row = conn.execute(
+                '''
+                SELECT * FROM promo_codes
+                WHERE LOWER(code) = LOWER(?)
+                LIMIT 1
+                ''',
+                (normalized_code,),
+            ).fetchone()
+            promo = _row_to_promo_code(row)
+            if promo is None:
+                raise ValueError('Промокод не найден.')
+            if promo.used >= promo.max_uses:
+                conn.execute(
+                    'UPDATE promo_codes SET is_active = 0 WHERE code = ?',
+                    (promo.code,),
+                )
+                conn.commit()
+                raise ValueError('Лимит использований этого промокода уже исчерпан.')
+            if not promo.is_active:
+                raise ValueError('Промокод больше не активен.')
+
+            existing_use = conn.execute(
+                '''
+                SELECT 1 FROM promo_uses
+                WHERE code = ? AND client_id = ?
+                LIMIT 1
+                ''',
+                (promo.code, client_id),
+            ).fetchone()
+            if existing_use is not None:
+                raise ValueError('Этот промокод уже активирован на этом устройстве.')
+
+            conn.execute(
+                '''
+                INSERT INTO promo_uses (code, client_id, created_at)
+                VALUES (?, ?, ?)
+                ''',
+                (promo.code, client_id, _now()),
+            )
+            used = promo.used + 1
+            is_active = 0 if used >= promo.max_uses else 1
+            conn.execute(
+                '''
+                UPDATE promo_codes
+                SET used = ?, is_active = ?
+                WHERE code = ?
+                ''',
+                (used, is_active, promo.code),
+            )
+            conn.commit()
+
+    add_tokens(client_id, promo.tokens)
+    return PromoRedeemResult(
+        code=promo.code,
+        tokens=promo.tokens,
+        used=used,
+        max_uses=promo.max_uses,
+    )
+
+
 def get_latest_subscription(client_id: str):
     return billing_repo.get_latest_subscription(client_id)
 
@@ -460,3 +535,16 @@ def _first_int(conn, query: str, params: tuple = (), key: str = 'c') -> int:
         return int(value or 0)
     except Exception:  # noqa: BLE001
         return 0
+
+
+def _row_to_promo_code(row) -> PromoCode | None:
+    if row is None:
+        return None
+    return PromoCode(
+        code=str(row['code']),
+        tokens=int(row['tokens']),
+        max_uses=int(row['max_uses']),
+        used=int(row['used']),
+        is_active=int(row['is_active']),
+        created_at=str(row['created_at']),
+    )

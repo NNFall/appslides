@@ -4,6 +4,7 @@ import '../../domain/models/billing_payment.dart';
 import '../../domain/models/billing_summary.dart';
 import '../../domain/models/outline_result.dart';
 import '../../domain/models/presentation_template.dart';
+import '../../domain/models/promo_redeem_result.dart';
 import '../../domain/models/remote_job.dart';
 import '../api/appslides_api_client.dart';
 import 'backend_config_repository.dart';
@@ -118,6 +119,10 @@ class AppSlidesRepository {
 
   Future<BillingSummary> cancelBillingSubscription() {
     return _api.cancelBillingSubscription();
+  }
+
+  Future<PromoRedeemResult> redeemPromoCode(String code) {
+    return _api.redeemPromoCode(code);
   }
 
   void dispose() {

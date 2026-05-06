@@ -110,8 +110,10 @@ uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 - `POST /v1/billing/payments`
 - `GET /v1/billing/payments/{payment_id}`
 - `POST /v1/billing/subscription/cancel`
+- `POST /v1/promo/redeem`
 
 Для billing и generation-запросов клиент передает `X-AppSlides-Client-Id`.
+Промокоды теперь можно гасить напрямую из мобильного клиента: backend принимает код, начисляет генерации на `client_id` установки и возвращает обновлённый billing summary.
 
 Пример запроса на outline:
 

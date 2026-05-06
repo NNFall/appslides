@@ -8,6 +8,7 @@ import '../../domain/models/billing_payment.dart';
 import '../../domain/models/billing_summary.dart';
 import '../../domain/models/outline_result.dart';
 import '../../domain/models/presentation_template.dart';
+import '../../domain/models/promo_redeem_result.dart';
 import '../../domain/models/remote_job.dart';
 import '../repositories/backend_config_repository.dart';
 import '../repositories/client_session_repository.dart';
@@ -192,6 +193,16 @@ class AppSlidesApiClient {
     final payload = _decodeResponse(response);
     _ensureSuccess(response, payload);
     return BillingSummary.fromJson(payload);
+  }
+
+  Future<PromoRedeemResult> redeemPromoCode(String code) async {
+    final payload = await _postJson(
+      path: AppConfig.promoRedeemPath,
+      body: <String, Object>{
+        'code': code,
+      },
+    );
+    return PromoRedeemResult.fromJson(payload);
   }
 
   Future<Map<String, dynamic>> _getJsonMap(String path) async {

@@ -12,6 +12,7 @@ class AppConfig {
   static const String billingPaymentsPath = '/v1/billing/payments';
   static const String billingCancelSubscriptionPath =
       '/v1/billing/subscription/cancel';
+  static const String promoRedeemPath = '/v1/promo/redeem';
 
   static String presentationJobPath(String jobId) => '$presentationJobsPath/$jobId';
 

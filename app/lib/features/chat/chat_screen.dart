@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../app/app_scope.dart';
 import '../../core/config/app_config.dart';
+import '../../data/api/appslides_api_client.dart';
 import '../../data/repositories/backend_config_repository.dart';
 import '../../data/repositories/chat_transcript_repository.dart';
 import '../../data/repositories/client_session_repository.dart';
@@ -20,6 +21,7 @@ import '../../domain/models/billing_summary.dart';
 import '../../domain/models/chat_transcript_entry.dart';
 import '../../domain/models/job_artifact.dart';
 import '../../domain/models/presentation_template.dart';
+import '../../domain/models/promo_redeem_result.dart';
 import '../../domain/models/remote_job.dart';
 import '../../domain/models/saved_file_entry.dart';
 import '../billing/billing_controller.dart';
@@ -323,19 +325,23 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _handleIncomingUri(Uri uri) async {
-    if (!_isBillingReturnUri(uri)) {
+    final uriKey = uri.toString();
+    if (_billingReturnInFlight || _lastHandledBillingReturnKey == uriKey) {
       return;
     }
 
-    final uriKey = uri.toString();
-    if (_billingReturnInFlight || _lastHandledBillingReturnKey == uriKey) {
+    if (!_isBillingReturnUri(uri) && !_isPromoRedeemUri(uri)) {
       return;
     }
 
     _billingReturnInFlight = true;
     _lastHandledBillingReturnKey = uriKey;
     try {
-      await _handleBillingReturn();
+      if (_isBillingReturnUri(uri)) {
+        await _handleBillingReturn();
+      } else {
+        await _handlePromoRedeemUri(uri);
+      }
     } finally {
       _billingReturnInFlight = false;
     }
@@ -345,6 +351,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     return uri.scheme == 'appslides' &&
         uri.host == 'billing' &&
         uri.path == '/return';
+  }
+
+  bool _isPromoRedeemUri(Uri uri) {
+    return uri.scheme == 'appslides' &&
+        uri.host == 'promo' &&
+        uri.path == '/redeem';
   }
 
   Future<void> _handleBillingReturn() async {
@@ -379,6 +391,19 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
   }
 
+  Future<void> _handlePromoRedeemUri(Uri uri) async {
+    final code = uri.queryParameters['code']?.trim() ?? '';
+    if (code.isEmpty) {
+      _appendBotMessage(
+        '❌ В ссылке нет промокода. Попроси отправить её ещё раз.',
+        keyboard: _mainMenuOnlyKeyboard(),
+      );
+      return;
+    }
+
+    await _redeemPromoCode(code);
+  }
+
   Future<void> _submitComposer() async {
     final raw = _composerController.text.trim();
     if (raw.isEmpty) {
@@ -391,9 +416,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _appendUserMessage(raw);
     await _persistTranscript();
 
-    final command = raw.toLowerCase();
-    if (command.startsWith('/')) {
-      await _handleCommand(command);
+    if (raw.startsWith('/')) {
+      await _handleCommand(raw);
       await _persistTranscript();
       return;
     }
@@ -418,7 +442,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
   }
 
-  Future<void> _handleCommand(String command) async {
+  Future<void> _handleCommand(String rawCommand) async {
+    final trimmed = rawCommand.trim();
+    final parts = trimmed.split(RegExp(r'\s+'));
+    final command = parts.first.toLowerCase();
     switch (command) {
       case '/start':
       case '/menu':
@@ -438,6 +465,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       case '/files':
         _showFiles();
         return;
+      case '/promo':
+        if (parts.length < 2) {
+          _appendBotMessage(
+            'Использование: `/promo КОД`',
+            keyboard: _mainMenuOnlyKeyboard(),
+          );
+          return;
+        }
+        await _redeemPromoCode(parts[1].trim());
+        return;
       default:
         _appendBotMessage(
           'Я не знаю команду `$command`.\n'
@@ -445,6 +482,54 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           keyboard: _mainMenuKeyboard(),
         );
         return;
+    }
+  }
+
+  Future<void> _redeemPromoCode(String rawCode) async {
+    final repository = AppScope.repositoryOf(context);
+    final code = rawCode.trim();
+    if (code.isEmpty) {
+      _appendBotMessage(
+        '❌ Промокод пустой.',
+        keyboard: _mainMenuOnlyKeyboard(),
+      );
+      return;
+    }
+
+    final progressId = _appendBotMessage('_Активирую промокод..._');
+    try {
+      final result = await repository.redeemPromoCode(code);
+      _removeMessageById(progressId);
+      await _handlePromoRedeemSuccess(result);
+    } catch (error) {
+      _removeMessageById(progressId);
+      final message = error is AppSlidesApiException
+          ? error.message
+          : error.toString();
+      _appendBotMessage(
+        '❌ Не удалось активировать промокод.\n$message',
+        keyboard: _mainMenuOnlyKeyboard(),
+      );
+    }
+  }
+
+  Future<void> _handlePromoRedeemSuccess(PromoRedeemResult result) async {
+    final billingController = _billingController;
+    if (billingController != null) {
+      await billingController.refreshSummary();
+    }
+
+    _appendBotMessage(
+      '✅ **Промокод активирован**\n'
+      'Код: `${result.code}`\n'
+      'Начислено генераций: **${result.tokensAdded}**\n'
+      'Текущий баланс: **${result.summary.remainingGenerations}**',
+      keyboard: _mainMenuOnlyKeyboard(),
+    );
+
+    if (_pendingTemplateAfterPayment != null &&
+        result.summary.remainingGenerations > 0) {
+      await _resumePendingPresentationAfterPayment();
     }
   }
 
