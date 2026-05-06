@@ -260,6 +260,26 @@ def deploy(remote: RemoteHost, remote_dir: str, remote_env: str) -> None:
     remote.run(f"cd '{remote_dir}' && docker compose up -d --build --remove-orphans")
 
 
+def install_admin_bot_watchdog(remote: RemoteHost, remote_dir: str) -> None:
+    script_path = posixpath.join(remote_dir, 'scripts', 'ensure_admin_bot.sh')
+    script_content = f"""#!/usr/bin/env sh
+set -eu
+cd '{remote_dir}'
+if ! docker compose ps --status running --services | grep -qx 'appslides_admin_bot'; then
+  docker compose up -d appslides_admin_bot >/dev/null 2>&1 || true
+fi
+"""
+    remote.upload_text(script_content, script_path)
+    remote.run(f"chmod +x '{script_path}'")
+
+    cron_line = f"*/2 * * * * {script_path} >/dev/null 2>&1"
+    install_cmd = (
+        f"(crontab -l 2>/dev/null | grep -v -F \"{script_path}\"; "
+        f"printf '%s\\n' \"{cron_line}\") | crontab -"
+    )
+    remote.run(install_cmd)
+
+
 def wait_for_health(remote: RemoteHost, remote_dir: str, host_port: int, timeout_seconds: int = 180) -> str:
     deadline = time.time() + timeout_seconds
     while time.time() < deadline:
@@ -334,6 +354,7 @@ def main() -> int:
         host_port = choose_host_port(remote)
         remote_env = build_remote_env(local_env, host_port)
         deploy(remote, args.remote_dir, remote_env)
+        install_admin_bot_watchdog(remote, args.remote_dir)
         health_payload = wait_for_health(remote, args.remote_dir, host_port)
         ensure_services_running(remote, args.remote_dir, ('appslides_backend', 'appslides_admin_bot'))
         _, ps_out, _ = remote.run(f"cd '{args.remote_dir}' && docker compose ps")

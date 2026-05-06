@@ -45,9 +45,8 @@ class ClientSessionRepository extends ChangeNotifier {
   }
 
   String _generateClientId() {
-    final timestamp = DateTime.now().millisecondsSinceEpoch.toRadixString(36);
-    final buffer = StringBuffer('appslides_')..write(timestamp)..write('_');
-    for (var index = 0; index < 18; index++) {
+    final buffer = StringBuffer('as_');
+    for (var index = 0; index < 10; index++) {
       buffer.write(_random.nextInt(16).toRadixString(16));
     }
     return buffer.toString();
