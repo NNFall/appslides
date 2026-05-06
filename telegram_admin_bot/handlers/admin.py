@@ -72,7 +72,11 @@ def _build_tag_link(tag: str) -> str | None:
 
 
 def _build_promo_link(code: str) -> str:
-    return f'appslides://promo/redeem?code={code}'
+    base = config.promo_share_base_url.strip().rstrip('/')
+    if not base:
+        return f'appslides://promo/redeem?code={code}'
+    separator = '&' if '?' in base else '?'
+    return f'{base}{separator}code={code}'
 
 
 @router.message(Command('botstats'))

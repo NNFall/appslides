@@ -38,6 +38,7 @@ class AdminBotConfig:
     temp_dir: Path
     bot_username: str
     app_share_url: str
+    promo_share_base_url: str
     mailer_template_index: int
 
 
@@ -65,5 +66,6 @@ def load_config() -> AdminBotConfig:
         temp_dir=Path(temp_dir).resolve(),
         bot_username=os.getenv('ADMIN_BOT_USERNAME', '').strip(),
         app_share_url=os.getenv('APP_SHARE_URL', '').strip(),
+        promo_share_base_url=os.getenv('PROMO_SHARE_BASE_URL', '').strip(),
         mailer_template_index=int(os.getenv('MAILER_TEMPLATE_INDEX', '5') or 5),
     )
