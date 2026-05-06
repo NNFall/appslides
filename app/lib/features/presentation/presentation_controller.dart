@@ -203,6 +203,16 @@ class PresentationController extends ChangeNotifier {
     }
   }
 
+  Future<void> retryJobRefresh() async {
+    final currentJob = _job;
+    if (currentJob == null) {
+      return;
+    }
+    _error = null;
+    notifyListeners();
+    await _refreshJob(currentJob.jobId);
+  }
+
   Uri? downloadUriFor(JobArtifact artifact) {
     final currentJob = _job;
     if (currentJob == null) {

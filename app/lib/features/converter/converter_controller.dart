@@ -177,6 +177,16 @@ class ConverterController extends ChangeNotifier {
     }
   }
 
+  Future<void> retryJobRefresh() async {
+    final currentJob = _job;
+    if (currentJob == null) {
+      return;
+    }
+    _error = null;
+    notifyListeners();
+    await _refreshJob(currentJob.jobId);
+  }
+
   String? downloadUrlFor(JobArtifact artifact) {
     final currentJob = _job;
     if (currentJob == null) {

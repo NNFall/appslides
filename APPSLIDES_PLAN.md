@@ -1,5 +1,21 @@
 # AppSlides Plan
 
+## Network Retry UX - 2026-05-06
+
+- Added a cross-flow mobile handling rule for transport errors:
+  - internet/backend transport failures must not surface as raw `ClientException` text in chat;
+  - the user must see a short Russian explanation and a retry action;
+  - this rule now covers presentation outline, presentation render/status refresh, and conversion start/status refresh.
+- Implemented MVP recovery model:
+  - manual retry buttons inside chat;
+  - exact replay for outline request using stored `topic + slides_total`;
+  - exact replay for render continuation using the current prepared draft;
+  - exact status refresh retry for already created presentation/conversion jobs.
+- Explicitly not implemented yet:
+  - automatic replay after reconnect;
+  - persistent offline request queue across cold restart;
+  - global network-resume orchestration for every pending action.
+
 ## Документация для повторного использования продукта - 2026-05-03
 
 - Зафиксировано новое продуктовое требование:

@@ -14,6 +14,9 @@ import '../repositories/backend_config_repository.dart';
 import '../repositories/client_session_repository.dart';
 
 class AppSlidesApiClient {
+  static const String networkErrorMessage =
+      'Похоже, пропало соединение с интернетом или сервером. Попробуйте ещё раз.';
+
   AppSlidesApiClient({
     http.Client? client,
     BackendConfigRepository? backendConfig,
@@ -104,25 +107,27 @@ class AppSlidesApiClient {
     required String filename,
     required String targetFormat,
   }) async {
-    final request = http.MultipartRequest(
-      'POST',
-      _resolve(AppConfig.conversionJobsPath),
-    )
-      ..fields['target_format'] = targetFormat
-      ..headers.addAll(await _jsonHeaders())
-      ..files.add(
-        http.MultipartFile.fromBytes(
-          'file',
-          bytes,
-          filename: filename,
-        ),
-      );
+    return _withNetworkHandling(() async {
+      final request = http.MultipartRequest(
+        'POST',
+        _resolve(AppConfig.conversionJobsPath),
+      )
+        ..fields['target_format'] = targetFormat
+        ..headers.addAll(await _jsonHeaders())
+        ..files.add(
+          http.MultipartFile.fromBytes(
+            'file',
+            bytes,
+            filename: filename,
+          ),
+        );
 
-    final streamed = await _client.send(request);
-    final response = await http.Response.fromStream(streamed);
-    final payload = _decodeResponse(response);
-    _ensureSuccess(response, payload);
-    return RemoteJob.fromJson(payload);
+      final streamed = await _client.send(request);
+      final response = await http.Response.fromStream(streamed);
+      final payload = _decodeResponse(response);
+      _ensureSuccess(response, payload);
+      return RemoteJob.fromJson(payload);
+    });
   }
 
   Future<RemoteJob> getConversionJob(String jobId) async {
@@ -139,21 +144,23 @@ class AppSlidesApiClient {
   }
 
   Future<Uint8List> downloadBytes(Uri uri) async {
-    final response = await _client.get(
-      uri,
-      headers: await _requestHeaders(),
-    );
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return response.bodyBytes;
-    }
+    return _withNetworkHandling(() async {
+      final response = await _client.get(
+        uri,
+        headers: await _requestHeaders(),
+      );
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return response.bodyBytes;
+      }
 
-    final message = response.bodyBytes.isEmpty
-        ? 'Unexpected backend error'
-        : utf8.decode(response.bodyBytes, allowMalformed: true);
-    throw AppSlidesApiException(
-      statusCode: response.statusCode,
-      message: message,
-    );
+      final message = response.bodyBytes.isEmpty
+          ? 'Unexpected backend error'
+          : utf8.decode(response.bodyBytes, allowMalformed: true);
+      throw AppSlidesApiException(
+        statusCode: response.statusCode,
+        message: message,
+      );
+    });
   }
 
   void close() {
@@ -206,27 +213,63 @@ class AppSlidesApiClient {
   }
 
   Future<Map<String, dynamic>> _getJsonMap(String path) async {
-    final response = await _client.get(
-      _resolve(path),
-      headers: await _jsonHeaders(),
-    );
-    final payload = _decodeResponse(response);
-    _ensureSuccess(response, payload);
-    return payload;
+    return _withNetworkHandling(() async {
+      final response = await _client.get(
+        _resolve(path),
+        headers: await _jsonHeaders(),
+      );
+      final payload = _decodeResponse(response);
+      _ensureSuccess(response, payload);
+      return payload;
+    });
   }
 
   Future<Map<String, dynamic>> _postJson({
     required String path,
     required Map<String, Object?> body,
   }) async {
-    final response = await _client.post(
-      _resolve(path),
-      headers: await _jsonHeaders(),
-      body: jsonEncode(body),
-    );
-    final payload = _decodeResponse(response);
-    _ensureSuccess(response, payload);
-    return payload;
+    return _withNetworkHandling(() async {
+      final response = await _client.post(
+        _resolve(path),
+        headers: await _jsonHeaders(),
+        body: jsonEncode(body),
+      );
+      final payload = _decodeResponse(response);
+      _ensureSuccess(response, payload);
+      return payload;
+    });
+  }
+
+  Future<T> _withNetworkHandling<T>(Future<T> Function() action) async {
+    try {
+      return await action();
+    } on AppSlidesApiException {
+      rethrow;
+    } catch (error) {
+      if (_looksLikeNetworkError(error)) {
+        throw const AppSlidesApiException(
+          statusCode: 0,
+          message: networkErrorMessage,
+          isNetworkError: true,
+        );
+      }
+      rethrow;
+    }
+  }
+
+  bool _looksLikeNetworkError(Object error) {
+    if (error is http.ClientException) {
+      return true;
+    }
+    final normalized = error.toString().toLowerCase();
+    return normalized.contains('clientexception') ||
+        normalized.contains('socketexception') ||
+        normalized.contains('failed host lookup') ||
+        normalized.contains('connection abort') ||
+        normalized.contains('connection closed') ||
+        normalized.contains('connection reset') ||
+        normalized.contains('timed out') ||
+        normalized.contains('timeout');
   }
 
   Uri _resolve(String path) => _baseUri.resolve(path);
@@ -279,10 +322,12 @@ class AppSlidesApiException implements Exception {
   const AppSlidesApiException({
     required this.statusCode,
     required this.message,
+    this.isNetworkError = false,
   });
 
   final int statusCode;
   final String message;
+  final bool isNetworkError;
 
   @override
   String toString() {

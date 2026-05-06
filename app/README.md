@@ -16,6 +16,8 @@
   - restored conversation step and pending paywall context after relaunch;
   - mobile transcript persistence backed by a flushed JSON file in app documents storage, with legacy prefs migration;
   - verified Android release behavior: chat history survives full `force-stop` and relaunch on a real phone;
+  - friendly Russian handling of network/API failures in chat flows instead of raw client exceptions;
+  - inline retry buttons for failed outline/render/conversion requests and status refreshes;
   - `/help`, `/balance`, `/settings`, `/history`, `/files` command-style flows;
   - local file cards with `Открыть` / `Удалить` actions directly inside the chat;
   - preserved backend-driven presentation/converter flows inside the same conversation.
@@ -44,6 +46,10 @@
   - if the user was blocked on the template step, successful payment resumes presentation creation automatically;
   - temporary polling transport errors do not immediately break the wait flow;
   - generation is blocked when balance is exhausted.
+- Network failure policy:
+  - transport failures are normalized into a user-facing Russian error message;
+  - the minimal recovery path is explicit manual retry in chat;
+  - automatic replay after reconnect or cold restart is not implemented yet.
 - The app sends a persistent `X-AppSlides-Client-Id` header on backend requests so billing and generation limits are tied to the installed client.
 - New installs now generate shorter client IDs in the format `as_<10 hex>` for cleaner admin/support workflows. Existing installs keep their stored ID until app data is cleared.
 - Promo activation in the mobile client is now manual only:
