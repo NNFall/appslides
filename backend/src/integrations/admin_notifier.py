@@ -131,6 +131,23 @@ class AdminNotifier:
             f"{_bold('User ID:')} {_code(_display_client_id(client_id))}"
         )
 
+    async def notify_promo_redeemed(
+        self,
+        *,
+        client_id: str,
+        code: str,
+        tokens: int,
+        used: int,
+        max_uses: int,
+    ) -> None:
+        await self.notify(
+            f"{_bold('?? ???????? ???????????')}\n"
+            f"{_bold('User ID:')} {_code(_display_client_id(client_id))}\n"
+            f"{_bold('????????:')} {_code(code)}\n"
+            f"{_bold('????????? ?????????:')} {tokens}\n"
+            f"{_bold('?????????????:')} {used}/{max_uses}"
+        )
+
     async def notify_generation_success(self, client_id: str) -> None:
         await self.notify(
             f"{_bold('✅ Успешная генерация (Презентация)')}\n"

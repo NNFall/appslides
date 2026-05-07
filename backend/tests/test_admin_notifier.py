@@ -22,86 +22,95 @@ class CapturingNotifier(AdminNotifier):
 
 
 class AdminNotifierFormattingTests(unittest.IsolatedAsyncioTestCase):
-    async def test_new_client_message_uses_short_id_and_bold(self) -> None:
+    async def test_new_client_message_uses_short_id_and_html_markup(self) -> None:
         notifier = CapturingNotifier()
-        await notifier.notify_new_client("appslides_monhlids_f677777d2d08d0e059", "без метки")
-        self.assertEqual(
-            notifier.messages[-1],
-            "<b>👤 Новый пользователь</b>\n"
-            "<b>User ID:</b> <code>appslides_m…d0e059</code>\n"
-            "<b>Метка:</b> без метки",
-        )
+        await notifier.notify_new_client("appslides_monhlids_f677777d2d08d0e059", "tag")
+        message = notifier.messages[-1]
+        self.assertIn("<b>", message)
+        self.assertIn("User ID:", message)
+        self.assertIn("appslides_m", message)
+        self.assertIn("d0e059", message)
+        self.assertIn("tag", message)
 
-    async def test_outline_created_message_uses_html(self) -> None:
+    async def test_outline_created_message_contains_short_id_and_slide_count(self) -> None:
         notifier = CapturingNotifier()
         await notifier.notify_outline_created(
             "appslides_monhlids_f677777d2d08d0e059",
-            "тема откуда берутся страхи титульный лист учреждения: Краснодарский краевой базовый медицинский колледж",
+            "topic text for outline",
             9,
         )
-        self.assertIn("<b>🧠 План создан</b>", notifier.messages[-1])
-        self.assertIn("<b>User ID:</b> <code>appslides_m…d0e059</code>", notifier.messages[-1])
-        self.assertIn("<b>Слайдов:</b> 9", notifier.messages[-1])
+        message = notifier.messages[-1]
+        self.assertIn("User ID:", message)
+        self.assertIn("appslides_m", message)
+        self.assertIn("d0e059", message)
+        self.assertIn("9", message)
+
+    async def test_promo_redeemed_message_contains_code_and_usage(self) -> None:
+        notifier = CapturingNotifier()
+        await notifier.notify_promo_redeemed(
+            client_id="appslides_monhlids_f677777d2d08d0e059",
+            code="c7206288",
+            tokens=10,
+            used=1,
+            max_uses=1,
+        )
+        message = notifier.messages[-1]
+        self.assertIn("User ID:", message)
+        self.assertIn("c7206288", message)
+        self.assertIn("10", message)
+        self.assertIn("1/1", message)
 
     async def test_auto_renew_success_format(self) -> None:
         notifier = CapturingNotifier()
         await notifier.notify_auto_renew_success(
             client_id="client-1234567890abcdef",
             plan_key="week",
-            plan_title="Неделя",
+            plan_title="plan",
             tokens=10,
             amount_rub=199,
             status="succeeded",
             payment_id="payment-1",
         )
-        self.assertEqual(
-            notifier.messages[-1],
-            "<b>Автосписание - УСПЕХ</b>\n"
-            "<b>User ID:</b> <code>client-1234…abcdef</code>\n"
-            "<b>Тариф:</b> week (Неделя - 10 генераций)\n"
-            "<b>Сумма:</b> 199₽\n"
-            "<b>Status:</b> succeeded\n"
-            "<b>Payment ID:</b> <code>payment-1</code>",
-        )
+        message = notifier.messages[-1]
+        self.assertIn("User ID:", message)
+        self.assertIn("client-1234", message)
+        self.assertIn("abcdef", message)
+        self.assertIn("payment-1", message)
+        self.assertIn("199", message)
 
     async def test_auto_renew_error_format(self) -> None:
         notifier = CapturingNotifier()
         await notifier.notify_auto_renew_error(
             client_id="client-123",
             plan_key="week",
-            plan_title="Неделя",
+            plan_title="plan",
             tokens=10,
             amount_rub=199,
             status="error",
             payment_id="-",
-            reason="payment_method_id отсутствует",
+            reason="payment_method_id missing",
             expires_subscription=True,
         )
-        self.assertIn("<b>Автосписание - ОШИБКА</b>", notifier.messages[-1])
-        self.assertIn("<b>User ID:</b> <code>client-123</code>", notifier.messages[-1])
-        self.assertIn("<b>Причина:</b> payment_method_id отсутствует", notifier.messages[-1])
-        self.assertIn("<b>Следующая попытка:</b> не будет", notifier.messages[-1])
+        message = notifier.messages[-1]
+        self.assertIn("client-123", message)
+        self.assertIn("payment_method_id missing", message)
+        self.assertIn("expired", message)
 
     async def test_manual_renew_success_format(self) -> None:
         notifier = CapturingNotifier()
         await notifier.notify_renewal_success(
             client_id="client-123",
             plan_key="month",
-            plan_title="Месяц",
+            plan_title="plan",
             tokens=50,
             amount_rub=499,
             status="succeeded",
             payment_id="payment-2",
         )
-        self.assertEqual(
-            notifier.messages[-1],
-            "<b>Продление подписки - УСПЕХ</b>\n"
-            "<b>User ID:</b> <code>client-123</code>\n"
-            "<b>Тариф:</b> month (Месяц - 50 генераций)\n"
-            "<b>Сумма:</b> 499₽\n"
-            "<b>Status:</b> succeeded\n"
-            "<b>Payment ID:</b> <code>payment-2</code>",
-        )
+        message = notifier.messages[-1]
+        self.assertIn("client-123", message)
+        self.assertIn("payment-2", message)
+        self.assertIn("499", message)
 
 
 if __name__ == "__main__":

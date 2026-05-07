@@ -3,8 +3,9 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from src.api.billing import _summary_response
-from src.core.dependencies import get_billing_service, get_known_client_id
+from src.core.dependencies import get_admin_notifier, get_billing_service, get_known_client_id
 from src.domain.billing_service import BillingService
+from src.integrations.admin_notifier import AdminNotifier
 from src.repositories import admin as admin_repo
 from src.schemas.promo import PromoRedeemResponse, RedeemPromoRequest
 
@@ -17,12 +18,20 @@ async def redeem_promo_code(
     payload: RedeemPromoRequest,
     client_id: str = Depends(get_known_client_id),
     billing_service: BillingService = Depends(get_billing_service),
+    notifier: AdminNotifier = Depends(get_admin_notifier),
 ) -> PromoRedeemResponse:
     try:
         result = admin_repo.redeem_promo_code(client_id=client_id, code=payload.code)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
 
+    await notifier.notify_promo_redeemed(
+        client_id=client_id,
+        code=result.code,
+        tokens=result.tokens,
+        used=result.used,
+        max_uses=result.max_uses,
+    )
     summary = await billing_service.get_summary(client_id)
     return PromoRedeemResponse(
         code=result.code,
