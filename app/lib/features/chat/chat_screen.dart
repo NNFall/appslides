@@ -524,7 +524,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   void _showHelp() {
-    final supportLink = _currentSupportMarkdownLink();
+    final supportTelegram = _currentTelegramSupportMarkdownLink();
+    final supportMax = _currentMaxSupportMarkdownLink();
     final clientId = _currentClientId();
     _appendBotMessage(
       '**❓ Помощь**\n'
@@ -535,8 +536,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       'Для конвертации используй отдельные кнопки **PDF / DOCX / PPTX**.\n\n'
       'Команда `/files` показывает локально сохранённые файлы.\n\n'
       '**ID пользователя:** `$clientId`\n\n'
-      'Если что-то не работает, напиши в поддержку:\n'
-      '$supportLink',
+      'Поддержка в Телеграм: $supportTelegram\n'
+      'Поддержка в Макс: $supportMax',
       keyboard: [
         [
           _action(
@@ -1858,7 +1859,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     return '@your_tracksupport';
   }
 
-  String _currentSupportMarkdownLink() {
+  String _currentTelegramSupportMarkdownLink() {
     final username = _currentSupportUsername();
     final normalized =
         username.startsWith('@') ? username.substring(1) : username;
@@ -1866,6 +1867,23 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       return username;
     }
     return '[@$normalized](https://t.me/$normalized)';
+  }
+
+  String _currentMaxSupportMarkdownLink() {
+    final raw = _billingController?.summary?.supportMaxUrl.trim() ?? '';
+    if (raw.isEmpty) {
+      return 'не указана';
+    }
+
+    final withScheme =
+        raw.startsWith('http://') || raw.startsWith('https://')
+            ? raw
+            : 'https://$raw';
+    final parsed = Uri.tryParse(withScheme);
+    if (parsed == null || !parsed.hasScheme || parsed.host.isEmpty) {
+      return raw;
+    }
+    return '[ссылка](${parsed.toString()})';
   }
 
   String _currentClientId() {

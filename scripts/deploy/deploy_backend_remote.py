@@ -135,6 +135,7 @@ def build_remote_env(local_env: dict[str, str], host_port: int) -> str:
         'YOOKASSA_POLL_TIMEOUT',
         'YOOKASSA_TEST_MODE',
         'SUPPORT_USERNAME',
+        'SUPPORT_MAX_URL',
         'OFFER_URL',
         'AUTO_RENEW_INTERVAL',
         'ADMIN_BOT_TOKEN',

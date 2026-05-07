@@ -60,6 +60,7 @@ class BillingServiceErrorHandlingTests(unittest.IsolatedAsyncioTestCase):
             gateway=RecurringUnsupportedGateway(),
             offer_url='https://example.com/offer',
             support_username='@support',
+            support_max_url='https://max.ru/example_support',
             return_url='appslides://billing/return',
             test_mode=False,
             notifier=self.notifier,

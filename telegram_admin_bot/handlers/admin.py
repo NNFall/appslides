@@ -71,6 +71,28 @@ def _build_tag_link(tag: str) -> str | None:
     return f'{base}{separator}tag={tag}'
 
 
+async def _resolve_client_id_or_reply(message: Message, raw_client_id: str) -> str | None:
+    resolved, candidates = admin_repo.resolve_client_id(raw_client_id)
+    if resolved is not None:
+        return resolved
+
+    if not candidates:
+        await message.answer(
+            f'Клиент `{html.escape(raw_client_id)}` не найден.\n'
+            'Проверь ID пользователя из `/help` в приложении.',
+            parse_mode='HTML',
+        )
+        return None
+
+    preview = '\n'.join(f'• <code>{html.escape(item)}</code>' for item in candidates[:5])
+    tail = f'\n... и еще {len(candidates) - 5}' if len(candidates) > 5 else ''
+    await message.answer(
+        f'ID `{html.escape(raw_client_id)}` неоднозначный. Уточни полный client_id.\n{preview}{tail}',
+        parse_mode='HTML',
+    )
+    return None
+
+
 @router.message(Command('botstats'))
 async def botstats(message: Message) -> None:
     if not await _is_admin(message.from_user.id):
@@ -196,10 +218,19 @@ async def sub_on(message: Message) -> None:
     if len(parts) < 3:
         await message.answer('Использование: /sub_on <client_id> <tokens>')
         return
-    client_id = parts[1].strip()
-    tokens = int(parts[2])
-    admin_repo.add_tokens(client_id, tokens)
-    await message.answer(f'Начислено {tokens} генераций клиенту {client_id}.')
+    resolved_client_id = await _resolve_client_id_or_reply(message, parts[1].strip())
+    if resolved_client_id is None:
+        return
+    try:
+        tokens = int(parts[2])
+    except ValueError:
+        await message.answer('Токены должны быть числом. Пример: /sub_on <client_id> 10')
+        return
+    if tokens <= 0:
+        await message.answer('Токены должны быть больше 0.')
+        return
+    admin_repo.add_tokens(resolved_client_id, tokens)
+    await message.answer(f'Начислено {tokens} генераций клиенту {resolved_client_id}.')
 
 
 @router.message(Command('sub_off'))
@@ -211,8 +242,10 @@ async def sub_off(message: Message) -> None:
     if len(parts) < 2:
         await message.answer('Использование: /sub_off <client_id>')
         return
-    client_id = parts[1].strip()
-    ok = admin_repo.set_subscription_status(client_id, 'expired')
+    resolved_client_id = await _resolve_client_id_or_reply(message, parts[1].strip())
+    if resolved_client_id is None:
+        return
+    ok = admin_repo.set_subscription_status(resolved_client_id, 'expired')
     await message.answer('Подписка отключена.' if ok else 'Активная подписка не найдена.')
 
 
@@ -225,8 +258,10 @@ async def sub_cancel(message: Message) -> None:
     if len(parts) < 2:
         await message.answer('Использование: /sub_cancel <client_id>')
         return
-    client_id = parts[1].strip()
-    ok = admin_repo.cancel_subscription(client_id)
+    resolved_client_id = await _resolve_client_id_or_reply(message, parts[1].strip())
+    if resolved_client_id is None:
+        return
+    ok = admin_repo.cancel_subscription(resolved_client_id)
     await message.answer('Подписка отменена.' if ok else 'Активная подписка не найдена.')
 
 
@@ -239,10 +274,12 @@ async def sub_check(message: Message) -> None:
     if len(parts) < 2:
         await message.answer('Использование: /sub_check <client_id>')
         return
-    client_id = parts[1].strip()
-    sub = admin_repo.get_active_subscription(client_id)
+    resolved_client_id = await _resolve_client_id_or_reply(message, parts[1].strip())
+    if resolved_client_id is None:
+        return
+    sub = admin_repo.get_active_subscription(resolved_client_id)
     if not sub:
-        sub = admin_repo.get_latest_subscription(client_id)
+        sub = admin_repo.get_latest_subscription(resolved_client_id)
         if not sub:
             await message.answer('Подписок не найдено.')
             return

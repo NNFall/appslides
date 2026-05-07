@@ -159,6 +159,45 @@ def add_tokens(client_id: str, tokens: int, days: int = 3650) -> None:
             conn.commit()
 
 
+def resolve_client_id(raw_client_id: str) -> tuple[str | None, list[str]]:
+    query = (raw_client_id or '').strip()
+    if not query:
+        return None, []
+
+    normalized = query.lower()
+    with _LOCK:
+        with closing(connect()) as conn:
+            rows = conn.execute(
+                '''
+                SELECT client_id FROM billing_clients
+                UNION
+                SELECT client_id FROM billing_subscriptions
+                UNION
+                SELECT client_id FROM billing_payments
+                '''
+            ).fetchall()
+
+    known_ids = sorted({str(row['client_id']).strip() for row in rows if str(row['client_id']).strip()})
+    if not known_ids:
+        return None, []
+
+    exact = [item for item in known_ids if item.lower() == normalized]
+    if len(exact) == 1:
+        return exact[0], exact
+
+    # Admins often paste the short tail of the id, so try suffix first.
+    suffix = [item for item in known_ids if item.lower().endswith(normalized)]
+    if len(suffix) == 1:
+        return suffix[0], suffix
+
+    contains = [item for item in known_ids if normalized in item.lower()]
+    if len(contains) == 1:
+        return contains[0], contains
+
+    candidates = suffix or contains
+    return None, candidates
+
+
 def set_subscription_status(client_id: str, status: str) -> bool:
     active = billing_repo.get_active_subscription(client_id)
     if active is None:
