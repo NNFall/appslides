@@ -1101,11 +1101,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           !controller.hasOutline &&
           controller.topic.trim().isNotEmpty) {
         _appendBotMessage(
-          '? ${_friendlyOutlineError(error)}',
+          '⚠️ ${_friendlyOutlineError(error)}',
           keyboard: [
             [
               _action(
-                '?? ??????????? ??? ???',
+                '🔁 Перегенерировать',
                 () => _retryOutlineRequest(
                   topic: controller.topic,
                   slidesTotal: controller.slidesTotal,
@@ -1126,11 +1126,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           _renderPreparationMessageId != null &&
           _isNetworkErrorMessage(error)) {
         _appendBotMessage(
-          '? ?? ??????? ?????????? ????????? ??-?? ??????? ?? ??????. ???????? ??? ???.',
+          '⚠️ Не удалось продолжить создание из-за проблем со связью. Попробуй ещё раз.',
           keyboard: [
             [
               _action(
-                '?? ??????????? ??? ???',
+                '🔁 Перегенерировать',
                 () => _retryRenderRequest(generatePdf: controller.generatePdf),
                 actionKey: 'retry_render_request',
                 payload: <String, dynamic>{'generate_pdf': controller.generatePdf},
@@ -1142,11 +1142,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         );
       } else if (controller.job != null && _isNetworkErrorMessage(error)) {
         _appendBotMessage(
-          '? ?? ??????? ???????? ?????? ????????? ??-?? ??????? ?? ??????. ??????? ??????????? ? ???????? ??? ???.',
+          '⚠️ Не удалось проверить статус генерации из-за проблем со связью. Нажми кнопку ниже.',
           keyboard: [
             [
               _action(
-                '?? ????????? ?????? ??? ???',
+                '🔄 Проверить снова',
                 _retryPresentationJobStatus,
                 actionKey: 'retry_presentation_job_status',
                 echoAsUser: false,
