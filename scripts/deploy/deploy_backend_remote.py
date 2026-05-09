@@ -265,8 +265,24 @@ def install_admin_bot_watchdog(remote: RemoteHost, remote_dir: str) -> None:
     script_content = f"""#!/usr/bin/env sh
 set -eu
 cd '{remote_dir}'
-if ! docker compose ps --status running --services | grep -qx 'appslides_admin_bot'; then
+
+restart_bot() {{
   docker compose up -d appslides_admin_bot >/dev/null 2>&1 || true
+  docker compose restart appslides_admin_bot >/dev/null 2>&1 || true
+}}
+
+if ! docker compose ps --status running --services | grep -qx 'appslides_admin_bot'; then
+  restart_bot
+  exit 0
+fi
+
+age="$(docker exec appslides_admin_bot sh -lc 'test -f /tmp/appslides_admin_bot.heartbeat && echo $(($(date +%s)-$(stat -c %Y /tmp/appslides_admin_bot.heartbeat))) || echo 999999' 2>/dev/null || echo 999999)"
+case "$age" in
+  ''|*[!0-9]*) age=999999 ;;
+esac
+
+if [ "$age" -gt 180 ]; then
+  restart_bot
 fi
 """
     remote.upload_text(script_content, script_path)
