@@ -141,11 +141,11 @@ class AdminNotifier:
         max_uses: int,
     ) -> None:
         await self.notify(
-            f"{_bold('?? ???????? ???????????')}\n"
+            f"{_bold('🎁 Промокод активирован')}\n"
             f"{_bold('User ID:')} {_code(_display_client_id(client_id))}\n"
-            f"{_bold('????????:')} {_code(code)}\n"
-            f"{_bold('????????? ?????????:')} {tokens}\n"
-            f"{_bold('?????????????:')} {used}/{max_uses}"
+            f"{_bold('Промокод:')} {_code(code)}\n"
+            f"{_bold('Начислено генераций:')} {tokens}\n"
+            f"{_bold('Использований:')} {used}/{max_uses}"
         )
 
     async def notify_generation_success(self, client_id: str) -> None:
