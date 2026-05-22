@@ -95,6 +95,8 @@ def build_remote_env(local_env: dict[str, str], host_port: int) -> str:
         'DATA_DIR': '/data',
         'DATABASE_PATH': '/data/appslides.db',
         'TEMP_DIR': '/app/runtime/temp',
+        'TEMP_TTL_SECONDS': local_env.get('TEMP_TTL_SECONDS', '86400'),
+        'TEMP_CLEAN_INTERVAL': local_env.get('TEMP_CLEAN_INTERVAL', '600'),
         'TEMPLATES_DIR': '/app/runtime/templates',
         'IMAGE_CONCURRENCY': local_env.get('IMAGE_CONCURRENCY', '5'),
         'IMAGE_GENERATION_RETRIES': local_env.get('IMAGE_GENERATION_RETRIES', '2'),

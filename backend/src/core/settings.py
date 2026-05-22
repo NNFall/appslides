@@ -109,6 +109,8 @@ class Settings:
     data_dir: Path
     database_path: Path
     temp_dir: Path
+    temp_ttl_seconds: int
+    temp_clean_interval: int
     templates_dir: Path
 
     yookassa_shop_id: str
@@ -175,6 +177,8 @@ def load_settings() -> Settings:
         data_dir=_resolve_path(os.getenv('DATA_DIR', ''), default_data_dir),
         database_path=_resolve_path(os.getenv('DATABASE_PATH', ''), default_database_path),
         temp_dir=_resolve_path(os.getenv('TEMP_DIR', ''), default_temp_dir),
+        temp_ttl_seconds=int(os.getenv('TEMP_TTL_SECONDS', '86400')),
+        temp_clean_interval=int(os.getenv('TEMP_CLEAN_INTERVAL', '600')),
         templates_dir=_resolve_path(os.getenv('TEMPLATES_DIR', ''), default_templates_dir),
         yookassa_shop_id=os.getenv('YOOKASSA_SHOP_ID', ''),
         yookassa_secret=os.getenv('YOOKASSA_SECRET', os.getenv('YOOKASSA_SECRET_KEY', '')),

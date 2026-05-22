@@ -13,7 +13,7 @@ After every large or important change:
 ## GitHub Repository
 
 - Repository: `https://github.com/NNFall/appslides`
-- Local root: `C:\Users\User\Desktop\work\appslides`
+- Local root: repository root
 
 ## Backend Runtime
 
@@ -58,6 +58,56 @@ The deploy script:
 - keeps persistent data outside the container
 - rebuilds and restarts Docker Compose
 - expects the public port to remain `8011`
+
+## Runtime Temp Cleanup
+
+The backend creates temporary files for uploads, conversions and presentation rendering under `TEMP_DIR`.
+
+Production mapping:
+
+- container path: `/app/runtime/temp`
+- host path: `/root/appslides/temp`
+- cleanup buckets: `uploads/`, `conversions/`, `presentations/`
+
+Cleanup is performed by the backend itself, not by the old Telegram bot. The loop starts with `appslides_backend` and deletes expired entries according to:
+
+- `TEMP_TTL_SECONDS`: how long temp files live
+- `TEMP_CLEAN_INTERVAL`: how often the cleanup loop runs
+
+Current production deploy passes these values from local env when available. The legacy bot env currently provides `TEMP_TTL_SECONDS=3600` and `TEMP_CLEAN_INTERVAL=600`, so production temp artifacts are removed after about 1 hour.
+
+When cleanup removes temp folders/files, it also deletes matching rows from the backend `artifacts` table. It only touches `TEMP_DIR/uploads`, `TEMP_DIR/conversions` and `TEMP_DIR/presentations`; it must not touch templates, fonts, the database, Docker data or logs.
+
+Useful read-only checks:
+
+```bash
+du -xh --max-depth=2 /root/appslides/temp 2>/dev/null | sort -h | tail -50
+docker compose logs --tail=200 appslides_backend
+```
+
+Expected successful log line:
+
+```text
+Temp cleanup removed dirs=<n> files=<n> artifact_rows=<n>
+```
+
+## Server Disk Diagnostics
+
+`/var` is the standard Linux directory for variable runtime data: service logs, systemd journal, package cache, Docker/containerd image layers, container writable data and other service state.
+
+Current server disk pressure is mainly from:
+
+- `/var/lib/containerd`: Docker/containerd image layers and build-related content
+- `/var/log/journal`: systemd journal logs
+- `/root/appslides/temp`: application temp files, now covered by backend cleanup
+
+Do not delete these blindly. Safe candidates after confirmation:
+
+- Docker build cache: `docker builder prune`
+- old unused Docker resources: inspect with `docker system df` first
+- systemd journal retention: `journalctl --vacuum-size=1G`
+
+Docker cache pruning should not stop running containers, but future builds can be slower because layers need to be downloaded or rebuilt again.
 
 ## Local Validation Before Push
 

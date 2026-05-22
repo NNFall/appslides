@@ -3,6 +3,7 @@ from __future__ import annotations
 from contextlib import closing
 from dataclasses import dataclass
 from datetime import datetime, timezone
+import os
 from pathlib import Path
 from threading import RLock
 from typing import Literal
@@ -74,3 +75,21 @@ def get_artifact(artifact_id: str) -> StoredArtifact | None:
         media_type=str(row['media_type']),
         path=Path(str(row['path'])).resolve(),
     )
+
+
+def delete_artifacts_under(paths: list[Path]) -> int:
+    prefixes = [str(path.resolve()) for path in paths]
+    if not prefixes:
+        return 0
+
+    deleted = 0
+    with _LOCK:
+        with closing(connect()) as conn:
+            for prefix in prefixes:
+                cursor = conn.execute(
+                    'DELETE FROM artifacts WHERE path = ? OR path LIKE ?',
+                    (prefix, f'{prefix}{os.sep}%'),
+                )
+                deleted += cursor.rowcount if cursor.rowcount is not None else 0
+            conn.commit()
+    return deleted

@@ -1,6 +1,25 @@
 ﻿# AppSlides Plan
 
 
+## Backend Temp Cleanup - 2026-05-22
+
+- Problem found on production server:
+  - `/root/appslides/temp` grew to about `975M`;
+  - the old Telegram bot had temp cleanup, but the new backend did not have its own cleanup loop;
+  - therefore files created by backend presentation rendering and conversions stayed on disk.
+- Implemented backend cleanup:
+  - `appslides_backend` now starts a background temp cleanup loop on startup;
+  - cleanup is controlled by `TEMP_TTL_SECONDS` and `TEMP_CLEAN_INTERVAL`;
+  - cleanup touches only `TEMP_DIR/uploads`, `TEMP_DIR/conversions` and `TEMP_DIR/presentations`;
+  - matching rows are removed from the backend `artifacts` table when files/folders are deleted.
+- Production behavior:
+  - deploy passes `TEMP_TTL_SECONDS` and `TEMP_CLEAN_INTERVAL` into Docker env;
+  - current production TTL is `3600` seconds and interval is `600` seconds because the local legacy env already contains these values;
+  - server verification showed cleanup reduced `/root/appslides/temp` from about `975M` to `16K`.
+- Disk-analysis conclusion:
+  - `/var` is large mostly because of Docker/containerd layers and system journal logs, not because of app temp files alone;
+  - Docker build cache and journal cleanup are separate operational actions and should only be run after explicit confirmation.
+
 ## Promo Admin Notify - 2026-05-07
 
 - Added backend-side admin notification for successful promo redemption.
