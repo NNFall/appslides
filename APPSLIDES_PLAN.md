@@ -29,7 +29,7 @@
   - replace YooKassa checkout buttons with native purchase flow;
   - send purchase token to backend;
   - backend verifies purchase token through Google Play Developer API before granting generations;
-  - later add Real-time Developer Notifications for renewals/cancellations.
+  - add Real-time Developer Notifications for renewals/cancellations through Pub/Sub.
 - Current implementation progress:
   - [x] `in_app_purchase` dependency added;
   - [x] client-side Google Play product lookup and purchase start added;
@@ -38,10 +38,12 @@
   - [x] backend Google Play gateway scaffold added through Android Publisher API;
   - [x] successful Google Play verification grants the existing subscription/generation entitlement;
   - [x] purchase is acknowledged after backend entitlement grant;
+  - [x] backend RTDN endpoint added: `POST /v1/billing/google-play/rtdn`;
+  - [x] RTDN renewal/cancel/expire handling added for known Google purchase tokens;
   - [ ] configure Play Console products and service account;
   - [ ] create/fill release upload keystore for Google Play;
   - [ ] provide a separate Telegram admin bot token for the PM/Google stack;
-  - [ ] add RTDN/PubSub sync for renewals and cancellations;
+  - [ ] configure Google Pub/Sub push subscription for RTDN;
   - [ ] translate remaining customer-facing chat copy to English.
 - Detailed implementation notes are tracked in `GOOGLE_PLAY_MIGRATION.md`.
 

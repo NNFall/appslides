@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Any
+
+from fastapi import APIRouter, Body, Depends, HTTPException, status
 
 from src.core.dependencies import get_billing_service, get_known_client_id
 from src.domain.billing_service import BillingService
@@ -120,6 +122,19 @@ async def verify_google_play_purchase(
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     return _payment_response(result)
+
+
+@router.post('/google-play/rtdn')
+async def handle_google_play_rtdn(
+    payload: dict[str, Any] = Body(...),
+    service: BillingService = Depends(get_billing_service),
+) -> dict[str, Any]:
+    try:
+        return await service.handle_google_play_rtdn(payload)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
 
 
 @router.post('/subscription/cancel', response_model=BillingSummaryResponse)

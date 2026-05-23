@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import asyncio
+import base64
+import json
 from dataclasses import dataclass
-from typing import Literal
+from typing import Any, Literal
 
 from src.domain.billing_plans import (
     BillingPlan,
@@ -21,6 +23,22 @@ from src.repositories import billing as billing_repo
 
 
 PaymentStatus = Literal['pending', 'paid', 'canceled', 'failed', 'succeeded']
+
+GOOGLE_PLAY_RTDN_EVENTS = {
+    1: 'recovered',
+    2: 'renewed',
+    3: 'canceled',
+    4: 'purchased',
+    5: 'on_hold',
+    6: 'grace_period',
+    7: 'restarted',
+    10: 'paused',
+    12: 'revoked',
+    13: 'expired',
+}
+GOOGLE_PLAY_ACTIVE_NOTIFICATION_TYPES = {1, 2, 4, 6, 7}
+GOOGLE_PLAY_CANCEL_NOTIFICATION_TYPES = {3}
+GOOGLE_PLAY_EXPIRE_NOTIFICATION_TYPES = {5, 10, 12, 13}
 
 
 @dataclass(frozen=True)
@@ -354,11 +372,124 @@ class BillingService:
             summary=summary,
         )
 
+    async def handle_google_play_rtdn(self, payload: dict[str, Any]) -> dict[str, Any]:
+        if not self._google_play_gateway.is_configured:
+            raise RuntimeError('Google Play Billing is not configured')
+
+        message = self._decode_google_play_rtdn_payload(payload)
+        if isinstance(message.get('testNotification'), dict):
+            return {'status': 'processed', 'event': 'test'}
+
+        notification = message.get('subscriptionNotification')
+        if not isinstance(notification, dict):
+            return {'status': 'ignored', 'reason': 'unsupported_message'}
+
+        notification_type = int(notification.get('notificationType') or 0)
+        purchase_token = str(notification.get('purchaseToken') or '').strip()
+        product_id = str(notification.get('subscriptionId') or '').strip()
+        package_name = str(message.get('packageName') or self._google_play_gateway.package_name).strip()
+        if not purchase_token or not product_id or not package_name:
+            raise ValueError('Invalid Google Play RTDN payload')
+
+        event = GOOGLE_PLAY_RTDN_EVENTS.get(notification_type, f'notification_{notification_type}')
+        existing_payment = billing_repo.get_payment(purchase_token)
+        if existing_payment is None:
+            return {
+                'status': 'ignored',
+                'event': event,
+                'reason': 'unknown_purchase_token',
+                'purchase_token': purchase_token,
+            }
+
+        plan = get_plan_by_google_play_product_id(product_id)
+        client_id = existing_payment.client_id
+
+        if notification_type in GOOGLE_PLAY_CANCEL_NOTIFICATION_TYPES:
+            billing_repo.cancel_subscription(client_id)
+            return {'status': 'processed', 'event': event, 'client_id': client_id}
+
+        if notification_type in GOOGLE_PLAY_EXPIRE_NOTIFICATION_TYPES:
+            self._expire_latest_google_play_subscription(client_id)
+            billing_repo.update_payment_status(purchase_token, 'canceled')
+            return {'status': 'processed', 'event': event, 'client_id': client_id}
+
+        try:
+            purchase = await asyncio.to_thread(
+                self._google_play_gateway.verify_subscription,
+                package_name=package_name,
+                product_id=product_id,
+                purchase_token=purchase_token,
+            )
+        except GooglePlayGatewayError as exc:
+            raise RuntimeError(exc.reason) from exc
+
+        if not purchase.is_active:
+            self._expire_latest_google_play_subscription(client_id)
+            billing_repo.update_payment_status(
+                purchase_token,
+                'failed',
+                payment_method_id=purchase.order_id,
+            )
+            return {'status': 'processed', 'event': event, 'client_id': client_id}
+
+        current_order_id = existing_payment.payment_method_id
+        is_new_google_order = bool(purchase.order_id and purchase.order_id != current_order_id)
+        should_grant = (
+            notification_type in GOOGLE_PLAY_ACTIVE_NOTIFICATION_TYPES
+            and (
+                billing_repo.get_subscription_for_use(client_id) is None
+                or (notification_type == 2 and is_new_google_order)
+            )
+        )
+        billing_repo.update_payment_status(
+            purchase_token,
+            'paid',
+            payment_method_id=purchase.order_id,
+        )
+        if should_grant:
+            billing_repo.create_subscription(
+                client_id=client_id,
+                plan_key=plan.key,
+                limit=plan.limit,
+                days=plan.days,
+                provider='google_play',
+                auto_renew=1 if plan.recurring and purchase.auto_renewing else 0,
+                payment_method_id=purchase.order_id,
+            )
+            if notification_type == 2:
+                await self._notifier.notify_payment_success(client_id, plan.title, provider='Google Play renewal')
+
+        return {'status': 'processed', 'event': event, 'client_id': client_id}
+
     async def cancel_subscription(self, client_id: str) -> BillingSummary:
         canceled = billing_repo.cancel_subscription(client_id)
         if canceled:
             await self._notifier.notify_subscription_canceled(client_id)
         return await self.get_summary(client_id)
+
+    def _expire_latest_google_play_subscription(self, client_id: str) -> None:
+        subscription = billing_repo.get_latest_subscription(client_id)
+        if subscription is None or subscription.provider != 'google_play':
+            return
+        billing_repo.expire_subscription(subscription.id)
+
+    def _decode_google_play_rtdn_payload(self, payload: dict[str, Any]) -> dict[str, Any]:
+        message = payload.get('message')
+        if not isinstance(message, dict):
+            raise ValueError('Invalid Google Play RTDN Pub/Sub envelope')
+
+        encoded = str(message.get('data') or '').strip()
+        if not encoded:
+            raise ValueError('Google Play RTDN message.data is empty')
+
+        try:
+            decoded = base64.b64decode(encoded).decode('utf-8')
+            data = json.loads(decoded)
+        except Exception as exc:  # noqa: BLE001
+            raise ValueError('Google Play RTDN message.data is invalid') from exc
+        if not isinstance(data, dict):
+            raise ValueError('Google Play RTDN message.data is not an object')
+        return data
 
     async def process_due_auto_renewals_once(self) -> int:
         if not self.is_configured:

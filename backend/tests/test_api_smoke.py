@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import json
 import sys
 import tempfile
 import time
@@ -105,6 +106,9 @@ class StubBillingService:
 
     async def consume_generation(self, client_id: str) -> bool:
         return True
+
+    async def handle_google_play_rtdn(self, payload: dict) -> dict:
+        return {'status': 'processed', 'event': 'test', 'has_message': 'message' in payload}
 
 
 class BackendApiSmokeTests(unittest.TestCase):
@@ -221,6 +225,17 @@ class BackendApiSmokeTests(unittest.TestCase):
         self.assertEqual(download.status_code, 200)
         self.assertIn('application/pdf', download.headers.get('content-type', ''))
         self.assertGreater(len(download.content), 0)
+
+    def test_google_play_rtdn_route_accepts_pubsub_payload(self) -> None:
+        data = base64.b64encode(json.dumps({'testNotification': {'version': '1.0'}}).encode()).decode()
+
+        response = self.client.post(
+            '/v1/billing/google-play/rtdn',
+            json={'message': {'data': data, 'messageId': 'test'}},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {'status': 'processed', 'event': 'test', 'has_message': True})
 
     def _wait_for_job(self, path: str) -> dict[str, object]:
         deadline = time.time() + 30

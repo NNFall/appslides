@@ -54,6 +54,13 @@ Source links:
   - verifies subscription token through Google Play Developer API when service account is configured;
   - grants existing AppSlides entitlement after successful verification;
   - acknowledges the Google Play purchase after granting entitlement.
+- Backend RTDN endpoint scaffold added:
+  - `POST /v1/billing/google-play/rtdn`;
+  - accepts Google Pub/Sub push envelopes;
+  - decodes `message.data` from base64 JSON;
+  - handles subscription renewals, cancellations, hold/revoke/expiry events;
+  - maps the event to a known user through the stored Google purchase token;
+  - ignores unknown purchase tokens safely until the app verifies that purchase.
 
 ## Build Commands
 
@@ -163,8 +170,8 @@ Request should include:
 
 4. Verify token with Google Play Developer API on the backend before granting generations. Done as scaffold, pending real service-account credentials.
 5. Acknowledge successful purchases after entitlement is granted. Done as scaffold.
-6. Add RTDN handler later for renewals, cancellations, grace period, hold and expiry.
-7. Send admin Telegram notifications for Google Play events the same way YooKassa events are sent now. Initial purchase success notification is wired.
+6. Add RTDN handler for renewals, cancellations, grace period, hold and expiry. Done as scaffold through `POST /v1/billing/google-play/rtdn`, pending real Pub/Sub wiring.
+7. Send admin Telegram notifications for Google Play events the same way YooKassa events are sent now. Initial purchase success and renewal notifications are wired.
 
 ## Backend Env For Google Play
 
@@ -182,6 +189,40 @@ Use one credential option:
 
 The service account must have access to the Play Console app and Android Publisher API.
 
+## Google Play RTDN / PubSub
+
+Backend endpoint:
+
+```text
+POST http://185.171.83.116:8021/v1/billing/google-play/rtdn
+```
+
+Expected body is the standard Google Pub/Sub push envelope:
+
+```json
+{
+  "message": {
+    "data": "base64-encoded-google-play-rtdn-json",
+    "messageId": "..."
+  },
+  "subscription": "projects/.../subscriptions/..."
+}
+```
+
+Current behavior:
+
+- `SUBSCRIPTION_RENEWED` refreshes the user entitlement only when Google returns a new order ID for the known purchase token.
+- `SUBSCRIPTION_CANCELED` marks the subscription as canceled, but keeps remaining generations usable until local expiry.
+- `SUBSCRIPTION_ON_HOLD`, `SUBSCRIPTION_PAUSED`, `SUBSCRIPTION_REVOKED` and `SUBSCRIPTION_EXPIRED` expire the local Google Play subscription.
+- Unknown purchase tokens are ignored safely, because RTDN does not include the app `client_id`. The app must first call `/v1/billing/google-play/verify` so the backend can store the token-to-user mapping.
+
+Before production:
+
+1. Create a Google Cloud Pub/Sub topic for Play RTDN.
+2. Connect the topic in Play Console for this app.
+3. Create a push subscription pointing to the endpoint above.
+4. Prefer adding OIDC authentication or a gateway-level secret before exposing this endpoint publicly.
+
 ## Backend Compatibility Rule
 
 The RuStore/YooKassa build and Google Play build should not be mixed in one runtime flow. The clean target is:
@@ -196,6 +237,6 @@ The Google Play backend is deployed separately to `/root/PMappslides` on port `8
 - Release signing scaffold exists, but the real upload keystore/passwords are not configured yet.
 - Google Play subscription product IDs are not known yet.
 - Google Play Developer API service account is not configured yet.
-- RTDN Pub/Sub is not configured yet.
+- RTDN handler exists, but Pub/Sub is not configured yet.
 - UI text is still mostly Russian.
 - Google Play verification code exists, but cannot be validated end-to-end until the app, products and test users exist in Play Console.

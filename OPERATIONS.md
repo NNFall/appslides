@@ -210,6 +210,14 @@ GOOGLE_PLAY_SERVICE_ACCOUNT_FILE=/data/google-play-service-account.json
 GOOGLE_PLAY_SERVICE_ACCOUNT_JSON={"type":"service_account",...}
 ```
 
+Google Play RTDN endpoint for Pub/Sub push subscriptions:
+
+```text
+http://185.171.83.116:8021/v1/billing/google-play/rtdn
+```
+
+RTDN only works for subscriptions already verified by the app once, because the backend maps Google `purchaseToken` to the local `client_id` during `/v1/billing/google-play/verify`.
+
 PM admin bot requires a separate Telegram bot token:
 
 ```env
