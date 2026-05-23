@@ -15,8 +15,10 @@
   - Android `applicationId` changed to `com.appslides.slideai`;
   - Kotlin `MainActivity` moved to package `com.appslides.slideai`;
   - launcher label changed to `Slide AI`;
-  - Flutter build number increased to `0.1.0+9`.
+  - Flutter build number increased to `0.1.0+10`.
   - app backend URL changed to `http://185.171.83.116:8021`.
+  - release signing scaffold added with ignored `app/android/key.properties`;
+  - backend presentation prompts changed to English-first for the PM/Google Play backend.
 - Google Play publishing target:
   - build `.aab` with `flutter build appbundle --release`;
   - configure proper release/upload-key signing before Play Console upload;
@@ -37,6 +39,7 @@
   - [x] successful Google Play verification grants the existing subscription/generation entitlement;
   - [x] purchase is acknowledged after backend entitlement grant;
   - [ ] configure Play Console products and service account;
+  - [ ] create/fill release upload keystore for Google Play;
   - [ ] provide a separate Telegram admin bot token for the PM/Google stack;
   - [ ] add RTDN/PubSub sync for renewals and cancellations;
   - [ ] translate remaining customer-facing chat copy to English.

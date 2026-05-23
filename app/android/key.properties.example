@@ -1,0 +1,4 @@
+storePassword=change-me
+keyPassword=change-me
+keyAlias=appslides_upload
+storeFile=upload-keystore.jks

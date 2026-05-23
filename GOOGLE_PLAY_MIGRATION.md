@@ -36,8 +36,11 @@ Source links:
 - Android `applicationId` changed to `com.appslides.slideai`.
 - Kotlin `MainActivity` package moved to `com.appslides.slideai`.
 - Android launcher label changed to `Slide AI`.
-- Flutter build number incremented to `0.1.0+9`.
+- Flutter build number incremented to `0.1.0+10`.
+- Release signing scaffold added through `app/android/key.properties`.
+- `app/android/key.properties` and keystore files are ignored by Git; only `app/android/key.properties.example` is committed.
 - Fixed backend URL changed to the separate PM backend: `http://185.171.83.116:8021`.
+- Backend presentation prompts and fallback text are now English-first for the PM/Google Play backend.
 - Flutter dependency `in_app_purchase` added.
 - Client-side Google Play purchase flow scaffold added:
   - loads Play products;
@@ -75,6 +78,16 @@ app/build/app/outputs/bundle/release/app-release.aab
 ```
 
 Important: Google Play requires a properly signed release bundle. The current project still uses debug signing for release builds, so release signing must be configured before uploading to Play Console.
+
+Release signing setup:
+
+1. Generate or receive the upload keystore.
+2. Put it under `app/android/`, for example `app/android/upload-keystore.jks`.
+3. Copy `app/android/key.properties.example` to `app/android/key.properties`.
+4. Fill real passwords and alias in `key.properties`.
+5. Rebuild the AAB.
+
+`key.properties` and keystore files must never be committed.
 
 ## Required Play Console Setup
 
@@ -180,7 +193,7 @@ The Google Play backend is deployed separately to `/root/PMappslides` on port `8
 
 ## Release Blocking Items
 
-- Release signing is not configured yet.
+- Release signing scaffold exists, but the real upload keystore/passwords are not configured yet.
 - Google Play subscription product IDs are not known yet.
 - Google Play Developer API service account is not configured yet.
 - RTDN Pub/Sub is not configured yet.

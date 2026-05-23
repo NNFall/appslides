@@ -312,7 +312,7 @@ class PresentationGenerationClient:
 
     def generate_outline(self, topic: str, slides: int) -> list[str]:
         if not self.api_key or not self.text_endpoint:
-            return [f'Слайд {index}: {topic}' for index in range(1, slides + 1)]
+            return [f'Slide {index}: {topic}' for index in range(1, slides + 1)]
 
         prompt = outline_prompt(topic, slides)
         payload = {'messages': [_build_text_message(prompt)], 'temperature': 0.6}
@@ -331,8 +331,8 @@ class PresentationGenerationClient:
             return [
                 {
                     'title': title,
-                    'text': f'Краткий текст по теме: {topic}.',
-                    'image_prompt': f'Иллюстрация: {title}.',
+                    'text': f'Brief presentation text about: {topic}.',
+                    'image_prompt': f'Clean presentation illustration about {title}.',
                 }
                 for title in outline
             ]
@@ -455,7 +455,7 @@ class PresentationGenerationClient:
             fallback = self._try_fallback_outline(payload, slides)
             if fallback is not None:
                 return fallback
-            raise TextGenerationError('Сервис временно недоступен, попробуйте позже.') from exc
+            raise TextGenerationError('The generation service is temporarily unavailable. Please try again later.') from exc
 
         content = _extract_content(data)
         err = _error_from_text(content)
@@ -479,7 +479,7 @@ class PresentationGenerationClient:
         fallback = self._try_fallback_outline(payload, slides)
         if fallback is not None:
             return fallback
-        raise TextGenerationError('Пустой ответ от сервиса. Попробуйте еще раз.')
+        raise TextGenerationError('The generation service returned an empty response. Please try again.')
 
     def _headers(self) -> dict[str, str]:
         if not self.api_key:
@@ -566,8 +566,8 @@ class PresentationGenerationClient:
         return [
             {
                 'title': title,
-                'text': f'Краткий текст по теме: {topic}.',
-                'image_prompt': f'Иллюстрация: {title}.',
+                'text': f'Brief presentation text about: {topic}.',
+                'image_prompt': f'Clean presentation illustration about {title}.',
             }
             for title in outline
         ]
@@ -618,9 +618,9 @@ def _extract_content(data: dict[str, Any]) -> str:
 
 def _extract_error(data: dict[str, Any]) -> str:
     if isinstance(data, dict) and 'code' in data and data.get('code') not in (0, '0', None):
-        return str(data.get('msg') or data.get('message') or data.get('error') or 'Ошибка сервиса')
+        return str(data.get('msg') or data.get('message') or data.get('error') or 'Service error')
     if isinstance(data, dict) and 'error' in data:
-        return str(data.get('error') or 'Ошибка сервиса')
+        return str(data.get('error') or 'Service error')
     return ''
 
 
@@ -635,7 +635,7 @@ def _error_from_text(text: str) -> str:
             return ''
         return _extract_error(payload)
     if 'server exception' in raw.lower():
-        return 'Сервис временно недоступен, попробуйте позже.'
+        return 'The generation service is temporarily unavailable. Please try again later.'
     return ''
 
 
@@ -691,15 +691,15 @@ def _clean_title(text: str) -> str:
 
 def _fallback_title(topic: str) -> str:
     if not topic:
-        return 'Презентация'
+        return 'Presentation'
     value = topic.strip()
     if not value:
-        return 'Презентация'
+        return 'Presentation'
     lines = [line for line in value.splitlines() if line.strip()]
     value = lines[0] if lines else value
     value = re.sub(r'\s+', ' ', value).strip()
     if not value:
-        return 'Презентация'
+        return 'Presentation'
     if len(value) > 80:
         value = value[:77].rstrip() + '...'
     return value

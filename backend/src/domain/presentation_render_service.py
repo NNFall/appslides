@@ -73,7 +73,7 @@ class PresentationRenderService:
                     str(image_path),
                 )
             return {
-                'title': slide.get('title', f'Слайд {index}'),
+                'title': slide.get('title', f'Slide {index}'),
                 'text': slide.get('text', ''),
                 'image_path': generated_image,
             }

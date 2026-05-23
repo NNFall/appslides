@@ -3,41 +3,47 @@ from __future__ import annotations
 
 def title_prompt(topic: str) -> str:
     return (
-        'Сформируй короткое название презентации (3-7 слов) из запроса пользователя. '
-        'Без кавычек, без точки в конце, только текст.\n'
-        f'Тема: {topic}\n'
+        'Create a concise presentation title from the user request. '
+        'Use 3-7 words. Return only the title text, with no quotes and no final period. '
+        'The title must be in English unless the user explicitly asked for another language.\n'
+        f'Topic: {topic}\n'
     )
 
 
 def outline_prompt(topic: str, slides: int) -> str:
     return (
-        'Составь план презентации. Верни только список заголовков слайдов, '
-        'по одному на строку, без нумерации.\n'
-        f'Тема: {topic}\n'
-        f'Количество слайдов: {slides}\n'
+        'Create a presentation outline. Return only slide titles, one title per line, '
+        'without numbering or extra commentary. '
+        'The outline must be in English unless the user explicitly asked for another language.\n'
+        f'Topic: {topic}\n'
+        f'Number of content slides: {slides}\n'
     )
 
 
 def outline_comment_prompt(topic: str, slides: int, outline: list[str], comment: str) -> str:
     outline_text = '\n'.join(f'- {item}' for item in outline)
     return (
-        'У тебя есть текущий план презентации и комментарий пользователя. '
-        'Перегенерируй план из указанного количества слайдов с учетом комментария. '
-        'Верни только список заголовков, по одному на строку, без нумерации.\n'
-        f'Тема: {topic}\n'
-        f'Количество слайдов: {slides}\n'
-        f'Текущий план:\n{outline_text}\n'
-        f'Комментарий пользователя: {comment}\n'
+        'You have the current presentation outline and the user revision comment. '
+        'Regenerate the outline with the requested number of content slides and apply the comment. '
+        'Return only slide titles, one per line, without numbering or extra commentary. '
+        'The outline must be in English unless the user explicitly asked for another language.\n'
+        f'Topic: {topic}\n'
+        f'Number of content slides: {slides}\n'
+        f'Current outline:\n{outline_text}\n'
+        f'User comment: {comment}\n'
     )
 
 
 def slides_prompt(topic: str, outline: list[str]) -> str:
     return (
-        'Сгенерируй JSON-массив слайдов. Каждый элемент: '
+        'Generate a JSON array of slide content. Each item must have this shape: '
         '{"title": str, "text": str, "image_prompt": str}. '
-        'Текст должен быть кратким (2-3 предложения), не длиннее 320 символов. '
-        'Заголовок 4-7 слов. '
-        'Возвращай только JSON.\n'
-        f'Тема: {topic}\n'
-        f'План: {outline}\n'
+        'The text must be concise: 2-3 sentences, no longer than 320 characters. '
+        'Each title must be 4-7 words. '
+        'Each image_prompt must be a vivid English prompt for a clean presentation illustration, '
+        'not a long paragraph and not a copy of the slide text. '
+        'Return only valid JSON. '
+        'All slide content must be in English unless the user explicitly asked for another language.\n'
+        f'Topic: {topic}\n'
+        f'Outline: {outline}\n'
     )

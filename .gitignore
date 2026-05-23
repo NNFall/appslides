@@ -29,6 +29,11 @@ app/.flutter-plugins
 app/.flutter-plugins-dependencies
 app/build/
 app/.pub/
+app/android/key.properties
+app/android/*.jks
+app/android/*.keystore
+app/android/app/*.jks
+app/android/app/*.keystore
 
 old_design/flutter_ui_v1/app/.dart_tool/
 old_design/flutter_ui_v1/app/build/

@@ -183,6 +183,16 @@ app/build/app/outputs/bundle/release/app-release.aab
 
 Before real Play Console upload, configure release signing with an upload key. The current project still has debug signing in `app/android/app/build.gradle.kts`, which is acceptable for local checks only, not for a store release.
 
+Release signing files:
+
+```text
+app/android/key.properties.example
+app/android/key.properties
+app/android/upload-keystore.jks
+```
+
+Only `key.properties.example` is committed. `key.properties` and keystore files are ignored by Git.
+
 Google Play billing can be overridden at build time if Play Console IDs differ:
 
 ```powershell
