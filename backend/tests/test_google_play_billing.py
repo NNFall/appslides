@@ -22,6 +22,10 @@ class DisabledYooKassaGateway:
     is_configured = False
 
 
+class DisabledGooglePlayGateway:
+    is_configured = False
+
+
 class CapturingNotifier:
     def __init__(self) -> None:
         self.payment_successes: list[tuple[str, str]] = []
@@ -102,6 +106,29 @@ class GooglePlayBillingTests(unittest.IsolatedAsyncioTestCase):
         self.assertIsNotNone(payment)
         self.assertEqual(payment.provider, 'google_play')
         self.assertEqual(payment.status, 'paid')
+
+    async def test_google_play_rtdn_test_notification_does_not_require_gateway(self) -> None:
+        service = BillingService(
+            gateway=DisabledYooKassaGateway(),
+            google_play_gateway=DisabledGooglePlayGateway(),
+            offer_url='https://example.com/offer',
+            support_username='@support',
+            support_max_url='https://max.ru/example_support',
+            return_url='appslides://billing/return',
+            test_mode=False,
+            notifier=self.notifier,
+        )
+        data = {'testNotification': {'version': '1.0'}}
+        payload = {
+            'message': {
+                'messageId': 'test-rtdn',
+                'data': base64.b64encode(json.dumps(data).encode('utf-8')).decode('ascii'),
+            },
+        }
+
+        result = await service.handle_google_play_rtdn(payload)
+
+        self.assertEqual(result, {'status': 'processed', 'event': 'test'})
 
     async def test_google_play_rtdn_renewal_refreshes_known_subscription(self) -> None:
         await self.service.verify_google_play_purchase(

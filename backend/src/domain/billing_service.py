@@ -373,12 +373,12 @@ class BillingService:
         )
 
     async def handle_google_play_rtdn(self, payload: dict[str, Any]) -> dict[str, Any]:
-        if not self._google_play_gateway.is_configured:
-            raise RuntimeError('Google Play Billing is not configured')
-
         message = self._decode_google_play_rtdn_payload(payload)
         if isinstance(message.get('testNotification'), dict):
             return {'status': 'processed', 'event': 'test'}
+
+        if not self._google_play_gateway.is_configured:
+            raise RuntimeError('Google Play Billing is not configured')
 
         notification = message.get('subscriptionNotification')
         if not isinstance(notification, dict):
