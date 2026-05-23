@@ -4,8 +4,14 @@ import asyncio
 from dataclasses import dataclass
 from typing import Literal
 
-from src.domain.billing_plans import BillingPlan, get_plan, list_plans
+from src.domain.billing_plans import (
+    BillingPlan,
+    get_plan,
+    get_plan_by_google_play_product_id,
+    list_plans,
+)
 from src.integrations.admin_notifier import AdminNotifier
+from src.integrations.google_play_gateway import GooglePlayGateway, GooglePlayGatewayError
 from src.integrations.yookassa_gateway import (
     YooKassaGateway,
     YooKassaGatewayError,
@@ -44,6 +50,7 @@ class BillingService:
         self,
         *,
         gateway: YooKassaGateway,
+        google_play_gateway: GooglePlayGateway,
         offer_url: str,
         support_username: str,
         support_max_url: str,
@@ -52,6 +59,7 @@ class BillingService:
         notifier: AdminNotifier,
     ) -> None:
         self._gateway = gateway
+        self._google_play_gateway = google_play_gateway
         self._offer_url = offer_url
         self._support_username = support_username
         self._support_max_url = support_max_url
@@ -245,6 +253,104 @@ class BillingService:
             status=status,
             confirmation_url=stored.confirmation_url,
             test_mode=self._test_mode,
+            summary=summary,
+        )
+
+    async def verify_google_play_purchase(
+        self,
+        *,
+        client_id: str,
+        package_name: str,
+        product_id: str,
+        purchase_token: str,
+    ) -> BillingPaymentResult:
+        if not self._google_play_gateway.is_configured:
+            raise RuntimeError('Google Play Billing is not configured')
+
+        billing_repo.touch_client(client_id)
+        plan = get_plan_by_google_play_product_id(product_id)
+        existing_payment = billing_repo.get_payment(purchase_token)
+
+        if existing_payment is not None and existing_payment.status == 'paid':
+            if billing_repo.get_subscription_for_use(client_id) is None:
+                billing_repo.create_subscription(
+                    client_id=client_id,
+                    plan_key=plan.key,
+                    limit=plan.limit,
+                    days=plan.days,
+                    provider='google_play',
+                    auto_renew=1 if plan.recurring else 0,
+                    payment_method_id=existing_payment.payment_method_id,
+                )
+            summary = await self.get_summary(client_id)
+            return BillingPaymentResult(
+                payment_id=purchase_token,
+                plan=plan,
+                status='paid',
+                confirmation_url=None,
+                test_mode=False,
+                summary=summary,
+            )
+
+        try:
+            purchase = await asyncio.to_thread(
+                self._google_play_gateway.verify_subscription,
+                package_name=package_name,
+                product_id=product_id,
+                purchase_token=purchase_token,
+            )
+        except GooglePlayGatewayError as exc:
+            raise RuntimeError(exc.reason) from exc
+
+        status = 'paid' if purchase.is_active else 'failed'
+        if existing_payment is None:
+            billing_repo.create_payment(
+                client_id=client_id,
+                provider='google_play',
+                amount=plan.price_rub,
+                currency='GOOGLE',
+                plan_key=plan.key,
+                external_payment_id=purchase_token,
+                status=status,
+                payment_method_id=purchase.order_id,
+                confirmation_url=None,
+            )
+        else:
+            billing_repo.update_payment_status(
+                purchase_token,
+                status,
+                payment_method_id=purchase.order_id,
+            )
+
+        if purchase.is_active:
+            billing_repo.create_subscription(
+                client_id=client_id,
+                plan_key=plan.key,
+                limit=plan.limit,
+                days=plan.days,
+                provider='google_play',
+                auto_renew=1 if plan.recurring else 0,
+                payment_method_id=purchase.order_id,
+            )
+            try:
+                await asyncio.to_thread(
+                    self._google_play_gateway.acknowledge_subscription,
+                    package_name=package_name,
+                    product_id=product_id,
+                    purchase_token=purchase_token,
+                )
+            except GooglePlayGatewayError:
+                # Do not revoke entitlement after a successful verification; log/alerting can be added later.
+                pass
+            await self._notifier.notify_payment_success(client_id, plan.title, provider='Google Play')
+
+        summary = await self.get_summary(client_id)
+        return BillingPaymentResult(
+            payment_id=purchase_token,
+            plan=plan,
+            status=status,
+            confirmation_url=None,
+            test_mode=False,
             summary=summary,
         )
 

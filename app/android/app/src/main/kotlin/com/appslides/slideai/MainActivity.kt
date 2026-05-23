@@ -1,4 +1,4 @@
-package com.appslides.appslides
+package com.appslides.slideai
 
 import io.flutter.embedding.android.FlutterActivity
 

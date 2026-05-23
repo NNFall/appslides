@@ -2,20 +2,26 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import '../../core/config/app_config.dart';
 import '../../data/api/appslides_api_client.dart';
 import '../../data/repositories/appslides_repository.dart';
 import '../../domain/models/billing_payment.dart';
 import '../../domain/models/billing_summary.dart';
+import 'google_play_billing_service.dart';
 
 class BillingController extends ChangeNotifier {
   BillingController({
     required AppSlidesRepository repository,
-  }) : _repository = repository;
+    GooglePlayBillingService? googlePlayBilling,
+  })  : _repository = repository,
+        _googlePlayBilling = googlePlayBilling ??
+            (AppConfig.useGooglePlayBilling ? GooglePlayBillingService() : null);
 
   static const Duration _paymentPollInterval = Duration(seconds: 20);
   static const Duration _paymentPollTimeout = Duration(minutes: 30);
 
   final AppSlidesRepository _repository;
+  final GooglePlayBillingService? _googlePlayBilling;
 
   BillingSummary? _summary;
   BillingPayment? _payment;
@@ -39,6 +45,13 @@ class BillingController extends ChangeNotifier {
   Future<void> initialize() async {
     if (_summary != null || _loadingSummary) {
       return;
+    }
+    if (AppConfig.useGooglePlayBilling) {
+      try {
+        await _googlePlayBilling?.initialize();
+      } catch (error) {
+        _error = _describeError(error);
+      }
     }
     await refreshSummary();
   }
@@ -67,10 +80,12 @@ class BillingController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final payment = await _repository.createBillingPayment(
-        planKey: planKey,
-        renew: renew,
-      );
+      final payment = AppConfig.useGooglePlayBilling
+          ? await _startGooglePlayCheckout(planKey)
+          : await _repository.createBillingPayment(
+              planKey: planKey,
+              renew: renew,
+            );
       _payment = payment;
       _summary = payment.summary;
       if (!payment.isFinished) {
@@ -132,7 +147,32 @@ class BillingController extends ChangeNotifier {
   @override
   void dispose() {
     _stopPolling();
+    unawaited(_googlePlayBilling?.dispose() ?? Future<void>.value());
     super.dispose();
+  }
+
+  String? storePriceForPlan(String planKey) {
+    return _googlePlayBilling?.priceForPlan(planKey);
+  }
+
+  Future<BillingPayment> _startGooglePlayCheckout(String planKey) async {
+    final billing = _googlePlayBilling;
+    if (billing == null) {
+      throw const GooglePlayBillingException(
+        'Google Play Billing is not configured in this build.',
+      );
+    }
+
+    final purchase = await billing.buyPlan(planKey);
+    final payment = await _repository.verifyGooglePlayPurchase(
+      packageName: purchase.packageName,
+      productId: purchase.productId,
+      purchaseToken: purchase.purchaseToken,
+    );
+    if (payment.isSuccessful) {
+      await billing.completePurchase(purchase.purchaseDetails);
+    }
+    return payment;
   }
 
   void _startPolling(String paymentId) {

@@ -3,7 +3,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: appslides_backend
+    container_name: ${BACKEND_CONTAINER_NAME:-pmappslides_backend}
     restart: unless-stopped
     env_file:
       - ./.env
@@ -19,7 +19,7 @@ services:
     build:
       context: .
       dockerfile: ./telegram_admin_bot/Dockerfile
-    container_name: appslides_admin_bot
+    container_name: ${ADMIN_BOT_CONTAINER_NAME:-pmappslides_admin_bot}
     restart: unless-stopped
     env_file:
       - ./.env

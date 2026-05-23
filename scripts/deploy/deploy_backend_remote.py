@@ -37,7 +37,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('--user', default='root')
     parser.add_argument('--password', required=True)
     parser.add_argument('--port', type=int, default=22)
-    parser.add_argument('--remote-dir', default='/root/appslides')
+    parser.add_argument('--remote-dir', default='/root/PMappslides')
+    parser.add_argument('--host-port', type=int, default=8021)
     return parser.parse_args()
 
 
@@ -86,6 +87,8 @@ def build_remote_env(local_env: dict[str, str], host_port: int) -> str:
         'APP_HOST': '0.0.0.0',
         'APP_PORT': '8000',
         'HOST_PORT': str(host_port),
+        'BACKEND_CONTAINER_NAME': local_env.get('BACKEND_CONTAINER_NAME', 'pmappslides_backend'),
+        'ADMIN_BOT_CONTAINER_NAME': local_env.get('ADMIN_BOT_CONTAINER_NAME', 'pmappslides_admin_bot'),
         'LOG_LEVEL': local_env.get('LOG_LEVEL', 'INFO'),
         'CORS_ALLOW_ORIGINS': local_env.get('CORS_ALLOW_ORIGINS', '*'),
         'LIBREOFFICE_PATH': 'soffice',
@@ -136,12 +139,14 @@ def build_remote_env(local_env: dict[str, str], host_port: int) -> str:
         'YOOKASSA_POLL_INTERVAL',
         'YOOKASSA_POLL_TIMEOUT',
         'YOOKASSA_TEST_MODE',
+        'GOOGLE_PLAY_PACKAGE_NAME',
+        'GOOGLE_PLAY_SERVICE_ACCOUNT_FILE',
+        'GOOGLE_PLAY_SERVICE_ACCOUNT_JSON',
+        'GOOGLE_PLAY_TEST_MODE',
         'SUPPORT_USERNAME',
         'SUPPORT_MAX_URL',
         'OFFER_URL',
         'AUTO_RENEW_INTERVAL',
-        'ADMIN_BOT_TOKEN',
-        'ADMIN_BOT_USERNAME',
         'ADMIN_IDS',
         'APP_SHARE_URL',
         'MAILER_TEMPLATE_INDEX',
@@ -150,6 +155,12 @@ def build_remote_env(local_env: dict[str, str], host_port: int) -> str:
         value = local_env.get(key)
         if value:
             env[key] = value
+
+    pm_admin_bot_token = local_env.get('PM_ADMIN_BOT_TOKEN', '').strip()
+    if pm_admin_bot_token:
+        env['ADMIN_BOT_TOKEN'] = pm_admin_bot_token
+        env['ADMIN_BOT_USERNAME'] = local_env.get('PM_ADMIN_BOT_USERNAME', local_env.get('ADMIN_BOT_USERNAME', ''))
+        env['ADMIN_IDS'] = local_env.get('PM_ADMIN_IDS', local_env.get('ADMIN_IDS', ''))
 
     return ''.join(f'{key}={_format_env_value(value)}\n' for key, value in env.items())
 
@@ -241,7 +252,7 @@ def ensure_remote_docker(remote: RemoteHost) -> None:
     remote.run('systemctl enable --now docker')
 
 
-def deploy(remote: RemoteHost, remote_dir: str, remote_env: str) -> None:
+def deploy(remote: RemoteHost, remote_dir: str, remote_env: str, admin_bot_enabled: bool) -> None:
     backend_remote = posixpath.join(remote_dir, 'backend')
     admin_bot_remote = posixpath.join(remote_dir, 'telegram_admin_bot')
     templates_remote = posixpath.join(remote_dir, 'templates')
@@ -259,7 +270,10 @@ def deploy(remote: RemoteHost, remote_dir: str, remote_env: str) -> None:
     remote.upload_text(remote_env, posixpath.join(remote_dir, '.env'))
 
     remote.run(f"cd '{remote_dir}' && docker compose down --remove-orphans", check=False)
-    remote.run(f"cd '{remote_dir}' && docker compose up -d --build --remove-orphans")
+    if admin_bot_enabled:
+        remote.run(f"cd '{remote_dir}' && docker compose up -d --build --remove-orphans")
+    else:
+        remote.run(f"cd '{remote_dir}' && docker compose up -d --build --remove-orphans appslides_backend")
 
 
 def install_admin_bot_watchdog(remote: RemoteHost, remote_dir: str) -> None:
@@ -278,7 +292,7 @@ if ! docker compose ps --status running --services | grep -qx 'appslides_admin_b
   exit 0
 fi
 
-age="$(docker exec appslides_admin_bot sh -lc 'test -f /tmp/appslides_admin_bot.heartbeat && echo $(($(date +%s)-$(stat -c %Y /tmp/appslides_admin_bot.heartbeat))) || echo 999999' 2>/dev/null || echo 999999)"
+age="$(docker compose exec -T appslides_admin_bot sh -lc 'test -f /tmp/appslides_admin_bot.heartbeat && echo $(($(date +%s)-$(stat -c %Y /tmp/appslides_admin_bot.heartbeat))) || echo 999999' 2>/dev/null || echo 999999)"
 case "$age" in
   ''|*[!0-9]*) age=999999 ;;
 esac
@@ -339,7 +353,7 @@ def ensure_services_running(remote: RemoteHost, remote_dir: str, expected_servic
     )
 
 
-def choose_host_port(remote: RemoteHost, preferred_port: int = 8011) -> int:
+def choose_host_port(remote: RemoteHost, preferred_port: int, backend_container_name: str) -> int:
     exit_code, out, _ = remote.run(
         f"ss -ltn '( sport = :{preferred_port} )' | sed -n '2,$p'",
         check=False,
@@ -348,14 +362,14 @@ def choose_host_port(remote: RemoteHost, preferred_port: int = 8011) -> int:
         return preferred_port
 
     exit_code, container_out, _ = remote.run(
-        "docker ps --format '{{.Names}} {{.Ports}}' | grep '^appslides_backend '",
+        f"docker ps --format '{{{{.Names}}}} {{{{.Ports}}}}' | grep '^{backend_container_name} '",
         check=False,
     )
     if exit_code == 0 and f':{preferred_port}->' in container_out:
         return preferred_port
 
     raise RuntimeError(
-        f'Host port {preferred_port} is busy. AppSlides mobile client is fixed to this port, '
+        f'Host port {preferred_port} is busy. PMAppSlides mobile client is fixed to this port, '
         'so release the port or update the application configuration before redeploy.'
     )
 
@@ -369,12 +383,16 @@ def main() -> int:
     remote = RemoteHost(args.host, args.user, args.password, args.port)
     try:
         ensure_remote_docker(remote)
-        host_port = choose_host_port(remote)
+        backend_container_name = local_env.get('BACKEND_CONTAINER_NAME', 'pmappslides_backend')
+        host_port = choose_host_port(remote, args.host_port, backend_container_name)
         remote_env = build_remote_env(local_env, host_port)
-        deploy(remote, args.remote_dir, remote_env)
-        install_admin_bot_watchdog(remote, args.remote_dir)
+        admin_bot_enabled = 'ADMIN_BOT_TOKEN=' in remote_env
+        deploy(remote, args.remote_dir, remote_env, admin_bot_enabled)
+        if admin_bot_enabled:
+            install_admin_bot_watchdog(remote, args.remote_dir)
         health_payload = wait_for_health(remote, args.remote_dir, host_port)
-        ensure_services_running(remote, args.remote_dir, ('appslides_backend', 'appslides_admin_bot'))
+        expected_services = ('appslides_backend', 'appslides_admin_bot') if admin_bot_enabled else ('appslides_backend',)
+        ensure_services_running(remote, args.remote_dir, expected_services)
         _, ps_out, _ = remote.run(f"cd '{args.remote_dir}' && docker compose ps")
         print(f'Host port: {host_port}')
         print('Health check OK:')

@@ -1,6 +1,47 @@
 ﻿# AppSlides Plan
 
 
+## Google Play Track - 2026-05-23
+
+- Product direction:
+  - prepare a Google Play version of the same mobile app;
+  - use package name `com.appslides.slideai`;
+  - use English store/app copy for the Google Play build;
+  - replace YooKassa payment flow with native Google Play Billing subscriptions.
+  - deploy a separate backend stack to `/root/PMappslides` instead of mixing with `/root/appslides`;
+  - use a separate public backend port: `8021`.
+- Initial Android prep completed:
+  - Android `namespace` changed to `com.appslides.slideai`;
+  - Android `applicationId` changed to `com.appslides.slideai`;
+  - Kotlin `MainActivity` moved to package `com.appslides.slideai`;
+  - launcher label changed to `Slide AI`;
+  - Flutter build number increased to `0.1.0+9`.
+  - app backend URL changed to `http://185.171.83.116:8021`.
+- Google Play publishing target:
+  - build `.aab` with `flutter build appbundle --release`;
+  - configure proper release/upload-key signing before Play Console upload;
+  - keep APK builds only for local/manual phone testing.
+- Billing migration plan:
+  - add Flutter Google Play Billing layer;
+  - create subscription products/base plans in Play Console;
+  - replace YooKassa checkout buttons with native purchase flow;
+  - send purchase token to backend;
+  - backend verifies purchase token through Google Play Developer API before granting generations;
+  - later add Real-time Developer Notifications for renewals/cancellations.
+- Current implementation progress:
+  - [x] `in_app_purchase` dependency added;
+  - [x] client-side Google Play product lookup and purchase start added;
+  - [x] purchase token is sent to backend for verification;
+  - [x] backend `POST /v1/billing/google-play/verify` added;
+  - [x] backend Google Play gateway scaffold added through Android Publisher API;
+  - [x] successful Google Play verification grants the existing subscription/generation entitlement;
+  - [x] purchase is acknowledged after backend entitlement grant;
+  - [ ] configure Play Console products and service account;
+  - [ ] provide a separate Telegram admin bot token for the PM/Google stack;
+  - [ ] add RTDN/PubSub sync for renewals and cancellations;
+  - [ ] translate remaining customer-facing chat copy to English.
+- Detailed implementation notes are tracked in `GOOGLE_PLAY_MIGRATION.md`.
+
 ## Backend Temp Cleanup - 2026-05-22
 
 - Problem found on production server:

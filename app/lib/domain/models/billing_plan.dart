@@ -6,6 +6,7 @@ class BillingPlan {
     required this.limit,
     required this.days,
     required this.recurring,
+    this.googlePlayProductId,
   });
 
   final String key;
@@ -14,6 +15,7 @@ class BillingPlan {
   final int limit;
   final int days;
   final bool recurring;
+  final String? googlePlayProductId;
 
   factory BillingPlan.fromJson(Map<String, dynamic> json) {
     return BillingPlan(
@@ -23,6 +25,7 @@ class BillingPlan {
       limit: json['limit'] as int,
       days: json['days'] as int,
       recurring: json['recurring'] as bool,
+      googlePlayProductId: json['google_play_product_id'] as String?,
     );
   }
 }

@@ -19,9 +19,10 @@ After every large or important change:
 
 - Server IP: `185.171.83.116`
 - SSH user: `root`
-- Remote app dir: `/root/appslides`
-- Public backend endpoint: `http://185.171.83.116:8011`
+- Remote app dir: `/root/PMappslides`
+- Public backend endpoint: `http://185.171.83.116:8021`
 - Docker service: `appslides_backend`
+- Docker container: `pmappslides_backend`
 
 ## Standard Git Flow
 
@@ -49,7 +50,8 @@ python scripts\deploy\deploy_backend_remote.py `
   --user root `
   --password <SERVER_PASSWORD> `
   --port 22 `
-  --remote-dir /root/appslides
+  --remote-dir /root/PMappslides `
+  --host-port 8021
 ```
 
 The deploy script:
@@ -57,7 +59,8 @@ The deploy script:
 - uploads `backend/`, `telegram_admin_bot/`, `templates/`, `docker-compose.yml` and `.env`
 - keeps persistent data outside the container
 - rebuilds and restarts Docker Compose
-- expects the public port to remain `8011`
+- expects the public port to remain `8021`
+- starts only backend unless `PM_ADMIN_BOT_TOKEN` is set locally; this avoids breaking the existing RuStore admin bot by reusing the same Telegram token
 
 ## Runtime Temp Cleanup
 
@@ -135,9 +138,81 @@ python -c "import telegram_admin_bot.main; print('admin bot import ok')"
 & 'C:\Users\User\develop\flutter\bin\flutter.bat' build apk
 ```
 
+### Google Play Android Build
+
+Google Play build work happens in `app/`.
+
+Current Google Play package name:
+
+```text
+com.appslides.slideai
+```
+
+Current fixed backend URL in the Google Play Flutter build:
+
+```text
+http://185.171.83.116:8021
+```
+
+Current Google Play billing product IDs expected by the app:
+
+```text
+slide_ai_week
+slide_ai_month
+```
+
+Local test APK:
+
+```powershell
+cd app
+& 'C:\Users\User\develop\flutter\bin\flutter.bat' build apk --release
+```
+
+Google Play upload artifact:
+
+```powershell
+cd app
+& 'C:\Users\User\develop\flutter\bin\flutter.bat' build appbundle --release
+```
+
+Expected output:
+
+```text
+app/build/app/outputs/bundle/release/app-release.aab
+```
+
+Before real Play Console upload, configure release signing with an upload key. The current project still has debug signing in `app/android/app/build.gradle.kts`, which is acceptable for local checks only, not for a store release.
+
+Google Play billing can be overridden at build time if Play Console IDs differ:
+
+```powershell
+& 'C:\Users\User\develop\flutter\bin\flutter.bat' build appbundle --release `
+  --dart-define=APPSLIDES_BILLING_PROVIDER=google_play `
+  --dart-define=APPSLIDES_GOOGLE_PLAY_PACKAGE_NAME=com.appslides.slideai `
+  --dart-define=APPSLIDES_GOOGLE_PLAY_WEEK_PRODUCT_ID=slide_ai_week `
+  --dart-define=APPSLIDES_GOOGLE_PLAY_MONTH_PRODUCT_ID=slide_ai_month
+```
+
+Backend Google Play verification requires one of:
+
+```env
+GOOGLE_PLAY_SERVICE_ACCOUNT_FILE=/data/google-play-service-account.json
+GOOGLE_PLAY_SERVICE_ACCOUNT_JSON={"type":"service_account",...}
+```
+
+PM admin bot requires a separate Telegram bot token:
+
+```env
+PM_ADMIN_BOT_TOKEN=
+PM_ADMIN_BOT_USERNAME=
+PM_ADMIN_IDS=
+```
+
+Do not reuse the RuStore/admin bot token in this stack. Telegram long polling supports only one active `getUpdates` consumer per bot token, so reusing the same token can make one of the admin bots stop responding.
+
 ## Notes
 
-- The mobile/web client is hard-wired to `http://185.171.83.116:8011`.
+- The mobile/web client is hard-wired to `http://185.171.83.116:8021`.
 - Local backend URL switching inside the app is intentionally disabled.
 - YooKassa is currently integrated in backend live mode and driven through the chat `/balance` flow.
 - Successful payment should now be reflected both on app resume and on later summary/generation checks because the backend auto-syncs unfinished payments.

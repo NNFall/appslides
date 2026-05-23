@@ -117,6 +117,18 @@ class AppSlidesRepository {
     return _api.getBillingPayment(paymentId);
   }
 
+  Future<BillingPayment> verifyGooglePlayPurchase({
+    required String packageName,
+    required String productId,
+    required String purchaseToken,
+  }) {
+    return _api.verifyGooglePlayPurchase(
+      packageName: packageName,
+      productId: productId,
+      purchaseToken: purchaseToken,
+    );
+  }
+
   Future<BillingSummary> cancelBillingSubscription() {
     return _api.cancelBillingSubscription();
   }

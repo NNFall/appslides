@@ -1496,7 +1496,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       }
       buffer.writeln('**Остаток генераций:** ${active.remaining}');
       buffer.writeln('**Действует до:** ${_shortDate(active.endsAt)}');
-      if (active.provider == 'yookassa') {
+      if (active.provider == 'google_play') {
+        buffer.writeln('Subscription is managed by Google Play.');
+      } else if (active.provider == 'yookassa') {
         buffer.writeln(
           active.autoRenew
               ? 'Автопродление через YooKassa включено.'
@@ -1526,9 +1528,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
 
     buffer.writeln();
-    buffer.writeln(
-      'Переходя к оплате, вы соглашаетесь с [офертой](${summary.offerUrl}).',
-    );
+    if (AppConfig.useGooglePlayBilling) {
+      buffer.writeln('Payment is handled securely by Google Play.');
+    } else {
+      buffer.writeln(
+        'Переходя к оплате, вы соглашаетесь с [офертой](${summary.offerUrl}).',
+      );
+    }
     return buffer.toString().trim();
   }
 
@@ -1536,7 +1542,15 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final rows = <List<_ChatAction>>[];
     final active = summary.activeSubscription;
 
-    if (active != null && active.isActive && active.autoRenew) {
+    if (AppConfig.useGooglePlayBilling && active != null && active.isActive) {
+      rows.add([
+        _action(
+          '⚙️ Manage in Google Play',
+          _openGooglePlaySubscriptions,
+          actionKey: 'open_google_play_subscriptions',
+        ),
+      ]);
+    } else if (active != null && active.isActive && active.autoRenew) {
       rows.add([
         _action(
           '❌ Отключить подписку',
@@ -1776,7 +1790,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _lastBillingTimeoutPaymentId = null;
     controller.clearPayment();
     _clearBillingProgressMessage();
-    _billingProgressMessageId = _appendBotMessage('_Создаю счёт на оплату..._');
+    _billingProgressMessageId = _appendBotMessage(
+      AppConfig.useGooglePlayBilling
+          ? '_Opening Google Play checkout..._'
+          : '_Создаю счёт на оплату..._',
+    );
     await controller.startCheckout(planKey: planKey, renew: renew);
     if (controller.payment == null && controller.error != null) {
       _clearBillingProgressMessage();
@@ -1859,6 +1877,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     return '@your_tracksupport';
   }
 
+  Future<void> _openGooglePlaySubscriptions() async {
+    final uri = Uri.parse(
+      'https://play.google.com/store/account/subscriptions'
+      '?package=${AppConfig.googlePlayPackageName}',
+    );
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
   String _currentTelegramSupportMarkdownLink() {
     final username = _currentSupportUsername();
     final normalized =
@@ -1929,12 +1955,23 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   String _planTariffLine(BillingPlan plan) {
+    final storePrice = _billingController?.storePriceForPlan(plan.key);
+    final priceLabel = AppConfig.useGooglePlayBilling && storePrice != null
+        ? storePrice
+        : '${plan.priceRub} ₽';
+    if (AppConfig.useGooglePlayBilling) {
+      return switch (plan.key) {
+        'week' => '$priceLabel / week — ${plan.limit} generations',
+        'month' => '$priceLabel / month — ${plan.limit} generations',
+        _ => '$priceLabel — ${plan.limit} generations',
+      };
+    }
     return switch (plan.key) {
-      'week' => '${plan.priceRub} ₽ / неделя — ${plan.limit} генераций',
-      'month' => '${plan.priceRub} ₽ / месяц — ${plan.limit} генераций',
-      'one10' => '${plan.priceRub} ₽ — ${plan.limit} генераций',
-      'one40' => '${plan.priceRub} ₽ — ${plan.limit} генераций',
-      _ => '${plan.priceRub} ₽ — ${plan.limit} генераций',
+      'week' => '$priceLabel / неделя — ${plan.limit} генераций',
+      'month' => '$priceLabel / месяц — ${plan.limit} генераций',
+      'one10' => '$priceLabel — ${plan.limit} генераций',
+      'one40' => '$priceLabel — ${plan.limit} генераций',
+      _ => '$priceLabel — ${plan.limit} генераций',
     };
   }
 
@@ -2478,6 +2515,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         break;
       case 'cancel_billing_subscription':
         callback = _cancelBillingSubscription;
+        break;
+      case 'open_google_play_subscriptions':
+        callback = _openGooglePlaySubscriptions;
         break;
       case 'launch_payment_url':
         final url = action.payload['url'] as String?;

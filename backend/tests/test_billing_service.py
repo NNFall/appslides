@@ -48,6 +48,10 @@ class RecurringUnsupportedGateway:
         )
 
 
+class DisabledGooglePlayGateway:
+    is_configured = False
+
+
 class BillingServiceErrorHandlingTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self) -> None:
         self.temp_dir_context = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
@@ -58,6 +62,7 @@ class BillingServiceErrorHandlingTests(unittest.IsolatedAsyncioTestCase):
         self.notifier = StubNotifier()
         self.service = BillingService(
             gateway=RecurringUnsupportedGateway(),
+            google_play_gateway=DisabledGooglePlayGateway(),
             offer_url='https://example.com/offer',
             support_username='@support',
             support_max_url='https://max.ru/example_support',

@@ -118,9 +118,14 @@ class AdminNotifier:
             f"{_bold('Причина:')} {html.escape(error)}"
         )
 
-    async def notify_payment_success(self, client_id: str, plan_title: str) -> None:
+    async def notify_payment_success(
+        self,
+        client_id: str,
+        plan_title: str,
+        provider: str = "YooKassa",
+    ) -> None:
         await self.notify(
-            f"{_bold('💰 Успешная покупка (YooKassa)')}\n"
+            f"{_bold(f'💰 Успешная покупка ({provider})')}\n"
             f"{_bold('User ID:')} {_code(_display_client_id(client_id))}\n"
             f"{_bold('Тариф:')} {html.escape(plan_title)}"
         )

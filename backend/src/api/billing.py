@@ -4,7 +4,12 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from src.core.dependencies import get_billing_service, get_known_client_id
 from src.domain.billing_service import BillingService
-from src.schemas.billing import BillingPaymentResponse, BillingSummaryResponse, CreateBillingPaymentRequest
+from src.schemas.billing import (
+    BillingPaymentResponse,
+    BillingSummaryResponse,
+    CreateBillingPaymentRequest,
+    VerifyGooglePlayPurchaseRequest,
+)
 
 
 router = APIRouter(prefix='/v1/billing', tags=['billing'])
@@ -38,6 +43,7 @@ def _summary_response(summary) -> BillingSummaryResponse:
                 'limit': plan.limit,
                 'days': plan.days,
                 'recurring': plan.recurring,
+                'google_play_product_id': plan.google_play_product_id,
             }
             for plan in summary.plans
         ],
@@ -93,6 +99,26 @@ async def get_billing_payment(
         result = await service.sync_payment(client_id=client_id, payment_id=payment_id)
     except LookupError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    return _payment_response(result)
+
+
+@router.post('/google-play/verify', response_model=BillingPaymentResponse)
+async def verify_google_play_purchase(
+    payload: VerifyGooglePlayPurchaseRequest,
+    client_id: str = Depends(get_known_client_id),
+    service: BillingService = Depends(get_billing_service),
+) -> BillingPaymentResponse:
+    try:
+        result = await service.verify_google_play_purchase(
+            client_id=client_id,
+            package_name=payload.package_name,
+            product_id=payload.product_id,
+            purchase_token=payload.purchase_token,
+        )
+    except RuntimeError as exc:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     return _payment_response(result)
 
 

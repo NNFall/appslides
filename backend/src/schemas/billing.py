@@ -19,6 +19,7 @@ class BillingPlanItem(BaseModel):
     limit: Annotated[int, Field(ge=1)]
     days: Annotated[int, Field(ge=1)]
     recurring: bool
+    google_play_product_id: str | None = None
 
 
 class BillingSubscriptionItem(BaseModel):
@@ -61,3 +62,11 @@ class BillingPaymentResponse(BaseModel):
     confirmation_url: str | None
     test_mode: bool
     summary: BillingSummaryResponse
+
+
+class VerifyGooglePlayPurchaseRequest(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+
+    package_name: Annotated[str, StringConstraints(strip_whitespace=True, min_length=3, max_length=255)]
+    product_id: Annotated[str, StringConstraints(strip_whitespace=True, min_length=3, max_length=255)]
+    purchase_token: Annotated[str, StringConstraints(strip_whitespace=True, min_length=8, max_length=4096)]
