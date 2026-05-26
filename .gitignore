@@ -35,6 +35,10 @@ app/android/*.keystore
 app/android/app/*.jks
 app/android/app/*.keystore
 
+releases/*.aab
+releases/*.apk
+runtime_logs/
+
 old_design/flutter_ui_v1/app/.dart_tool/
 old_design/flutter_ui_v1/app/build/
 
