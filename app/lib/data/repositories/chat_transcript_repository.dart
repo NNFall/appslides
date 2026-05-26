@@ -153,7 +153,10 @@ class ChatTranscriptRepository extends ChangeNotifier {
   }
 
   bool _applyDecodedEntries(List<ChatTranscriptEntry> parsedEntries) {
-    if (_containsCyrillicTranscript(parsedEntries)) {
+    final restoredEntries =
+        parsedEntries.where((entry) => !_isTransientProgressEntry(entry));
+
+    if (_containsCyrillicTranscript(restoredEntries)) {
       _clearRestoredState();
       unawaited(_store.remove());
       return false;
@@ -161,11 +164,24 @@ class ChatTranscriptRepository extends ChangeNotifier {
 
     _entries
       ..clear()
-      ..addAll(parsedEntries);
+      ..addAll(restoredEntries);
     return true;
   }
 
-  bool _containsCyrillicTranscript(List<ChatTranscriptEntry> entries) {
+  bool _isTransientProgressEntry(ChatTranscriptEntry entry) {
+    if (entry.sender != ChatTranscriptSender.bot) {
+      return false;
+    }
+    final normalized = entry.text.trim().replaceAll('_', '').toLowerCase();
+    return normalized == 'generating the presentation outline...' ||
+        normalized == 'trying to generate the outline again...' ||
+        normalized == 'updating the outline...' ||
+        normalized == 'building the presentation...' ||
+        normalized == 'starting conversion...' ||
+        normalized == 'checking payment...';
+  }
+
+  bool _containsCyrillicTranscript(Iterable<ChatTranscriptEntry> entries) {
     return entries.any((entry) {
       if (_containsCyrillicText(entry.text)) {
         return true;

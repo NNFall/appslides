@@ -16,6 +16,7 @@ import '../repositories/client_session_repository.dart';
 class AppSlidesApiClient {
   static const String networkErrorMessage =
       'It looks like the internet or server connection was lost. Please try again.';
+  static const Duration requestTimeout = Duration(minutes: 3);
 
   AppSlidesApiClient({
     http.Client? client,
@@ -124,8 +125,9 @@ class AppSlidesApiClient {
           ),
         );
 
-      final streamed = await _client.send(request);
-      final response = await http.Response.fromStream(streamed);
+      final streamed = await _client.send(request).timeout(requestTimeout);
+      final response =
+          await http.Response.fromStream(streamed).timeout(requestTimeout);
       final payload = _decodeResponse(response);
       _ensureSuccess(response, payload);
       return RemoteJob.fromJson(payload);
@@ -147,10 +149,12 @@ class AppSlidesApiClient {
 
   Future<Uint8List> downloadBytes(Uri uri) async {
     return _withNetworkHandling(() async {
-      final response = await _client.get(
-        uri,
-        headers: await _requestHeaders(),
-      );
+      final response = await _client
+          .get(
+            uri,
+            headers: await _requestHeaders(),
+          )
+          .timeout(requestTimeout);
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return response.bodyBytes;
       }
@@ -210,14 +214,18 @@ class AppSlidesApiClient {
   }
 
   Future<BillingSummary> cancelBillingSubscription() async {
-    final response = await _client.post(
-      _resolve(AppConfig.billingCancelSubscriptionPath),
-      headers: await _jsonHeaders(),
-      body: '{}',
-    );
-    final payload = _decodeResponse(response);
-    _ensureSuccess(response, payload);
-    return BillingSummary.fromJson(payload);
+    return _withNetworkHandling(() async {
+      final response = await _client
+          .post(
+            _resolve(AppConfig.billingCancelSubscriptionPath),
+            headers: await _jsonHeaders(),
+            body: '{}',
+          )
+          .timeout(requestTimeout);
+      final payload = _decodeResponse(response);
+      _ensureSuccess(response, payload);
+      return BillingSummary.fromJson(payload);
+    });
   }
 
   Future<PromoRedeemResult> redeemPromoCode(String code) async {
@@ -232,10 +240,12 @@ class AppSlidesApiClient {
 
   Future<Map<String, dynamic>> _getJsonMap(String path) async {
     return _withNetworkHandling(() async {
-      final response = await _client.get(
-        _resolve(path),
-        headers: await _jsonHeaders(),
-      );
+      final response = await _client
+          .get(
+            _resolve(path),
+            headers: await _jsonHeaders(),
+          )
+          .timeout(requestTimeout);
       final payload = _decodeResponse(response);
       _ensureSuccess(response, payload);
       return payload;
@@ -247,11 +257,13 @@ class AppSlidesApiClient {
     required Map<String, Object?> body,
   }) async {
     return _withNetworkHandling(() async {
-      final response = await _client.post(
-        _resolve(path),
-        headers: await _jsonHeaders(),
-        body: jsonEncode(body),
-      );
+      final response = await _client
+          .post(
+            _resolve(path),
+            headers: await _jsonHeaders(),
+            body: jsonEncode(body),
+          )
+          .timeout(requestTimeout);
       final payload = _decodeResponse(response);
       _ensureSuccess(response, payload);
       return payload;

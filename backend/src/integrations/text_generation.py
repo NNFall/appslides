@@ -469,9 +469,9 @@ class PresentationGenerationClient:
                 return fallback
             raise TextGenerationError(err)
 
-        lines = _split_lines(content)
+        lines = _parse_outline_lines(content, slides)
         if lines:
-            return lines[:slides]
+            return lines
 
         replicate = self._try_replicate_outline(prompt, slides)
         if replicate is not None:
@@ -511,10 +511,7 @@ class PresentationGenerationClient:
         except Exception:
             self.logger.exception('Replicate outline fallback failed')
             return None
-        lines = _split_lines(text)
-        if not lines:
-            return None
-        return lines[:slides]
+        return _parse_outline_lines(text, slides)
 
     def _try_replicate_title(self, prompt: str) -> str | None:
         if not self.replicate_text_client:
@@ -554,12 +551,12 @@ class PresentationGenerationClient:
             err = _error_from_text(content)
             if err:
                 continue
-            lines = _split_lines(content)
+            lines = _parse_outline_lines(content, slides)
             if not lines:
                 continue
             self.text_model = model
             self.text_endpoint = endpoint
-            return lines[:slides]
+            return lines
         return None
 
     def _fallback_slides(self, topic: str, outline: list[str]) -> list[dict[str, str]]:
@@ -636,6 +633,8 @@ def _error_from_text(text: str) -> str:
         return _extract_error(payload)
     if 'server exception' in raw.lower():
         return 'The generation service is temporarily unavailable. Please try again later.'
+    if _looks_like_provider_apology(raw):
+        return 'The generation service returned an invalid outline. Please try again.'
     return ''
 
 
@@ -646,6 +645,70 @@ def _build_text_message(prompt: str) -> dict[str, Any]:
 def _split_lines(text: str) -> list[str]:
     lines = [re.sub(r'^\d+\.?\s*', '', line).strip() for line in text.splitlines()]
     return [line for line in lines if line]
+
+
+def _parse_outline_lines(text: str, expected_count: int) -> list[str] | None:
+    lines: list[str] = []
+    for raw_line in text.splitlines():
+        line = _clean_outline_line(raw_line)
+        if not line:
+            continue
+        if _is_outline_noise_line(line):
+            continue
+        if _looks_like_provider_apology(line):
+            return None
+        lines.append(line)
+
+    if len(lines) < expected_count:
+        return None
+    return lines[:expected_count]
+
+
+def _clean_outline_line(value: str) -> str:
+    line = value.strip()
+    line = re.sub(r'^\s*[-*•]\s+', '', line)
+    line = re.sub(r'^\s*\d+[\).\:-]?\s*', '', line)
+    line = line.strip().strip('"').strip("'").strip()
+    return line[:200]
+
+
+def _is_outline_noise_line(line: str) -> bool:
+    lowered = line.lower().strip()
+    if not lowered:
+        return True
+    if lowered.startswith('```') or lowered.endswith('```'):
+        return True
+    noise_prefixes = (
+        'here is',
+        'here are',
+        'presentation outline',
+        'outline:',
+        'slide titles:',
+        'sure,',
+        'certainly,',
+    )
+    if lowered.startswith(noise_prefixes):
+        return True
+    if lowered in {'text', 'json', 'markdown'}:
+        return True
+    return False
+
+
+def _looks_like_provider_apology(text: str) -> bool:
+    lowered = text.lower()
+    patterns = (
+        'i seem to be encountering an error',
+        'encountering an error',
+        'can i try something else',
+        'sorry,',
+        'i am sorry',
+        "i'm sorry",
+        'i cannot',
+        "i can't",
+        'unable to generate',
+        'failed to generate',
+    )
+    return any(pattern in lowered for pattern in patterns)
 
 
 def _parse_json_list(text: str) -> list[dict[str, str]]:
