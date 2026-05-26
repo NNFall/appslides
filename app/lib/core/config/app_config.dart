@@ -26,13 +26,13 @@ class AppConfig {
   static const String conversionJobsPath = '/v1/conversions/jobs';
   static const String billingSummaryPath = '/v1/billing/summary';
   static const String billingPaymentsPath = '/v1/billing/payments';
-  static const String googlePlayVerifyPath =
-      '/v1/billing/google-play/verify';
+  static const String googlePlayVerifyPath = '/v1/billing/google-play/verify';
   static const String billingCancelSubscriptionPath =
       '/v1/billing/subscription/cancel';
   static const String promoRedeemPath = '/v1/promo/redeem';
 
-  static String presentationJobPath(String jobId) => '$presentationJobsPath/$jobId';
+  static String presentationJobPath(String jobId) =>
+      '$presentationJobsPath/$jobId';
 
   static String presentationDownloadPath(String jobId, String format) =>
       '${presentationJobPath(jobId)}/download/$format';

@@ -36,6 +36,7 @@ class _UnsupportedLocalFileStore implements LocalFileStore {
     required String filename,
     required String uniqueHint,
   }) {
-    throw UnsupportedError('Local file storage is unavailable on this platform.');
+    throw UnsupportedError(
+        'Local file storage is unavailable on this platform.');
   }
 }

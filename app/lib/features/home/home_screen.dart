@@ -33,7 +33,7 @@ class HomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                'Мобильный клиент для генерации презентаций и конвертации файлов на новом backend.',
+                'Mobile client for presentation generation and file conversion on the new backend.',
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: Colors.white.withValues(alpha: 0.9),
                   height: 1.45,
@@ -44,9 +44,9 @@ class HomeScreen extends StatelessWidget {
                 spacing: 10,
                 runSpacing: 10,
                 children: const [
-                  _StatChip(label: 'Outline API готов'),
-                  _StatChip(label: 'Render API готов'),
-                  _StatChip(label: 'PPTX/PDF backend готов'),
+                  _StatChip(label: 'Outline API ready'),
+                  _StatChip(label: 'Render API ready'),
+                  _StatChip(label: 'PPTX/PDF backend ready'),
                 ],
               ),
             ],
@@ -54,15 +54,15 @@ class HomeScreen extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         const SectionCard(
-          title: 'Ближайший мобильный scope',
+          title: 'Next mobile scope',
           subtitle:
-              'Следующий шаг для приложения: подключить templates, outline и render endpoints, затем собрать локальную историю файлов.',
+              'Next app step: connect templates, outline and render endpoints, then build local file history.',
         ),
         const SizedBox(height: 16),
         const SectionCard(
-          title: 'Текущее состояние проекта',
+          title: 'Current project state',
           subtitle:
-              'Telegram-бот уже разобран и его логика переносится в отдельный Python-backend. Мобильное приложение будет новым клиентом поверх этих API.',
+              'The Telegram bot has been analyzed and its logic is moving into a separate Python backend. The mobile app is a new client on top of these APIs.',
         ),
       ],
     );

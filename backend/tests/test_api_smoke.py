@@ -38,10 +38,10 @@ PNG_1X1 = base64.b64decode(
 
 class StubGenerationClient:
     def generate_title(self, topic: str) -> str:
-        return f'Презентация: {topic[:40]}'
+        return f'Presentation: {topic[:40]}'
 
     def generate_outline(self, topic: str, slides: int) -> list[str]:
-        return [f'Раздел {index}: {topic}' for index in range(1, slides + 1)]
+        return [f'Section {index}: {topic}' for index in range(1, slides + 1)]
 
     def revise_outline(self, topic: str, slides: int, outline: list[str], comment: str) -> list[str]:
         revised = outline[:slides]
@@ -53,8 +53,8 @@ class StubGenerationClient:
         return [
             {
                 'title': item,
-                'text': f'Краткий текст по теме "{topic}" для блока "{item}".',
-                'image_prompt': f'Иллюстрация для {item}',
+                'text': f'Short text about "{topic}" for the section "{item}".',
+                'image_prompt': f'Illustration for {item}',
             }
             for item in outline
         ]
@@ -158,14 +158,14 @@ class BackendApiSmokeTests(unittest.TestCase):
         response = self.client.post(
             '/v1/presentations/outline',
             json={
-                'topic': 'Тестовая тема',
+                'topic': 'Test topic',
                 'slides_total': 6,
             },
             headers=self.client_headers,
         )
         self.assertEqual(response.status_code, 200)
         payload = response.json()
-        self.assertEqual(payload['title'], 'Презентация: Тестовая тема')
+        self.assertEqual(payload['title'], 'Presentation: Test topic')
         self.assertEqual(payload['slides_total'], 6)
         self.assertEqual(payload['content_slides'], 5)
         self.assertEqual(len(payload['outline']), 5)
@@ -174,9 +174,9 @@ class BackendApiSmokeTests(unittest.TestCase):
         create_response = self.client.post(
             '/v1/presentations/jobs',
             json={
-                'topic': 'Тема презентации',
-                'title': 'Готовый файл',
-                'outline': ['Вступление', 'Основная часть', 'Выводы'],
+                'topic': 'Presentation topic',
+                'title': 'Ready file',
+                'outline': ['Introduction', 'Main section', 'Conclusions'],
                 'design_id': 1,
                 'generate_pdf': False,
             },

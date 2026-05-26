@@ -18,37 +18,43 @@ class AppScope extends StatefulWidget {
   final Widget child;
 
   static AppSlidesRepository repositoryOf(BuildContext context) {
-    final scope = context.dependOnInheritedWidgetOfExactType<_AppScopeInherited>();
+    final scope =
+        context.dependOnInheritedWidgetOfExactType<_AppScopeInherited>();
     assert(scope != null, 'AppScope is missing above this context');
     return scope!.repository;
   }
 
   static LocalHistoryRepository historyOf(BuildContext context) {
-    final scope = context.dependOnInheritedWidgetOfExactType<_AppScopeInherited>();
+    final scope =
+        context.dependOnInheritedWidgetOfExactType<_AppScopeInherited>();
     assert(scope != null, 'AppScope is missing above this context');
     return scope!.historyRepository;
   }
 
   static BackendConfigRepository backendConfigOf(BuildContext context) {
-    final scope = context.dependOnInheritedWidgetOfExactType<_AppScopeInherited>();
+    final scope =
+        context.dependOnInheritedWidgetOfExactType<_AppScopeInherited>();
     assert(scope != null, 'AppScope is missing above this context');
     return scope!.backendConfigRepository;
   }
 
   static ClientSessionRepository clientSessionOf(BuildContext context) {
-    final scope = context.dependOnInheritedWidgetOfExactType<_AppScopeInherited>();
+    final scope =
+        context.dependOnInheritedWidgetOfExactType<_AppScopeInherited>();
     assert(scope != null, 'AppScope is missing above this context');
     return scope!.clientSessionRepository;
   }
 
   static SavedFilesRepository savedFilesOf(BuildContext context) {
-    final scope = context.dependOnInheritedWidgetOfExactType<_AppScopeInherited>();
+    final scope =
+        context.dependOnInheritedWidgetOfExactType<_AppScopeInherited>();
     assert(scope != null, 'AppScope is missing above this context');
     return scope!.savedFilesRepository;
   }
 
   static ChatTranscriptRepository transcriptOf(BuildContext context) {
-    final scope = context.dependOnInheritedWidgetOfExactType<_AppScopeInherited>();
+    final scope =
+        context.dependOnInheritedWidgetOfExactType<_AppScopeInherited>();
     assert(scope != null, 'AppScope is missing above this context');
     return scope!.chatTranscriptRepository;
   }
@@ -58,14 +64,16 @@ class AppScope extends StatefulWidget {
 }
 
 class _AppScopeState extends State<AppScope> {
-  late final BackendConfigRepository _backendConfigRepository = BackendConfigRepository();
+  late final BackendConfigRepository _backendConfigRepository =
+      BackendConfigRepository();
   late final ClientSessionRepository _clientSessionRepository =
       ClientSessionRepository();
   late final AppSlidesRepository _repository = AppSlidesRepository(
     backendConfig: _backendConfigRepository,
     clientSession: _clientSessionRepository,
   );
-  late final LocalHistoryRepository _historyRepository = LocalHistoryRepository();
+  late final LocalHistoryRepository _historyRepository =
+      LocalHistoryRepository();
   late final SavedFilesRepository _savedFilesRepository = SavedFilesRepository(
     repository: _repository,
   );

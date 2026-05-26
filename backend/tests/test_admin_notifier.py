@@ -55,13 +55,13 @@ class AdminNotifierFormattingTests(unittest.IsolatedAsyncioTestCase):
             max_uses=1,
         )
         message = notifier.messages[-1]
-        self.assertIn("Промокод активирован", message)
+        self.assertIn("Promo code redeemed", message)
         self.assertIn("User ID:", message)
-        self.assertIn("Промокод:", message)
+        self.assertIn("Promo code:", message)
         self.assertIn("c7206288", message)
-        self.assertIn("Начислено генераций:", message)
+        self.assertIn("Generations added:", message)
         self.assertIn("10", message)
-        self.assertIn("Использований:", message)
+        self.assertIn("Uses:", message)
         self.assertIn("1/1", message)
 
     async def test_auto_renew_success_format(self) -> None:

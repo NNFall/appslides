@@ -11,7 +11,7 @@ def list_presentation_templates(templates_dir: Path) -> list[dict[str, str | int
         items.append(
             {
                 'id': index,
-                'name': f'Шаблон {index}',
+                'name': f'Template {index}',
                 'template_path': str(template_path) if template_path.exists() else None,
                 'preview_path': str(preview_path) if preview_path.exists() else None,
                 'template_available': template_path.exists(),

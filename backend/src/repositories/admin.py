@@ -407,7 +407,7 @@ def get_all_tag_stats_full() -> list[dict[str, int | str]]:
                 )
             stats.append(
                 {
-                    'tag': 'без метки',
+                    'tag': 'no tag',
                     'users': no_users,
                     'buyers': no_buyers,
                     'revenue': no_revenue,
@@ -432,7 +432,7 @@ def create_promo_code(code: str, tokens: int, max_uses: int) -> None:
 def redeem_promo_code(client_id: str, code: str) -> PromoRedeemResult:
     normalized_code = code.strip()
     if not normalized_code:
-        raise ValueError('Промокод пустой.')
+        raise ValueError('Promo code is empty.')
 
     with _LOCK:
         with closing(connect()) as conn:
@@ -446,16 +446,16 @@ def redeem_promo_code(client_id: str, code: str) -> PromoRedeemResult:
             ).fetchone()
             promo = _row_to_promo_code(row)
             if promo is None:
-                raise ValueError('Промокод не найден.')
+                raise ValueError('Promo code not found.')
             if promo.used >= promo.max_uses:
                 conn.execute(
                     'UPDATE promo_codes SET is_active = 0 WHERE code = ?',
                     (promo.code,),
                 )
                 conn.commit()
-                raise ValueError('Лимит использований этого промокода уже исчерпан.')
+                raise ValueError('This promo code has no uses left.')
             if not promo.is_active:
-                raise ValueError('Промокод больше не активен.')
+                raise ValueError('This promo code is no longer active.')
 
             existing_use = conn.execute(
                 '''
@@ -466,7 +466,7 @@ def redeem_promo_code(client_id: str, code: str) -> PromoRedeemResult:
                 (promo.code, client_id),
             ).fetchone()
             if existing_use is not None:
-                raise ValueError('Этот промокод уже активирован на этом устройстве.')
+                raise ValueError('This promo code has already been activated on this device.')
 
             conn.execute(
                 '''

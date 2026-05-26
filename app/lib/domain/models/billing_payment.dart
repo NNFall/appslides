@@ -18,7 +18,8 @@ class BillingPayment {
   final BillingSummary summary;
   final BillingPlan? plan;
 
-  bool get isFinished => status == 'paid' || status == 'canceled' || status == 'failed';
+  bool get isFinished =>
+      status == 'paid' || status == 'canceled' || status == 'failed';
   bool get isSuccessful => status == 'paid';
 
   factory BillingPayment.fromJson(

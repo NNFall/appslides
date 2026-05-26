@@ -58,7 +58,8 @@ class SavedFileEntry {
       remoteUrl: json['remote_url'] as String? ?? '',
       localPath: json['local_path'] as String? ?? '',
       sizeBytes: json['size_bytes'] as int? ?? 0,
-      savedAt: DateTime.tryParse(json['saved_at'] as String? ?? '') ?? DateTime.now(),
+      savedAt: DateTime.tryParse(json['saved_at'] as String? ?? '') ??
+          DateTime.now(),
     );
   }
 

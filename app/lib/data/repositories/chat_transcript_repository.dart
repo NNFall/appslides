@@ -10,6 +10,7 @@ class ChatTranscriptRepository extends ChangeNotifier {
   static const String _storageKey = 'appslides.chat.transcript.v2';
   static const String _legacyStorageKey = 'appslides.chat.transcript.v1';
   static const int _maxEntries = 250;
+  static final RegExp _cyrillicPattern = RegExp(r'[\u0400-\u04FF]');
 
   final ChatTranscriptStore _store = createChatTranscriptStore(
     storageKey: _storageKey,
@@ -72,18 +73,26 @@ class ChatTranscriptRepository extends ChangeNotifier {
               .map((item) =>
                   ChatTranscriptEntry.fromJson(item.cast<String, dynamic>()))
               .toList(growable: false);
-          _applyDecodedEntries(parsedEntries);
-          final mode = map['composer_mode'] as String?;
-          _composerModeKey = (mode == null || mode.isEmpty) ? 'idle' : mode;
-          _pendingTemplate = map['pending_template'] is Map<String, dynamic>
-              ? ChatTranscriptTemplatePreview.fromJson(
-                  map['pending_template'] as Map<String, dynamic>,
-                )
-              : map['pending_template'] is Map
-                  ? ChatTranscriptTemplatePreview.fromJson(
-                      (map['pending_template'] as Map).cast<String, dynamic>(),
-                    )
-                  : null;
+          final acceptedEntries = _applyDecodedEntries(parsedEntries);
+          if (acceptedEntries) {
+            final mode = map['composer_mode'] as String?;
+            _composerModeKey = (mode == null || mode.isEmpty) ? 'idle' : mode;
+            _pendingTemplate = map['pending_template'] is Map<String, dynamic>
+                ? ChatTranscriptTemplatePreview.fromJson(
+                    map['pending_template'] as Map<String, dynamic>,
+                  )
+                : map['pending_template'] is Map
+                    ? ChatTranscriptTemplatePreview.fromJson(
+                        (map['pending_template'] as Map)
+                            .cast<String, dynamic>(),
+                      )
+                    : null;
+            if (_pendingTemplate != null &&
+                _containsCyrillicText(_pendingTemplate!.name)) {
+              _clearRestoredState();
+              unawaited(_store.remove());
+            }
+          }
         } else {
           _entries.clear();
           _composerModeKey = 'idle';
@@ -143,9 +152,62 @@ class ChatTranscriptRepository extends ChangeNotifier {
     }
   }
 
-  void _applyDecodedEntries(List<ChatTranscriptEntry> parsedEntries) {
+  bool _applyDecodedEntries(List<ChatTranscriptEntry> parsedEntries) {
+    if (_containsCyrillicTranscript(parsedEntries)) {
+      _clearRestoredState();
+      unawaited(_store.remove());
+      return false;
+    }
+
     _entries
       ..clear()
       ..addAll(parsedEntries);
+    return true;
+  }
+
+  bool _containsCyrillicTranscript(List<ChatTranscriptEntry> entries) {
+    return entries.any((entry) {
+      if (_containsCyrillicText(entry.text)) {
+        return true;
+      }
+      for (final row in entry.keyboard) {
+        for (final action in row) {
+          if (_containsCyrillicText(action.label)) {
+            return true;
+          }
+        }
+      }
+      for (final attachment in entry.attachments) {
+        if (_containsCyrillicText(attachment.caption) ||
+            _containsCyrillicText(attachment.filename)) {
+          return true;
+        }
+      }
+      for (final template in entry.templatePreviewTemplates) {
+        if (_containsCyrillicText(template.name)) {
+          return true;
+        }
+      }
+      final linkPreview = entry.linkPreview;
+      if (linkPreview != null) {
+        if (_containsCyrillicText(linkPreview.domain) ||
+            _containsCyrillicText(linkPreview.title) ||
+            _containsCyrillicText(linkPreview.description) ||
+            _containsCyrillicText(linkPreview.url)) {
+          return true;
+        }
+      }
+      return false;
+    });
+  }
+
+  void _clearRestoredState() {
+    _entries.clear();
+    _composerModeKey = 'idle';
+    _pendingTemplate = null;
+  }
+
+  bool _containsCyrillicText(String value) {
+    return _cyrillicPattern.hasMatch(value);
   }
 }

@@ -59,13 +59,15 @@ class PresentationController extends ChangeNotifier {
   String? get error => _error;
   RemoteJob? get job => _job;
 
-  bool get canGenerateOutline => _topic.trim().length >= 3 && !_generatingOutline;
+  bool get canGenerateOutline =>
+      _topic.trim().length >= 3 && !_generatingOutline;
   bool get hasOutline => _outline.isNotEmpty && _title.trim().isNotEmpty;
   bool get canStartJob =>
       hasOutline && _selectedDesignId != null && !_startingJob && !_isJobActive;
   bool get _isJobActive =>
       _job != null &&
-      (_job!.status == RemoteJobStatus.queued || _job!.status == RemoteJobStatus.running);
+      (_job!.status == RemoteJobStatus.queued ||
+          _job!.status == RemoteJobStatus.running);
 
   Future<void> initialize() async {
     if (_templates.isNotEmpty || _loadingTemplates) {
@@ -227,9 +229,11 @@ class PresentationController extends ChangeNotifier {
     return null;
   }
 
-  String? downloadUrlFor(JobArtifact artifact) => downloadUriFor(artifact)?.toString();
+  String? downloadUrlFor(JobArtifact artifact) =>
+      downloadUriFor(artifact)?.toString();
 
-  bool isSavingArtifact(String artifactId) => _savingArtifactIds.contains(artifactId);
+  bool isSavingArtifact(String artifactId) =>
+      _savingArtifactIds.contains(artifactId);
 
   String? savedPathFor(String artifactId) {
     return _savedFilesRepository.findByArtifactId(artifactId)?.localPath;
@@ -255,7 +259,9 @@ class PresentationController extends ChangeNotifier {
   Future<void> saveArtifact(JobArtifact artifact) async {
     final currentJob = _job;
     final uri = downloadUriFor(artifact);
-    if (currentJob == null || uri == null || _savingArtifactIds.contains(artifact.artifactId)) {
+    if (currentJob == null ||
+        uri == null ||
+        _savingArtifactIds.contains(artifact.artifactId)) {
       return;
     }
 
@@ -317,7 +323,7 @@ class PresentationController extends ChangeNotifier {
       _job = refreshed;
       _historyRepository.upsertPresentationJob(
         jobId: refreshed.jobId,
-        title: _title.trim().isEmpty ? 'Без названия' : _title.trim(),
+        title: _title.trim().isEmpty ? 'Untitled' : _title.trim(),
         designId: _selectedDesignId,
         status: refreshed.status,
         updatedAtRaw: refreshed.updatedAt,

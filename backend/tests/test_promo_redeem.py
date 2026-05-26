@@ -56,7 +56,7 @@ class PromoRedeemRepositoryTests(unittest.TestCase):
                 code='promo5678',
             )
 
-        self.assertIn('уже активирован', str(ctx.exception))
+        self.assertIn('already been activated', str(ctx.exception))
 
     def test_promo_becomes_inactive_after_limit(self) -> None:
         admin_repo.create_promo_code('promo9999', 3, 1)
@@ -71,7 +71,7 @@ class PromoRedeemRepositoryTests(unittest.TestCase):
                 code='promo9999',
             )
 
-        self.assertIn('исчерпан', str(ctx.exception))
+        self.assertIn('no uses left', str(ctx.exception))
 
 
 if __name__ == '__main__':

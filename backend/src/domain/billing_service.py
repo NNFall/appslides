@@ -191,7 +191,7 @@ class BillingService:
                         amount_rub=plan.price_rub,
                         status=payment.status or 'unknown',
                         payment_id=payment.payment_id,
-                        reason=f'Платеж не прошел, status={payment.status or "unknown"}',
+                        reason=f'Payment did not succeed, status={payment.status or "unknown"}',
                     )
                 summary = await self.get_summary(client_id)
                 return BillingPaymentResult(
@@ -509,7 +509,7 @@ class BillingService:
                     amount_rub=plan.price_rub,
                     status='error',
                     payment_id='-',
-                    reason='payment_method_id отсутствует',
+                    reason='payment_method_id is missing',
                     expires_subscription=True,
                 )
                 processed += 1
@@ -590,7 +590,7 @@ class BillingService:
                     amount_rub=plan.price_rub,
                     status=remote.status,
                     payment_id=remote.payment_id,
-                    reason=f'Платеж не прошел, status={remote.status}',
+                    reason=f'Payment did not succeed, status={remote.status}',
                     next_try=next_try,
                 )
             else:
@@ -603,7 +603,7 @@ class BillingService:
                     amount_rub=plan.price_rub,
                     status=remote.status or 'unknown',
                     payment_id=remote.payment_id,
-                    reason=f'Платеж не прошел, status={remote.status or "unknown"}',
+                    reason=f'Payment did not succeed, status={remote.status or "unknown"}',
                     next_try=next_try,
                 )
             processed += 1

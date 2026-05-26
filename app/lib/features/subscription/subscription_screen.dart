@@ -13,20 +13,20 @@ class SubscriptionScreen extends StatelessWidget {
         const SectionCard(
           title: 'Billing',
           subtitle:
-              'Для mobile-версии здесь должен появиться store billing слой, а не прямой перенос Telegram Stars/YooKassa.',
+              'The mobile version uses native store billing for subscriptions.',
         ),
         const SizedBox(height: 16),
         SectionCard(
-          title: 'Что важно не сломать',
+          title: 'What must not break',
           subtitle:
-              'Entitlements, restore purchases, проверку receipt/purchase token и синхронизацию лимитов с backend.',
+              'Entitlements, purchase restoration, receipt/purchase token verification and limit sync with the backend.',
           child: Wrap(
             spacing: 12,
             runSpacing: 12,
             children: [
               FilledButton(
                 onPressed: () {},
-                child: const Text('Открыть тарифы'),
+                child: const Text('Open plans'),
               ),
               OutlinedButton(
                 onPressed: () {},

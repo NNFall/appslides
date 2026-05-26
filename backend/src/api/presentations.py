@@ -108,7 +108,7 @@ async def render_presentation(
     if not await billing_service.can_start_generation(client_id):
         raise HTTPException(
             status_code=status.HTTP_402_PAYMENT_REQUIRED,
-            detail='Лимит генераций исчерпан. Оформите подписку через YooKassa.',
+            detail='Generation limit reached. Subscribe in the app to continue.',
         )
 
     try:
@@ -133,7 +133,7 @@ async def render_presentation(
         ) from exc
 
     if not await billing_service.consume_generation(client_id):
-        error_text = 'Не удалось списать генерацию после успешного рендера.'
+        error_text = 'Could not consume one generation after a successful render.'
         await notifier.notify_generation_failed(client_id, error_text)
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -172,7 +172,7 @@ async def create_presentation_job(
     if not await billing_service.can_start_generation(client_id):
         raise HTTPException(
             status_code=status.HTTP_402_PAYMENT_REQUIRED,
-            detail='Лимит генераций исчерпан. Оформите подписку через YooKassa.',
+            detail='Generation limit reached. Subscribe in the app to continue.',
         )
 
     job = create_job(
@@ -247,7 +247,7 @@ async def _run_presentation_job(
         return
 
     if not await billing_service.consume_generation(client_id):
-        error_text = 'Не удалось списать генерацию после успешного рендера.'
+        error_text = 'Could not consume one generation after a successful render.'
         mark_job_failed(job_id, error_text)
         await notifier.notify_generation_failed(client_id, error_text)
         return

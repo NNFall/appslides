@@ -55,7 +55,7 @@ class YooKassaGateway:
         self._receipt_phone = receipt_phone.strip()
         self._tax_system_code = tax_system_code
         self._vat_code = vat_code
-        self._item_name = item_name.strip() or 'Подписка на генерации AppSlides'
+        self._item_name = item_name.strip() or 'AppSlides generation subscription'
         self._payment_subject = payment_subject or 'service'
         self._payment_mode = payment_mode or 'full_prepayment'
 
@@ -78,7 +78,7 @@ class YooKassaGateway:
                 'return_url': return_url or self._return_url or 'https://yookassa.ru',
             },
             'capture': True,
-            'description': f'Подписка {plan.title}',
+            'description': f'Subscription {plan.title}',
             'metadata': {'client_id': client_id, 'plan_key': plan.key},
         }
         receipt = self._build_receipt(plan.price_rub, f'{self._item_name}: {plan.title}')
@@ -99,7 +99,7 @@ class YooKassaGateway:
         payload: dict[str, Any] = {
             'amount': {'value': f'{plan.price_rub:.2f}', 'currency': 'RUB'},
             'capture': True,
-            'description': f'Подписка {plan.title} - продление',
+            'description': f'Subscription {plan.title} - renewal',
             'metadata': {
                 'client_id': client_id,
                 'plan_key': plan.key,
@@ -129,19 +129,19 @@ class YooKassaGateway:
             description = self._extract_api_error_description(exc)
             if 'recurring payments' in description.lower():
                 raise YooKassaGatewayError(
-                    user_message='Автосписания YooKassa для этого магазина пока не включены. Попробуйте позже или выберите разовый тариф.',
+                    user_message='Recurring payments are not enabled for this store yet. Try again later or choose a one-time plan.',
                     reason=description,
                     code='recurring_not_enabled',
                 ) from exc
             raise YooKassaGatewayError(
-                user_message='YooKassa отклонила платеж. Проверьте настройки магазина и повторите попытку позже.',
+                user_message='The payment provider rejected the payment. Check store settings and try again later.',
                 reason=description,
                 code='forbidden',
             ) from exc
         except ApiError as exc:
             description = self._extract_api_error_description(exc)
             raise YooKassaGatewayError(
-                user_message='Не удалось создать платеж YooKassa. Повторите попытку позже.',
+                user_message='Could not create the payment. Please try again later.',
                 reason=description,
                 code='api_error',
             ) from exc

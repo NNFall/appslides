@@ -171,7 +171,8 @@ class GooglePlayBillingService {
     for (final completer in _pendingPurchases.values) {
       if (!completer.isCompleted) {
         completer.completeError(
-          const GooglePlayBillingException('Google Play purchase was canceled.'),
+          const GooglePlayBillingException(
+              'Google Play purchase was canceled.'),
         );
       }
     }

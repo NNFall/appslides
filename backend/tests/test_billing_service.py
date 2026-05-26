@@ -35,14 +35,14 @@ class RecurringUnsupportedGateway:
 
     def create_redirect_payment(self, **kwargs):
         raise YooKassaGatewayError(
-            user_message='Автосписания YooKassa для этого магазина пока не включены. Попробуйте позже или выберите разовый тариф.',
+            user_message='Recurring payments are not enabled for this store yet. Try again later or choose a one-time plan.',
             reason="This store can't make recurring payments. Contact the YooMoney manager to learn more",
             code='recurring_not_enabled',
         )
 
     def create_recurring_payment(self, **kwargs):
         raise YooKassaGatewayError(
-            user_message='Автосписания YooKassa для этого магазина пока не включены. Попробуйте позже или выберите разовый тариф.',
+            user_message='Recurring payments are not enabled for this store yet. Try again later or choose a one-time plan.',
             reason="This store can't make recurring payments. Contact the YooMoney manager to learn more",
             code='recurring_not_enabled',
         )
@@ -84,7 +84,7 @@ class BillingServiceErrorHandlingTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(
             str(ctx.exception),
-            'Автосписания YooKassa для этого магазина пока не включены. Попробуйте позже или выберите разовый тариф.',
+            'Recurring payments are not enabled for this store yet. Try again later or choose a one-time plan.',
         )
         self.assertEqual(billing_repo.list_open_payments('appslides_test_client'), [])
 

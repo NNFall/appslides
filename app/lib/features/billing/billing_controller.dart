@@ -15,7 +15,9 @@ class BillingController extends ChangeNotifier {
     GooglePlayBillingService? googlePlayBilling,
   })  : _repository = repository,
         _googlePlayBilling = googlePlayBilling ??
-            (AppConfig.useGooglePlayBilling ? GooglePlayBillingService() : null);
+            (AppConfig.useGooglePlayBilling
+                ? GooglePlayBillingService()
+                : null);
 
   static const Duration _paymentPollInterval = Duration(seconds: 20);
   static const Duration _paymentPollTimeout = Duration(minutes: 30);
@@ -181,7 +183,8 @@ class BillingController extends ChangeNotifier {
     _paymentPollingTimedOut = false;
     _pollTimer = Timer.periodic(_paymentPollInterval, (_) async {
       if (_pollingStartedAt == null ||
-          DateTime.now().difference(_pollingStartedAt!) >= _paymentPollTimeout) {
+          DateTime.now().difference(_pollingStartedAt!) >=
+              _paymentPollTimeout) {
         _paymentPollingTimedOut = true;
         _stopPolling(resetTimeout: false);
         notifyListeners();

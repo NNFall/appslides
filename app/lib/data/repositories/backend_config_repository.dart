@@ -32,7 +32,7 @@ class BackendConfigRepository extends ChangeNotifier {
     final normalized = normalize(value);
     if (normalized == null || normalized != AppConfig.defaultBackendBaseUrl) {
       throw UnsupportedError(
-        'Backend endpoint зафиксирован на сервере AppSlides и не меняется из приложения.',
+        'The backend endpoint is fixed to the AppSlides server and cannot be changed in the app.',
       );
     }
   }
@@ -53,8 +53,7 @@ class BackendConfigRepository extends ChangeNotifier {
       return null;
     }
 
-    final buffer = StringBuffer()
-      ..write('${parsed.scheme}://${parsed.host}');
+    final buffer = StringBuffer()..write('${parsed.scheme}://${parsed.host}');
     if (parsed.hasPort) {
       buffer.write(':${parsed.port}');
     }

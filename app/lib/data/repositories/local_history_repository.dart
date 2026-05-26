@@ -11,6 +11,7 @@ import '../../domain/models/remote_job.dart';
 class LocalHistoryRepository extends ChangeNotifier {
   static const String _storageKey = 'appslides.history.entries.v1';
   static const int _maxEntries = 100;
+  static final RegExp _cyrillicPattern = RegExp(r'[\u0400-\u04FF]');
 
   final SharedPreferencesAsync _storage = SharedPreferencesAsync();
   final List<HistoryEntry> _entries = <HistoryEntry>[];
@@ -36,13 +37,19 @@ class LocalHistoryRepository extends ChangeNotifier {
       } else {
         final decoded = jsonDecode(raw);
         if (decoded is List) {
-          _entries
-            ..clear()
-            ..addAll(
-              decoded
-                  .whereType<Map>()
-                  .map((item) => HistoryEntry.fromJson(item.cast<String, dynamic>())),
-            );
+          final restored = decoded
+              .whereType<Map>()
+              .map(
+                  (item) => HistoryEntry.fromJson(item.cast<String, dynamic>()))
+              .toList(growable: false);
+          if (_containsCyrillicHistory(restored)) {
+            _entries.clear();
+            unawaited(_storage.remove(_storageKey));
+          } else {
+            _entries
+              ..clear()
+              ..addAll(restored);
+          }
         }
       }
     } catch (_) {
@@ -75,7 +82,7 @@ class LocalHistoryRepository extends ChangeNotifier {
         status: HistoryEntryStatus.info,
         title: title,
         subtitle: topic,
-        details: 'Слайдов: $slidesTotal, пунктов плана: $outlineItems',
+        details: 'Slides: $slidesTotal, outline items: $outlineItems',
         createdAt: now,
         updatedAt: now,
       ),
@@ -96,7 +103,8 @@ class LocalHistoryRepository extends ChangeNotifier {
     List<String> links = const <String>[],
   }) {
     final now = DateTime.now();
-    final index = _entries.indexWhere((entry) => entry.id == 'presentation-$jobId');
+    final index =
+        _entries.indexWhere((entry) => entry.id == 'presentation-$jobId');
     final existingLinks = index >= 0 ? _entries[index].links : const <String>[];
     final entry = HistoryEntry(
       id: 'presentation-$jobId',
@@ -137,7 +145,8 @@ class LocalHistoryRepository extends ChangeNotifier {
     List<String> links = const <String>[],
   }) {
     final now = DateTime.now();
-    final index = _entries.indexWhere((entry) => entry.id == 'conversion-$jobId');
+    final index =
+        _entries.indexWhere((entry) => entry.id == 'conversion-$jobId');
     final existingLinks = index >= 0 ? _entries[index].links : const <String>[];
     final entry = HistoryEntry(
       id: 'conversion-$jobId',
@@ -285,15 +294,16 @@ class LocalHistoryRepository extends ChangeNotifier {
   }) {
     final buffer = StringBuffer();
     if (designId != null) {
-      buffer.write('Дизайн: $designId. ');
+      buffer.write('Design: $designId. ');
     }
-    buffer.write('Статус: ${status.name}. ');
+    buffer.write('Status: ${status.name}. ');
     buffer.write('Backend updated_at: $updatedAtRaw.');
     if (artifacts.isNotEmpty) {
-      buffer.write(' Файлы: ${artifacts.map((item) => item.filename).join(', ')}.');
+      buffer.write(
+          ' Files: ${artifacts.map((item) => item.filename).join(', ')}.');
     }
     if (error != null && error.isNotEmpty) {
-      buffer.write(' Ошибка: $error');
+      buffer.write(' Error: $error');
     }
     return buffer.toString();
   }
@@ -307,15 +317,30 @@ class LocalHistoryRepository extends ChangeNotifier {
     required JobArtifact? artifact,
   }) {
     final buffer = StringBuffer();
-    buffer.write('${sourceFormat.toUpperCase()} -> ${targetFormat.toUpperCase()}. ');
-    buffer.write('Статус: ${status.name}. ');
+    buffer.write(
+        '${sourceFormat.toUpperCase()} -> ${targetFormat.toUpperCase()}. ');
+    buffer.write('Status: ${status.name}. ');
     buffer.write('Backend updated_at: $updatedAtRaw.');
     if (artifact != null) {
-      buffer.write(' Результат: ${artifact.filename}.');
+      buffer.write(' Result: ${artifact.filename}.');
     }
     if (error != null && error.isNotEmpty) {
-      buffer.write(' Ошибка: $error');
+      buffer.write(' Error: $error');
     }
     return buffer.toString();
+  }
+
+  static bool _containsCyrillicHistory(List<HistoryEntry> entries) {
+    return entries.any(
+      (entry) =>
+          _containsCyrillicText(entry.title) ||
+          _containsCyrillicText(entry.subtitle) ||
+          _containsCyrillicText(entry.details) ||
+          entry.links.any(_containsCyrillicText),
+    );
+  }
+
+  static bool _containsCyrillicText(String value) {
+    return _cyrillicPattern.hasMatch(value);
   }
 }

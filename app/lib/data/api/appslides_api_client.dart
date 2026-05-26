@@ -15,7 +15,7 @@ import '../repositories/client_session_repository.dart';
 
 class AppSlidesApiClient {
   static const String networkErrorMessage =
-      'Похоже, пропало соединение с интернетом или сервером. Попробуйте ещё раз.';
+      'It looks like the internet or server connection was lost. Please try again.';
 
   AppSlidesApiClient({
     http.Client? client,
@@ -36,10 +36,12 @@ class AppSlidesApiClient {
 
   Future<List<PresentationTemplate>> fetchTemplates() async {
     final payload = await _getJsonMap(AppConfig.templatesPath);
-    final rawTemplates = payload['templates'] as List<dynamic>? ?? const <dynamic>[];
+    final rawTemplates =
+        payload['templates'] as List<dynamic>? ?? const <dynamic>[];
     return rawTemplates
         .whereType<Map>()
-        .map((item) => PresentationTemplate.fromJson(item.cast<String, dynamic>()))
+        .map((item) =>
+            PresentationTemplate.fromJson(item.cast<String, dynamic>()))
         .toList();
   }
 

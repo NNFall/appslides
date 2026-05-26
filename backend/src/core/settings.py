@@ -193,7 +193,7 @@ def load_settings() -> Settings:
         yookassa_receipt_phone=os.getenv('YOOKASSA_RECEIPT_PHONE', '').strip(),
         yookassa_tax_system_code=int(os.getenv('YOOKASSA_TAX_SYSTEM_CODE', '1') or 1),
         yookassa_vat_code=int(os.getenv('YOOKASSA_VAT_CODE', '1') or 1),
-        yookassa_item_name=os.getenv('YOOKASSA_ITEM_NAME', 'Подписка на генерации AppSlides'),
+        yookassa_item_name=os.getenv('YOOKASSA_ITEM_NAME', 'AppSlides generation subscription'),
         yookassa_payment_subject=os.getenv('YOOKASSA_PAYMENT_SUBJECT', 'service') or 'service',
         yookassa_payment_mode=os.getenv('YOOKASSA_PAYMENT_MODE', 'full_prepayment') or 'full_prepayment',
         yookassa_test_mode=os.getenv('YOOKASSA_TEST_MODE', '1') == '1',

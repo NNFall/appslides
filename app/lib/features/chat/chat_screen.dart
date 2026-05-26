@@ -210,7 +210,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                           mode: _composerMode,
                           onMenuPressed: () => unawaited(_runAction(
                             _ChatAction(
-                              label: '🏠 Главное меню',
+                              label: '🏠 Main menu',
                               onTap: _showMainMenu,
                               showAsUserMessage: true,
                               actionKey: 'show_main_menu',
@@ -271,13 +271,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
     _didSeedConversation = true;
     _appendBotMessage(
-      '🎬 AI Презентации\n'
-      'Создавай презентации и конвертируй файлы за пару минут.\n\n'
-      '🚀 Генерация по теме и пожеланиям\n'
-      '🎨 4 дизайна на выбор\n'
-      '🖼 Иллюстрации и PDF-рендер\n'
-      '🧰 Конвертация PDF/DOCX/PPTX\n\n'
-      'Выбери раздел ниже 👇',
+      '🎬 AI Presentations\n'
+      'Create presentations and convert files in minutes.\n\n'
+      '🚀 Generate by topic and requirements\n'
+      '🎨 4 designs to choose from\n'
+      '🖼 Illustrations and PDF rendering\n'
+      '🧰 PDF/DOCX/PPTX conversion\n\n'
+      'Choose a section below 👇',
       keyboard: _mainMenuKeyboard(),
     );
   }
@@ -349,7 +349,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         uri.path == '/return';
   }
 
-
   Future<void> _handleBillingReturn() async {
     final billingController = _billingController;
     if (billingController == null) {
@@ -376,12 +375,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
     if (summary.remainingGenerations > 0) {
       _appendBotMessage(
-        '✅ **Возврат из YooKassa выполнен**\nСтатус подписки обновлён.',
+        '✅ **Payment return completed**\nSubscription status has been updated.',
         keyboard: _mainMenuOnlyKeyboard(),
       );
     }
   }
-
 
   Future<void> _submitComposer() async {
     final raw = _composerController.text.trim();
@@ -447,7 +445,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       case '/promo':
         if (parts.length < 2) {
           _appendBotMessage(
-            'Использование: `/promo КОД`',
+            'Usage: `/promo CODE`',
             keyboard: _mainMenuOnlyKeyboard(),
           );
           return;
@@ -456,8 +454,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         return;
       default:
         _appendBotMessage(
-          'Я не знаю команду `$command`.\n'
-          'Попробуй `/start`, `/help`, `/balance`, `/settings`, `/files` или просто отправь тему презентации.',
+          'I do not know the command `$command`.\n'
+          'Try `/start`, `/help`, `/balance`, `/settings`, `/files`, or just send a presentation topic.',
           keyboard: _mainMenuKeyboard(),
         );
         return;
@@ -469,24 +467,23 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final code = rawCode.trim();
     if (code.isEmpty) {
       _appendBotMessage(
-        '❌ Промокод пустой.',
+        '❌ Promo code is empty.',
         keyboard: _mainMenuOnlyKeyboard(),
       );
       return;
     }
 
-    final progressId = _appendBotMessage('_Активирую промокод..._');
+    final progressId = _appendBotMessage('_Activating promo code..._');
     try {
       final result = await repository.redeemPromoCode(code);
       _removeMessageById(progressId);
       await _handlePromoRedeemSuccess(result);
     } catch (error) {
       _removeMessageById(progressId);
-      final message = error is AppSlidesApiException
-          ? error.message
-          : error.toString();
+      final message =
+          error is AppSlidesApiException ? error.message : error.toString();
       _appendBotMessage(
-        '❌ Не удалось активировать промокод.\n$message',
+        '❌ Could not activate the promo code.\n$message',
         keyboard: _mainMenuOnlyKeyboard(),
       );
     }
@@ -499,10 +496,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
 
     _appendBotMessage(
-      '✅ **Промокод активирован**\n'
-      'Код: `${result.code}`\n'
-      'Начислено генераций: **${result.tokensAdded}**\n'
-      'Текущий баланс: **${result.summary.remainingGenerations}**',
+      '✅ **Promo code activated**\n'
+      'Code: `${result.code}`\n'
+      'Generations added: **${result.tokensAdded}**\n'
+      'Current balance: **${result.summary.remainingGenerations}**',
       keyboard: _mainMenuOnlyKeyboard(),
     );
 
@@ -518,7 +515,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       setState(() {});
     }
     _appendBotMessage(
-      '**Главное меню** 📌',
+      '**Main menu** 📌',
       keyboard: _mainMenuKeyboard(),
     );
   }
@@ -528,20 +525,20 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final supportMax = _currentMaxSupportMarkdownLink();
     final clientId = _currentClientId();
     _appendBotMessage(
-      '**❓ Помощь**\n'
-      '1. Нажми **«Создать презентацию»** или просто отправь тему.\n'
-      '2. Выбери число слайдов.\n'
-      '3. Утверди план и дизайн.\n'
-      '4. Получи **PPTX** и **PDF**.\n\n'
-      'Для конвертации используй отдельные кнопки **PDF / DOCX / PPTX**.\n\n'
-      'Команда `/files` показывает локально сохранённые файлы.\n\n'
-      '**ID пользователя:** `$clientId`\n\n'
-      'Поддержка в Телеграм: $supportTelegram\n'
-      'Поддержка в Макс: $supportMax',
+      '**❓ Help**\n'
+      '1. Tap **Create presentation** or just send a topic.\n'
+      '2. Choose the number of slides.\n'
+      '3. Confirm the outline and design.\n'
+      '4. Get **PPTX** and **PDF** files.\n\n'
+      'Use the separate **PDF / DOCX / PPTX** buttons for conversion.\n\n'
+      'The `/files` command shows locally saved files.\n\n'
+      '**User ID:** `$clientId`\n\n'
+      'Telegram support: $supportTelegram\n'
+      'Max support: $supportMax',
       keyboard: [
         [
           _action(
-            '🏠 Главное меню',
+            '🏠 Main menu',
             _showMainMenu,
             actionKey: 'show_main_menu',
             echoAsUser: false,
@@ -562,19 +559,19 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (summary == null) {
       final message = controller.error?.trim().isNotEmpty == true
           ? controller.error!.trim()
-          : 'Не удалось загрузить данные по подписке.';
+          : 'Could not load subscription data.';
       _appendBotMessage(
         '❌ $message',
         keyboard: [
           [
             _action(
-              '🔄 Повторить',
+              '🔄 Retry',
               _showBalance,
               actionKey: 'show_balance',
               echoAsUser: false,
             ),
             _action(
-              '🏠 Главное меню',
+              '🏠 Main menu',
               _showMainMenu,
               actionKey: 'show_main_menu',
               echoAsUser: false,
@@ -595,19 +592,18 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final currentUrl =
         _backendConfigRepository?.baseUrl ?? AppConfig.defaultBackendBaseUrl;
     _appendBotMessage(
-      '⚙️ Настройки\n'
-      'Приложение всегда подключается к удалённому backend AppSlides.\n'
-      'Локальная смена URL отключена.\n\n'
-      'Текущий сервер:\n'
+      '⚙️ Settings\n'
+      'The app always connects to the remote AppSlides backend.\n'
+      'Changing the backend URL locally is disabled.\n\n'
+      'Current server:\n'
       '$currentUrl',
       keyboard: [
         [
-          _action('🔌 Проверить', _testConnection,
-              actionKey: 'test_connection'),
+          _action('🔌 Check', _testConnection, actionKey: 'test_connection'),
         ],
         [
           _action(
-            '🏠 Главное меню',
+            '🏠 Main menu',
             _showMainMenu,
             actionKey: 'show_main_menu',
             echoAsUser: false,
@@ -626,19 +622,20 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
     final recentEntries = history.entries.take(6).toList();
     final recentFiles = savedFiles.entries.take(4).toList();
-    final buffer = StringBuffer('🗂 История\n');
+    final buffer = StringBuffer('🗂 History\n');
 
     if (recentEntries.isEmpty) {
-      buffer.writeln('Пока пусто. Сгенерируй outline или запусти конвертацию.');
+      buffer.writeln(
+          'Nothing here yet. Generate an outline or start a conversion.');
     } else {
-      buffer.writeln('Последние события:');
+      buffer.writeln('Recent events:');
       for (final entry in recentEntries) {
         buffer.writeln('• ${entry.title} — ${entry.status.name}');
       }
     }
 
     if (recentFiles.isNotEmpty) {
-      buffer.writeln('\nЛокально сохраненные файлы:');
+      buffer.writeln('\nLocally saved files:');
       for (final file in recentFiles) {
         buffer.writeln('• ${file.filename} — ${file.kind.toUpperCase()}');
       }
@@ -650,10 +647,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           recentFiles.map(_buildSavedFileAttachment).toList(growable: false),
       keyboard: [
         [
-          _action('📁 Файлы', () async => _showFiles(),
+          _action('📁 Files', () async => _showFiles(),
               actionKey: 'show_files'),
           _action(
-            '🏠 Главное меню',
+            '🏠 Main menu',
             _showMainMenu,
             actionKey: 'show_main_menu',
             echoAsUser: false,
@@ -672,12 +669,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final recentFiles = savedFiles.entries.take(6).toList(growable: false);
     if (recentFiles.isEmpty) {
       _appendBotMessage(
-        '📁 Локальных файлов пока нет.\n'
-        'Сохрани результат генерации или конвертации, и он появится здесь.',
+        '📁 No local files yet.\n'
+        'Save a generated or converted result and it will appear here.',
         keyboard: [
           [
             _action(
-              '🏠 Главное меню',
+              '🏠 Main menu',
               _showMainMenu,
               actionKey: 'show_main_menu',
               echoAsUser: false,
@@ -689,16 +686,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
 
     _appendBotMessage(
-      '📁 Локальные файлы\n'
-      'Ниже последние сохранённые результаты. Их можно открыть или удалить прямо из чата.',
+      '📁 Local files\n'
+      'The latest saved results are below. You can open or delete them directly from the chat.',
       attachments:
           recentFiles.map(_buildSavedFileAttachment).toList(growable: false),
       keyboard: [
         [
-          _action('🗂 История', () async => _showHistory(),
+          _action('🗂 History', () async => _showHistory(),
               actionKey: 'show_history'),
           _action(
-            '🏠 Главное меню',
+            '🏠 Main menu',
             _showMainMenu,
             actionKey: 'show_main_menu',
             echoAsUser: false,
@@ -709,17 +706,17 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _testConnection() async {
-    _appendBotMessage('Проверяю backend...');
+    _appendBotMessage('Checking backend...');
     try {
       final healthy = await AppScope.repositoryOf(context).healthcheck();
       _appendBotMessage(
         healthy
-            ? '✅ Backend ответил: `/v1/health -> ok`'
-            : '⚠️ Backend ответил, но статус не ok.',
+            ? '✅ Backend replied: `/v1/health -> ok`'
+            : '⚠️ Backend replied, but status is not ok.',
         keyboard: [
           [
             _action(
-              '🏠 Главное меню',
+              '🏠 Main menu',
               _showMainMenu,
               actionKey: 'show_main_menu',
               echoAsUser: false,
@@ -729,17 +726,17 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       );
     } catch (error) {
       _appendBotMessage(
-        '❌ Не удалось достучаться до backend.\n$error',
+        '❌ Could not reach the backend.\n$error',
         keyboard: [
           [
             _action(
-              '🔄 Повторить',
+              '🔄 Retry',
               _testConnection,
               actionKey: 'test_connection',
               echoAsUser: false,
             ),
             _action(
-              '🏠 Главное меню',
+              '🏠 Main menu',
               _showMainMenu,
               actionKey: 'show_main_menu',
               echoAsUser: false,
@@ -756,7 +753,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       setState(() {});
     }
     _appendBotMessage(
-      '✍️ Напиши тему презентации и пожелания.\nНапример: «Удивительные факты о космосе для школьников».',
+      '✍️ Send the presentation topic and any requirements.\nExample: “Amazing facts about space for school students”.',
     );
   }
 
@@ -784,7 +781,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
 
     _appendBotMessage(
-      'Отлично. Сколько сделать слайдов?',
+      'Great. How many slides should I make?',
       keyboard: [
         [
           _slideAction(4),
@@ -797,7 +794,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         ],
         [
           _action(
-            '↩ Отмена',
+            '↩ Cancel',
             _showMainMenu,
             actionKey: 'show_main_menu',
             echoAsUser: false,
@@ -821,7 +818,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
     _clearOutlineProgressMessage();
     _outlineProgressMessageId =
-        _appendBotMessage('_Генерирую план презентации..._');
+        _appendBotMessage('_Generating the presentation outline..._');
     await controller.generateOutline();
   }
 
@@ -852,7 +849,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
 
     _outlineProgressMessageId =
-        _appendBotMessage('_Пробую получить план ещё раз..._');
+        _appendBotMessage('_Trying to generate the outline again..._');
     await controller.generateOutline();
   }
 
@@ -869,7 +866,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _lastPresentationStatusKey = null;
     _lastPresentationResultKey = null;
     _renderPreparationMessageId =
-        _appendBotMessage('_Пробую продолжить генерацию презентации..._');
+        _appendBotMessage('_Trying to continue presentation generation..._');
     await _startRender(generatePdf: generatePdf);
   }
 
@@ -880,7 +877,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
 
     _lastPresentationError = null;
-    _appendBotMessage('_Проверяю статус генерации ещё раз..._');
+    _appendBotMessage('_Checking generation status again..._');
     await controller.retryJobRefresh();
   }
 
@@ -903,7 +900,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
 
     _lastConverterError = null;
-    _appendBotMessage('_Проверяю статус конвертации ещё раз..._');
+    _appendBotMessage('_Checking conversion status again..._');
     await controller.retryJobRefresh();
   }
 
@@ -912,7 +909,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (parsed == null ||
         !_presentationController!.slideOptions.contains(parsed)) {
       _appendBotMessage(
-        'Пожалуйста, отправь число от 4 до 10 или нажми кнопку с количеством слайдов.',
+        'Please send a number from 4 to 10 or tap a slide-count button.',
       );
       return;
     }
@@ -931,7 +928,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
     if (templates.isEmpty) {
       _appendBotMessage(
-        'Шаблоны пока не загрузились. Попробую обновить каталог ещё раз...',
+        'Templates are not loaded yet. I will refresh the catalog again...',
       );
       unawaited(controller.refreshTemplates());
       return;
@@ -942,7 +939,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       templatePreviewTemplates: templates,
     );
     _appendBotMessage(
-      'Выбери дизайн оформления 🎨',
+      'Choose a design template 🎨',
       keyboard: _buildTemplateKeyboard(templates),
     );
   }
@@ -953,8 +950,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       setState(() {});
     }
     _appendBotMessage(
-      '✍️ Напиши, что изменить в плане.\n'
-      'Например: «сделай акцент на практических выводах и сократи вводную часть».',
+      '✍️ Send what should be changed in the outline.\n'
+      'Example: “focus on practical conclusions and shorten the introduction”.',
     );
   }
 
@@ -971,7 +968,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
     _clearOutlineProgressMessage();
     _outlineProgressMessageId =
-        _appendBotMessage('_Обновляю план по твоему комментарию..._');
+        _appendBotMessage('_Updating the outline from your comment..._');
     await controller.reviseOutline(comment);
   }
 
@@ -987,8 +984,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       final summary = billingController.summary;
       if (summary == null) {
         _appendBotMessage(
-          '❌ Не удалось проверить баланс генераций.\n'
-          '${billingController.error ?? 'Открой /balance и попробуй снова.'}',
+          '❌ Could not check the generation balance.\n'
+          '${billingController.error ?? 'Open /balance and try again.'}',
         );
         return;
       }
@@ -1001,7 +998,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
     controller.selectDesign(template.id);
     _clearRenderProgressMessages();
-    _renderPreparationMessageId = _appendBotMessage('_Пишу тексты..._');
+    _renderPreparationMessageId = _appendBotMessage('_Writing slide text..._');
     unawaited(_startRender(generatePdf: true));
   }
 
@@ -1038,15 +1035,15 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final selectedFile = controller.selectedFile;
     if (selectedFile == null) {
       _appendBotMessage(
-        'Файл не выбран. Нажми `$label` ещё раз, когда будешь готов.',
+        'No file selected. Tap `$label` again when you are ready.',
       );
       return;
     }
 
     controller.setTargetFormat(targetExtension);
     _appendBotMessage(
-      '📎 Принял файл `${selectedFile.name}`.\n'
-      'Запускаю конвертацию ${sourceExtension.toUpperCase()} → ${targetExtension.toUpperCase()}...',
+      '📎 File received: `${selectedFile.name}`.\n'
+      'Starting ${sourceExtension.toUpperCase()} → ${targetExtension.toUpperCase()} conversion...',
     );
     await controller.startConversionJob();
   }
@@ -1061,15 +1058,15 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         normalized.contains('timed out') ||
         normalized.contains('timeout') ||
         normalized.contains('connection closed')) {
-      return 'Похоже, приложение потеряло соединение с интернетом или сервером.\nПопробуй ещё раз, когда связь стабилизируется.';
+      return 'It looks like the app lost connection to the internet or server.\nTry again when the connection is stable.';
     }
-    return 'Не удалось получить план презентации.\nПопробуй ещё раз.';
+    return 'Could not generate the presentation outline.\nPlease try again.';
   }
 
   bool _isNetworkErrorMessage(String rawError) {
     final normalized = rawError.toLowerCase();
-    return normalized.contains('пропало соединение') ||
-        normalized.contains('соединение с интернетом') ||
+    return normalized.contains('connection lost') ||
+        normalized.contains('internet connection') ||
         normalized.contains('clientexception') ||
         normalized.contains('connection abort') ||
         normalized.contains('software caused connection abort') ||
@@ -1105,7 +1102,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           keyboard: [
             [
               _action(
-                '🔁 Перегенерировать',
+                '🔁 Regenerate',
                 () => _retryOutlineRequest(
                   topic: controller.topic,
                   slidesTotal: controller.slidesTotal,
@@ -1126,14 +1123,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           _renderPreparationMessageId != null &&
           _isNetworkErrorMessage(error)) {
         _appendBotMessage(
-          '⚠️ Не удалось продолжить создание из-за проблем со связью. Попробуй ещё раз.',
+          '⚠️ Could not continue generation because of a connection problem. Try again.',
           keyboard: [
             [
               _action(
-                '🔁 Перегенерировать',
+                '🔁 Regenerate',
                 () => _retryRenderRequest(generatePdf: controller.generatePdf),
                 actionKey: 'retry_render_request',
-                payload: <String, dynamic>{'generate_pdf': controller.generatePdf},
+                payload: <String, dynamic>{
+                  'generate_pdf': controller.generatePdf
+                },
                 echoAsUser: false,
               ),
             ],
@@ -1142,11 +1141,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         );
       } else if (controller.job != null && _isNetworkErrorMessage(error)) {
         _appendBotMessage(
-          '⚠️ Не удалось проверить статус генерации из-за проблем со связью. Нажми кнопку ниже.',
+          '⚠️ Could not check generation status because of a connection problem. Tap the button below.',
           keyboard: [
             [
               _action(
-                '🔄 Проверить снова',
+                '🔄 Check again',
                 _retryPresentationJobStatus,
                 actionKey: 'retry_presentation_job_status',
                 echoAsUser: false,
@@ -1167,23 +1166,23 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         _clearOutlineProgressMessage();
         _appendBotMessage(_buildOutlineText(controller));
         _appendBotMessage(
-          'Принять или изменить?\nМожно написать комментарий к плану, и я его обновлю.',
+          'Accept or edit?\nYou can send a comment and I will update the outline.',
           keyboard: [
             [
               _action(
-                '✅ Принять план',
+                '✅ Accept outline',
                 () async => _approveOutline(),
                 actionKey: 'approve_outline',
               ),
               _action(
-                '✍️ Редактировать',
+                '✍️ Edit',
                 _requestOutlineRevision,
                 actionKey: 'request_outline_revision',
               ),
             ],
             [
               _action(
-                '↩ Отмена',
+                '↩ Cancel',
                 _showMainMenu,
                 actionKey: 'show_main_menu',
                 echoAsUser: false,
@@ -1205,12 +1204,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             _renderPreparationMessageId = null;
             if (_presentationStatusMessageId == null) {
               _presentationStatusMessageId = _appendBotMessage(
-                '⌛ Задача поставлена в очередь.\nID задачи: `${job.jobId}`',
+                '⌛ Job queued.\nJob ID: `${job.jobId}`',
               );
             } else {
               _updateMessageById(
                 _presentationStatusMessageId!,
-                text: '⌛ Задача поставлена в очередь.\nID задачи: `${job.jobId}`',
+                text: '⌛ Job queued.\nJob ID: `${job.jobId}`',
               );
             }
             break;
@@ -1219,12 +1218,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             _renderPreparationMessageId = null;
             if (_presentationStatusMessageId == null) {
               _presentationStatusMessageId = _appendBotMessage(
-                '⚙️ Генерация идёт.\nID задачи: `${job.jobId}`',
+                '⚙️ Generation is running.\nJob ID: `${job.jobId}`',
               );
             } else {
               _updateMessageById(
                 _presentationStatusMessageId!,
-                text: '⚙️ Генерация идёт.\nID задачи: `${job.jobId}`',
+                text: '⚙️ Generation is running.\nJob ID: `${job.jobId}`',
               );
             }
             break;
@@ -1232,7 +1231,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             _removeMessageById(_renderPreparationMessageId);
             _renderPreparationMessageId = null;
             _appendBotMessage(
-              '❌ Не удалось собрать презентацию.\n${job.error ?? 'Попробуй ещё раз.'}',
+              '❌ Could not build the presentation.\n${job.error ?? 'Please try again.'}',
               keyboard: _mainMenuOnlyKeyboard(),
             );
             break;
@@ -1243,18 +1242,20 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       }
 
       if (job.isSuccessful && job.artifacts.isNotEmpty) {
-        final resultKey = '${job.jobId}:${job.artifacts.map((item) => item.artifactId).join('|')}';
+        final resultKey =
+            '${job.jobId}:${job.artifacts.map((item) => item.artifactId).join('|')}';
         if (resultKey != _lastPresentationResultKey) {
           _lastPresentationResultKey = resultKey;
           _removeMessageById(_presentationStatusMessageId);
           _presentationStatusMessageId = null;
           final attachments = job.artifacts
-              .map((artifact) => _buildPresentationAttachment(job.jobId, artifact))
+              .map((artifact) =>
+                  _buildPresentationAttachment(job.jobId, artifact))
               .toList(growable: false);
           _appendBotMessage(
-            '**✅ Презентация готова**\n'
-            'Тема: **${controller.title}**\n'
-            'Файлы уже доступны ниже.',
+            '**✅ Presentation is ready**\n'
+            'Topic: **${controller.title}**\n'
+            'The files are available below.',
             attachments: attachments,
             keyboard: _mainMenuOnlyKeyboard(),
           );
@@ -1284,11 +1285,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           controller.targetFormat != null &&
           _isNetworkErrorMessage(error)) {
         _appendBotMessage(
-          '❌ Не удалось отправить файл на конвертацию из-за проблем со связью. Попробуй ещё раз.',
+          '❌ Could not upload the file for conversion because of a connection problem. Try again.',
           keyboard: [
             [
               _action(
-                '🔄 Попробовать ещё раз',
+                '🔄 Try again',
                 _retryConversionRequest,
                 actionKey: 'retry_conversion_request',
                 echoAsUser: false,
@@ -1299,11 +1300,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         );
       } else if (controller.job != null && _isNetworkErrorMessage(error)) {
         _appendBotMessage(
-          '❌ Не удалось обновить статус конвертации из-за проблем со связью. Проверь подключение и попробуй ещё раз.',
+          '❌ Could not update conversion status because of a connection problem. Check your connection and try again.',
           keyboard: [
             [
               _action(
-                '🔄 Проверить статус ещё раз',
+                '🔄 Check status again',
                 _retryConversionJobStatus,
                 actionKey: 'retry_conversion_job_status',
                 echoAsUser: false,
@@ -1324,18 +1325,18 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         _lastConverterStatusKey = statusKey;
         switch (job.status) {
           case RemoteJobStatus.queued:
-            _appendBotMessage('⌛ Файл поставлен в очередь на конвертацию.');
+            _appendBotMessage('⌛ File queued for conversion.');
             break;
           case RemoteJobStatus.running:
-            _appendBotMessage('⚙️ Конвертация идёт...');
+            _appendBotMessage('⚙️ Conversion is running...');
             break;
           case RemoteJobStatus.failed:
             _appendBotMessage(
-              '❌ Конвертация завершилась с ошибкой.\n${job.error ?? 'Попробуй ещё раз.'}',
+              '❌ Conversion failed.\n${job.error ?? 'Please try again.'}',
               keyboard: [
                 [
                   _action(
-                    '🏠 Главное меню',
+                    '🏠 Main menu',
                     _showMainMenu,
                     actionKey: 'show_main_menu',
                     echoAsUser: false,
@@ -1356,14 +1357,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         if (resultKey != _lastConverterResultKey) {
           _lastConverterResultKey = resultKey;
           _appendBotMessage(
-            '✅ Конвертация готова\nФайл доступен ниже.',
+            '✅ Conversion is ready\nThe file is available below.',
             attachments: <_ChatAttachment>[
               _buildConversionAttachment(job.jobId, artifact),
             ],
             keyboard: [
               [
                 _action(
-                  '🏠 Главное меню',
+                  '🏠 Main menu',
                   _showMainMenu,
                   actionKey: 'show_main_menu',
                   echoAsUser: false,
@@ -1393,8 +1394,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         payment.paymentId != _lastBillingTimeoutPaymentId) {
       _lastBillingTimeoutPaymentId = payment.paymentId;
       _appendBotMessage(
-        '⌛ **Оплата ещё не подтверждена**\n'
-        'Я автоматически проверял статус 30 минут каждые 20 секунд. Если ты уже оплатил, нажми **«Проверить оплату»** или открой счёт снова.',
+        '⌛ **Payment is not confirmed yet**\n'
+        'I checked the status every 20 seconds for 30 minutes. If you have already paid, tap **Check payment** or open the checkout again.',
         keyboard: _buildPendingPaymentKeyboard(payment),
       );
     }
@@ -1408,7 +1409,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           case 'waiting_for_capture':
             _clearBillingProgressMessage();
             _appendBotMessage(
-              '💳 **Счёт создан**\nОткрой YooKassa, оплати тариф и затем нажми **«Проверить оплату»**.',
+              '💳 **Checkout created**\nOpen Google Play checkout, complete the purchase, then tap **Check payment**.',
               keyboard: _buildPendingPaymentKeyboard(payment),
             );
             if (payment.confirmationUrl case final confirmationUrl?) {
@@ -1428,18 +1429,18 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             _lastBillingTimeoutPaymentId = null;
             _clearBillingProgressMessage();
             _appendBotMessage(
-              '❌ Оплата отменена.',
+              '❌ Payment canceled.',
               keyboard: [
                 [
                   _action(
-                    '✅ Выбрать подписку',
+                    '✅ Choose subscription',
                     _showPlanOptions,
                     actionKey: 'show_plan_options',
                   ),
                 ],
                 [
                   _action(
-                    '🏠 Главное меню',
+                    '🏠 Main menu',
                     _showMainMenu,
                     actionKey: 'show_main_menu',
                     echoAsUser: false,
@@ -1452,18 +1453,18 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             _lastBillingTimeoutPaymentId = null;
             _clearBillingProgressMessage();
             _appendBotMessage(
-              '❌ Платёж завершился ошибкой. Попробуй выбрать тариф ещё раз.',
+              '❌ Payment failed. Try choosing a plan again.',
               keyboard: [
                 [
                   _action(
-                    '✅ Выбрать подписку',
+                    '✅ Choose subscription',
                     _showPlanOptions,
                     actionKey: 'show_plan_options',
                   ),
                 ],
                 [
                   _action(
-                    '🏠 Главное меню',
+                    '🏠 Main menu',
                     _showMainMenu,
                     actionKey: 'show_main_menu',
                     echoAsUser: false,
@@ -1490,19 +1491,19 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
     if (active != null && active.isActive) {
       final plan = _findBillingPlan(summary, active.planKey);
-      buffer.writeln('**✅ Подписка активна**');
+      buffer.writeln('**✅ Subscription active**');
       if (plan != null) {
-        buffer.writeln('**Тариф:** ${_planTariffLine(plan)}');
+        buffer.writeln('**Plan:** ${_planTariffLine(plan)}');
       }
-      buffer.writeln('**Остаток генераций:** ${active.remaining}');
-      buffer.writeln('**Действует до:** ${_shortDate(active.endsAt)}');
+      buffer.writeln('**Generations left:** ${active.remaining}');
+      buffer.writeln('**Valid until:** ${_shortDate(active.endsAt)}');
       if (active.provider == 'google_play') {
         buffer.writeln('Subscription is managed by Google Play.');
       } else if (active.provider == 'yookassa') {
         buffer.writeln(
           active.autoRenew
-              ? 'Автопродление через YooKassa включено.'
-              : 'Автопродление через YooKassa отключено.',
+              ? 'Auto-renewal through Google Play is enabled.'
+              : 'Auto-renewal through Google Play is disabled.',
         );
       }
       return buffer.toString().trim();
@@ -1510,18 +1511,19 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
     final remaining = latest?.remaining ?? 0;
     if (latest != null && latest.isCanceled) {
-      buffer.writeln('**❌ Подписка отключена**');
-      buffer.writeln('**Генерации:** $remaining');
-      buffer.writeln('Генерации доступны до ${_shortDate(latest.endsAt)}.');
+      buffer.writeln('**❌ Subscription canceled**');
+      buffer.writeln('**Generations:** $remaining');
+      buffer.writeln(
+          'Generations are available until ${_shortDate(latest.endsAt)}.');
     } else {
-      buffer.writeln('**❌ Подписка неактивна**');
-      buffer.writeln('**Генерации:** $remaining');
+      buffer.writeln('**❌ Subscription inactive**');
+      buffer.writeln('**Generations:** $remaining');
     }
 
     final recurringPlans = _visibleBillingPlans(summary);
     if (recurringPlans.isNotEmpty) {
       buffer.writeln();
-      buffer.writeln('**Подписка с автосписанием**');
+      buffer.writeln('**Auto-renewing subscription**');
       for (final plan in recurringPlans) {
         buffer.writeln('- ${_planOptionLabel(plan)}');
       }
@@ -1532,7 +1534,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       buffer.writeln('Payment is handled securely by Google Play.');
     } else {
       buffer.writeln(
-        'Переходя к оплате, вы соглашаетесь с [офертой](${summary.offerUrl}).',
+        'By continuing to checkout, you agree to the [terms](${summary.offerUrl}).',
       );
     }
     return buffer.toString().trim();
@@ -1553,7 +1555,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     } else if (active != null && active.isActive && active.autoRenew) {
       rows.add([
         _action(
-          '❌ Отключить подписку',
+          '❌ Cancel subscription',
           _cancelBillingSubscription,
           actionKey: 'cancel_billing_subscription',
         ),
@@ -1561,7 +1563,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     } else if (active == null || !active.isActive) {
       rows.add([
         _action(
-          '✅ Выбрать подписку',
+          '✅ Choose subscription',
           _showPlanOptions,
           actionKey: 'show_plan_options',
         ),
@@ -1570,7 +1572,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
     rows.add([
       _action(
-        '🏠 Главное меню',
+        '🏠 Main menu',
         _showMainMenu,
         actionKey: 'show_main_menu',
         echoAsUser: false,
@@ -1584,7 +1586,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (payment.confirmationUrl != null) {
       rows.add([
         _action(
-          '💳 Оплатить',
+          '💳 Pay',
           () async => _launchPaymentUrl(payment.confirmationUrl!),
           actionKey: 'launch_payment_url',
           payload: <String, dynamic>{
@@ -1595,7 +1597,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
     rows.add([
       _action(
-        '🔄 Проверить оплату',
+        '🔄 Check payment',
         () async => _checkBillingPayment(payment.paymentId),
         actionKey: 'check_billing_payment',
         payload: <String, dynamic>{
@@ -1605,7 +1607,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     ]);
     rows.add([
       _action(
-        '🏠 Главное меню',
+        '🏠 Main menu',
         _showMainMenu,
         actionKey: 'show_main_menu',
         echoAsUser: false,
@@ -1630,7 +1632,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         ],
       [
         _action(
-          '⬅️ Назад',
+          '⬅️ Back',
           _showMainMenu,
           actionKey: 'show_main_menu',
           echoAsUser: false,
@@ -1639,8 +1641,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     ];
 
     _appendBotMessage(
-      '**Презентация почти готова!** ✅\n'
-      'Выбери подписку, чтобы завершить финальный шаг и получить готовую презентацию.',
+      '**Your presentation is almost ready!** ✅\n'
+      'Choose a subscription to finish the final step and receive the completed presentation.',
       keyboard: rows,
     );
   }
@@ -1655,13 +1657,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final active = summary.activeSubscription;
     final plan =
         active == null ? null : _findBillingPlan(summary, active.planKey);
-    final buffer = StringBuffer('**Оплата прошла успешно.** ✅\n\n');
+    final buffer = StringBuffer('**Payment successful.** ✅\n\n');
     if (plan != null) {
-      buffer.writeln('**Тариф:** ${_planTariffLine(plan)}');
+      buffer.writeln('**Plan:** ${_planTariffLine(plan)}');
     }
     if (active != null) {
-      buffer.writeln('**Остаток генераций:** ${active.remaining}');
-      buffer.writeln('**Действует до:** ${_shortDate(active.endsAt)}');
+      buffer.writeln('**Generations left:** ${active.remaining}');
+      buffer.writeln('**Valid until:** ${_shortDate(active.endsAt)}');
     }
     return buffer.toString().trim();
   }
@@ -1670,7 +1672,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     return [
       [
         _action(
-          '🏠 Главное меню',
+          '🏠 Main menu',
           _showMainMenu,
           actionKey: 'show_main_menu',
           echoAsUser: false,
@@ -1739,7 +1741,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final summary = controller.summary;
     if (summary == null) {
       _appendBotMessage(
-        '❌ ${controller.error ?? 'Не удалось загрузить список тарифов.'}',
+        '❌ ${controller.error ?? 'Could not load the plan list.'}',
       );
       return;
     }
@@ -1763,7 +1765,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         ],
       [
         _action(
-          '⬅️ Назад',
+          '⬅️ Back',
           _showBalance,
           actionKey: 'show_balance',
           echoAsUser: false,
@@ -1773,8 +1775,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
     _appendBotMessage(
       renew
-          ? '**Продлить подписку**\nВыбери тариф для продления:'
-          : '**Выбери подписку** 👇',
+          ? '**Renew subscription**\nChoose a plan to renew:'
+          : '**Choose a subscription** 👇',
       keyboard: rows,
     );
   }
@@ -1793,7 +1795,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _billingProgressMessageId = _appendBotMessage(
       AppConfig.useGooglePlayBilling
           ? '_Opening Google Play checkout..._'
-          : '_Создаю счёт на оплату..._',
+          : '_Creating checkout..._',
     );
     await controller.startCheckout(planKey: planKey, renew: renew);
     if (controller.payment == null && controller.error != null) {
@@ -1820,7 +1822,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final summary = controller.summary;
     if (summary == null) {
       _appendBotMessage(
-        '❌ ${controller.error ?? 'Не удалось отключить подписку.'}',
+        '❌ ${controller.error ?? 'Could not cancel the subscription.'}',
       );
       return;
     }
@@ -1829,12 +1831,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final untilDate = latest == null ? '' : _shortDate(latest.endsAt);
     _appendBotMessage(
       latest == null
-          ? 'Подписка отключена.'
-          : 'Подписка выключена. Генерации доступны до $untilDate.',
+          ? 'Subscription canceled.'
+          : 'Subscription is canceled. Generations are available until $untilDate.',
       keyboard: [
         [
           _action(
-            '🏠 Главное меню',
+            '🏠 Main menu',
             _showMainMenu,
             actionKey: 'show_main_menu',
             echoAsUser: false,
@@ -1862,7 +1864,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       controller.selectDesign(template.id);
       _clearRenderProgressMessages();
       _renderPreparationMessageId = _appendBotMessage(
-          '_Оплата подтверждена. Продолжаю создание презентации..._');
+          '_Payment confirmed. Continuing presentation generation..._');
       await _startRender(generatePdf: true);
     } finally {
       _resumingPresentationAfterPayment = false;
@@ -1898,18 +1900,17 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   String _currentMaxSupportMarkdownLink() {
     final raw = _billingController?.summary?.supportMaxUrl.trim() ?? '';
     if (raw.isEmpty) {
-      return 'не указана';
+      return 'not set';
     }
 
-    final withScheme =
-        raw.startsWith('http://') || raw.startsWith('https://')
-            ? raw
-            : 'https://$raw';
+    final withScheme = raw.startsWith('http://') || raw.startsWith('https://')
+        ? raw
+        : 'https://$raw';
     final parsed = Uri.tryParse(withScheme);
     if (parsed == null || !parsed.hasScheme || parsed.host.isEmpty) {
       return raw;
     }
-    return '[ссылка](${parsed.toString()})';
+    return '[link](${parsed.toString()})';
   }
 
   String _currentClientId() {
@@ -1917,20 +1918,20 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (clientId != null && clientId.isNotEmpty) {
       return clientId;
     }
-    return 'загружается...';
+    return 'loading...';
   }
 
   Future<void> _launchPaymentUrl(String url) async {
     final uri = Uri.tryParse(url);
     if (uri == null) {
-      _appendBotMessage('Ссылка на оплату:\n$url');
+      _appendBotMessage('Payment link:\n$url');
       return;
     }
 
     final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!launched) {
       _appendBotMessage(
-        'Не удалось открыть ссылку автоматически.\nОткрой её вручную:\n$url',
+        'Could not open the link automatically.\nOpen it manually:\n$url',
       );
     }
   }
@@ -1950,7 +1951,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       'month' => '⭐ ${_planTariffLine(plan)}',
       'one10' => '⭐ ${_planTariffLine(plan)}',
       'one40' => '⭐ ${_planTariffLine(plan)}',
-      _ => '${plan.priceRub} ₽ — ${plan.limit} генераций',
+      _ => '${plan.priceRub}  — ${plan.limit} generations',
     };
   }
 
@@ -1967,11 +1968,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       };
     }
     return switch (plan.key) {
-      'week' => '$priceLabel / неделя — ${plan.limit} генераций',
-      'month' => '$priceLabel / месяц — ${plan.limit} генераций',
-      'one10' => '$priceLabel — ${plan.limit} генераций',
-      'one40' => '$priceLabel — ${plan.limit} генераций',
-      _ => '$priceLabel — ${plan.limit} генераций',
+      'week' => '$priceLabel / week — ${plan.limit} generations',
+      'month' => '$priceLabel / month — ${plan.limit} generations',
+      'one10' => '$priceLabel — ${plan.limit} generations',
+      'one40' => '$priceLabel — ${plan.limit} generations',
+      _ => '$priceLabel — ${plan.limit} generations',
     };
   }
 
@@ -2011,7 +2012,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
     if (kIsWeb) {
       _appendBotMessage(
-        'На web локальное сохранение пока отключено.\nИспользуй download URL из карточки файла.',
+        'Local saving on web is disabled for now.\nUse the download URL from the file card.',
       );
       return;
     }
@@ -2055,7 +2056,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         _appendBotMessage('❌ $openError');
       }
     } catch (error) {
-      _appendBotMessage('❌ Не удалось сохранить файл.\n$error');
+      _appendBotMessage('❌ Could not save the file.\n$error');
     } finally {
       if (mounted) {
         setState(() {
@@ -2087,12 +2088,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       if (deleted) {
         history.detachLocalFile(existing.localPath);
         _appendBotMessage(
-            '🗑 Файл `${existing.filename}` удалён из локального хранилища.');
+            '🗑 File `${existing.filename}` was deleted from local storage.');
       } else {
-        _appendBotMessage('❌ Не удалось удалить `${existing.filename}`.');
+        _appendBotMessage('❌ Could not delete `${existing.filename}`.');
       }
     } catch (error) {
-      _appendBotMessage('❌ Ошибка при удалении файла.\n$error');
+      _appendBotMessage('❌ Error while deleting the file.\n$error');
     } finally {
       if (mounted) {
         setState(() {
@@ -2117,7 +2118,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     return [
       [
         _action(
-          '📊 Создать презентацию',
+          '📊 Create presentation',
           _beginPresentationTopicInput,
           actionKey: 'begin_presentation_topic',
         ),
@@ -2169,13 +2170,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       ],
       [
         _action(
-          '💳 Баланс / Подписка',
+          '💳 Balance / Subscription',
           () async => _showBalance(),
           actionKey: 'show_balance',
         ),
       ],
       [
-        _action('❓ Помощь', () async => _showHelp(), actionKey: 'show_help'),
+        _action('❓ Help', () async => _showHelp(), actionKey: 'show_help'),
       ],
     ];
   }
@@ -2203,7 +2204,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     rows.add(
       <_ChatAction>[
         _action(
-          '↩ Отмена',
+          '↩ Cancel',
           _showMainMenu,
           actionKey: 'show_main_menu',
           echoAsUser: false,
@@ -2257,7 +2258,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       icon: artifact.kind == 'pdf'
           ? Icons.picture_as_pdf_rounded
           : Icons.slideshow_rounded,
-      caption: artifact.kind == 'pdf' ? 'Финальный PDF' : 'Редактируемый PPTX',
+      caption: artifact.kind == 'pdf' ? 'Final PDF' : 'Editable PPTX',
     );
   }
 
@@ -2276,7 +2277,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       icon: artifact.kind == 'docx'
           ? Icons.description_rounded
           : Icons.picture_as_pdf_rounded,
-      caption: 'Результат конвертации',
+      caption: 'Conversion result',
     );
   }
 
@@ -2291,8 +2292,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       sourceType: entry.sourceType,
       icon: _iconForKind(entry.kind),
       caption: entry.sourceType == SavedFileSourceType.presentationArtifact
-          ? 'Сохранённый файл презентации'
-          : 'Сохранённый результат конвертации',
+          ? 'Saved presentation file'
+          : 'Saved conversion result',
     );
   }
 
@@ -2478,7 +2479,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         if (topic.isEmpty || slides == null) {
           return null;
         }
-        callback = () => _retryOutlineRequest(topic: topic, slidesTotal: slides);
+        callback =
+            () => _retryOutlineRequest(topic: topic, slidesTotal: slides);
         break;
       case 'retry_render_request':
         callback = () => _retryRenderRequest(
@@ -2576,7 +2578,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   String _buildOutlineText(PresentationController controller) {
     final buffer = StringBuffer();
-    buffer.writeln('**План презентации «${controller.title}»** 📋');
+    buffer.writeln('**Presentation outline: “${controller.title}”** 📋');
     buffer.writeln();
     for (var index = 0; index < controller.outline.length; index++) {
       buffer.writeln('${index + 1}. ${controller.outline[index]}');
@@ -2912,7 +2914,7 @@ class _ChatHeader extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const Text(
-            'Слайд ИИ',
+            'Slide AI',
             style: TextStyle(
               fontSize: 13.8,
               fontWeight: FontWeight.w600,
@@ -2922,7 +2924,7 @@ class _ChatHeader extends StatelessWidget {
           ),
           const SizedBox(height: 2),
           const Text(
-            'бот',
+            'bot',
             style: TextStyle(
               fontSize: 11,
               color: Color(0xFF9AA1AA),
@@ -2974,7 +2976,7 @@ class _ComposerBar extends StatelessWidget {
                 borderRadius: BorderRadius.circular(999),
               ),
             ),
-            child: const Text('Меню'),
+            child: const Text('Menu'),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -2998,9 +3000,10 @@ class _ComposerBar extends StatelessWidget {
                   border: InputBorder.none,
                   hintText: switch (mode) {
                     _ComposerMode.presentationTopic =>
-                      'Тема презентации и пожелания',
-                    _ComposerMode.presentationSlides => 'Например, 7',
-                    _ComposerMode.outlineRevision => 'Что изменить в плане?',
+                      'Presentation topic and requirements',
+                    _ComposerMode.presentationSlides => 'For example, 7',
+                    _ComposerMode.outlineRevision =>
+                      'What should be changed in the outline?',
                     _ComposerMode.idle => null,
                   },
                 ),
@@ -3321,11 +3324,11 @@ class _AttachmentTile extends StatelessWidget {
   String _prettyAttachmentMeta(_ChatAttachment attachment) {
     switch (attachment.kind) {
       case 'pptx':
-        return 'Презентация (PPTX)';
+        return 'Presentation (PPTX)';
       case 'pdf':
-        return 'Презентация (PDF)';
+        return 'Presentation (PDF)';
       case 'docx':
-        return 'Документ (DOCX)';
+        return 'Document (DOCX)';
       default:
         return attachment.kind.toUpperCase();
     }

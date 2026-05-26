@@ -131,7 +131,7 @@ class PresentationRenderService:
 
 def _safe_filename(value: str) -> str:
     base = value.strip()
-    base = re.sub(r'[^A-Za-zА-Яа-я0-9 _-]+', ' ', base)
+    base = re.sub(r'[^A-Za-z0-9 _-]+', ' ', base)
     base = re.sub(r'\s+', ' ', base).strip()
     if not base:
         return 'presentation'
