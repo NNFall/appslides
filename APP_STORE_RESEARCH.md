@@ -39,6 +39,111 @@ Flutter официально указывает, что iOS release-сборка
 
 ## Варианты инфраструктуры для iOS-сборки
 
+### Простыми словами: Xcode, TestFlight и как выглядят платформы
+
+**Xcode** - это официальная программа Apple для сборки iOS-приложений. В нашем случае основной код остается Flutter, но финальный iPhone-билд все равно проходит через Xcode-инструменты: iOS SDK, подпись сертификатами, `Archive`, проверка Bundle ID, provisioning profile и загрузка в App Store Connect. Обычно на Mac открывают `app/ios/Runner.xcworkspace`, выбирают Apple Team, чинят signing, после этого собирают `flutter build ipa` или делают `Archive` прямо в Xcode.
+
+**TestFlight** - это официальный тестовый канал Apple внутри App Store Connect. Мы загружаем подписанный `.ipa` в App Store Connect, после обработки build появляется в TestFlight. Внутренние тестировщики ставят приложение почти сразу, внешние тестировщики обычно проходят beta review от Apple. Это не отдельный магазин, а промежуточный этап перед публикацией в App Store.
+
+**Что нужно для подписи и загрузки**:
+
+- Apple Developer Program, сейчас $99/год.
+- Доступ в App Store Connect.
+- Bundle ID приложения.
+- Apple Team ID.
+- Сертификаты и provisioning profiles или automatic signing через Xcode.
+- Для CI, например Codemagic: App Store Connect API Key (`issuer id`, `key id`, `.p8`) и signing assets, сохраненные как secrets.
+
+**Ручной сценарий через удаленный Mac** выглядит так: арендуем Mac, подключаемся к рабочему столу macOS, ставим/проверяем Xcode, Flutter, CocoaPods, подтягиваем GitHub-репозиторий, собираем `.ipa`, загружаем build через Xcode/Transporter. Это похоже на обычную работу за Mac, только Mac находится в облаке.
+
+**Автоматический сценарий через CI** выглядит иначе: рабочего стола macOS нет. Мы подключаем GitHub к сервису сборок, кладем секреты, описываем workflow, нажимаем `Start build` или пушим commit. Сервис сам поднимает macOS runner, собирает `.ipa`, сохраняет артефакт и может сам отправить build в TestFlight. С Windows вручную собрать `.ipa` нельзя, но можно из браузера запускать CI и смотреть логи.
+
+#### MacInCloud
+
+Что это: облачный Mac с удаленным доступом. По ощущениям это ближе всего к обычному серверу с macOS и графическим рабочим столом: подключились, открыли Xcode, терминал, браузер, Transporter и работаете руками.
+
+Как будет выглядеть работа:
+
+- покупаем временный доступ;
+- заходим на удаленный Mac;
+- подтягиваем проект из GitHub;
+- запускаем `flutter doctor`, `pod install`, `flutter build ipa`;
+- открываем Xcode/Transporter, логинимся в Apple аккаунт или используем ключи;
+- загружаем build в TestFlight.
+
+По ценам на текущей странице Pay-As-You-Go:
+
+- 25 часов: $25;
+- 50 часов: $50;
+- 100 часов: $100;
+- 7 дней: $28;
+- 14 дней: $56;
+- 30 дней: $120.
+
+Важное ограничение: на managed Pay-As-You-Go обычно нет admin/root-доступа. Для полного контроля нужен Dedicated Server Plan. Итоговая цена может меняться от выбранного региона, железа, RAM, SSH/Remote Build Port и других add-ons. Для первого ручного TestFlight-прогона это самый понятный вариант.
+
+#### MacStadium
+
+Что это: аренда выделенного Mac mini или Mac Studio в дата-центре. Это не “сайт для сборки”, а полноценная постоянная машина Apple, к которой можно подключаться удаленно и держать окружение сколько нужно.
+
+Как будет выглядеть работа:
+
+- арендуем конкретный Mac mini/Mac Studio;
+- настраиваем Xcode, Flutter, сертификаты;
+- либо собираем руками, либо ставим свой CI runner;
+- окружение остается постоянным между сборками.
+
+Текущие месячные цены на pricing-странице:
+
+- Mac mini M2.S: $109/месяц;
+- Mac mini M4.S: $119/месяц;
+- Mac mini M2.M: $199/месяц;
+- Mac mini M4.M: $199/месяц;
+- Mac mini M2.L: $249/месяц;
+- Mac mini M4.L: $299/месяц;
+- Mac mini M2.XL: $349/месяц;
+- Mac mini M4.XL: $399/месяц;
+- Mac Studio S1.M: $249/месяц;
+- Mac Studio S2.M: $369/месяц;
+- Mac Studio S2.L: $449/месяц.
+
+MacStadium больше подходит, когда iOS становится постоянным направлением и нужно регулярно собирать, тестировать и хранить стабильную среду. Для пары первых билдов это обычно избыточно.
+
+#### Codemagic
+
+Что это: CI/CD-сервис для мобильных приложений, особенно удобный для Flutter. Рабочего стола macOS там нет: мы не “заходим на Mac”, а запускаем сборку через сайт или по push в GitHub. Результат - `.ipa`-файл, логи, артефакты и, при настройке, автоматическая отправка в TestFlight.
+
+Как будет выглядеть работа:
+
+- подключаем GitHub-репозиторий;
+- добавляем `codemagic.yaml`;
+- загружаем Apple signing secrets и App Store Connect API key;
+- запускаем build вручную или автоматически;
+- Codemagic собирает `.ipa`;
+- build можно скачать руками или автоматически отправить в TestFlight.
+
+Текущие цены:
+
+- individual tier: 500 бесплатных macOS M2 минут в месяц;
+- Mac mini M2: $0.095/минута;
+- Mac mini M4: $0.114/минута;
+- Linux X2 и Windows: $0.045/минута;
+- дополнительная параллельная сборка: $49/concurrency;
+- fixed annual M2: $3,990/год;
+- fixed annual M4: $5,400/год;
+- fixed annual M4 Max: $9,000/год.
+
+Цены указаны без налогов. Для первых тестов Codemagic может быть самым дешевым вариантом, если хватит бесплатных 500 минут. Минус: первую настройку signing и App Store Connect API придется сделать аккуратно, потому что ошибки видны только в логах, без ручного Xcode-интерфейса.
+
+#### Что выбрать практически
+
+Для первого iOS-прогона я бы выбрал один из двух путей:
+
+- MacInCloud, если нужно руками увидеть Xcode, signing, Transporter и быстро разобраться с первыми ошибками.
+- Codemagic, если хотим сразу сделать повторяемую сборку: commit -> build -> TestFlight.
+
+MacStadium сейчас не нужен, пока нет постоянного iOS-потока. Он имеет смысл позже, если iOS станет регулярным направлением и будет выгоднее держать свой постоянный Mac в облаке.
+
 ### Вариант 1. Арендованный Mac, например MacInCloud
 
 Схема:
@@ -477,6 +582,8 @@ Includes 50 AI presentation generations per month, PPTX and PDF export, presenta
 ## Источники
 
 - Flutter: Build and release an iOS app: https://docs.flutter.dev/deployment/ios
+- Apple Xcode: https://developer.apple.com/xcode/
+- Apple TestFlight: https://developer.apple.com/testflight/
 - Apple: Upload builds: https://developer.apple.com/help/app-store-connect/manage-builds/upload-builds/
 - Apple Developer Program: https://developer.apple.com/programs/
 - Apple membership details: https://developer.apple.com/programs/whats-included/
@@ -489,4 +596,4 @@ Includes 50 AI presentation generations per month, PPTX and PDF export, presenta
 - Codemagic iOS CI/CD: https://codemagic.io/ios-continuous-integration
 - MacStadium pricing: https://macstadium.com/pricing
 - MacInCloud checkout/features: https://checkout.macincloud.com/select
-
+- MacInCloud Pay-As-You-Go checkout: https://checkout.macincloud.com/select/payg
