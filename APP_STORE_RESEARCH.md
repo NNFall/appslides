@@ -71,7 +71,14 @@ Flutter официально указывает, что iOS release-сборка
 - открываем Xcode/Transporter, логинимся в Apple аккаунт или используем ключи;
 - загружаем build в TestFlight.
 
-По ценам на текущей странице Pay-As-You-Go:
+На основной странице выбора планов MacInCloud сейчас видны такие стартовые варианты:
+
+- Pay-As-You-Go: от $4/день или $1/час. Это самый гибкий вариант для разового ручного захода, но с ограничениями. Доступ через RDP, static IP, physical non-VM Mac server, можно сохранять файлы на сервере или синхронизировать через Dropbox/OneDrive/Google Drive. Admin/root-доступа нет.
+- Managed Server: от $25/месяц. Это более постоянный managed-доступ с недельной, месячной, квартальной или годовой оплатой. Первый раз может быть 24-часовой trial. Также без admin/root-доступа.
+- Dedicated Server: от $49/месяц. Это вариант для продвинутого сценария с full administrator/root/sudo-доступом к выделенному серверу. Trial нет.
+- Runner/Agent: от $29/месяц. Это CI/CD-вариант для Azure Pipelines, Bitbucket Runner, GitHub Runner, GitLab Runner, TeamCity Runner. Там нет интерактивного desktop GUI/SSH, зато есть runner/agent-сценарий и 48-часовой trial.
+
+На странице Pay-As-You-Go checkout отдельно показываются пакеты prepaid-времени:
 
 - 25 часов: $25;
 - 50 часов: $50;
@@ -80,7 +87,9 @@ Flutter официально указывает, что iOS release-сборка
 - 14 дней: $56;
 - 30 дней: $120.
 
-Важное ограничение: на managed Pay-As-You-Go обычно нет admin/root-доступа. Для полного контроля нужен Dedicated Server Plan. Итоговая цена может меняться от выбранного региона, железа, RAM, SSH/Remote Build Port и других add-ons. Для первого ручного TestFlight-прогона это самый понятный вариант.
+Это не противоречие: карточка на общей странице показывает стартовую цену тарифа, а checkout показывает конкретные пакеты времени/кредитов и опции. Итоговая цена может меняться от выбранного региона, железа, RAM, SSH/Remote Build Port и других add-ons.
+
+Для первой iOS-сборки нам нужен не Runner/Agent, а именно вариант с интерактивным Mac-доступом: Pay-As-You-Go, Managed Server или Dedicated Server. Самый практичный старт - Pay-As-You-Go или Managed Server, потому что можно руками открыть Xcode, увидеть ошибки signing и загрузить build в TestFlight. Dedicated нужен только если упрёмся в необходимость admin/root-доступа.
 
 #### MacStadium
 
