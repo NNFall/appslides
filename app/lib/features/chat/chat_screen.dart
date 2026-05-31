@@ -1582,6 +1582,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       ]);
     }
 
+    if (AppConfig.useAppStoreBilling) {
+      rows.add([
+        _action(
+          'Restore App Store purchase',
+          _restoreAppStorePurchase,
+          actionKey: 'restore_app_store_purchase',
+        ),
+      ]);
+    }
+
     rows.add([
       _action(
         '🏠 Main menu',
@@ -1822,6 +1832,52 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       return;
     }
     await controller.pollPayment(paymentId);
+  }
+
+  Future<void> _restoreAppStorePurchase() async {
+    final controller = _billingController;
+    if (controller == null) {
+      return;
+    }
+
+    if (!AppConfig.useAppStoreBilling) {
+      _appendBotMessage(
+        'Purchase restoration is available only in the App Store build.',
+        keyboard: _mainMenuOnlyKeyboard(),
+      );
+      return;
+    }
+
+    _lastBillingPaymentStatusKey = null;
+    _lastBillingTimeoutPaymentId = null;
+    controller.clearPayment();
+    _clearBillingProgressMessage();
+    _billingProgressMessageId =
+        _appendBotMessage('_Restoring App Store purchase..._');
+    await controller.restoreAppStorePurchase();
+    if (controller.payment == null && controller.error != null) {
+      _clearBillingProgressMessage();
+      _appendBotMessage(
+        '❌ ${controller.error!}',
+        keyboard: [
+          [
+            _action(
+              '✅ Choose subscription',
+              _showPlanOptions,
+              actionKey: 'show_plan_options',
+            ),
+          ],
+          [
+            _action(
+              '🏠 Main menu',
+              _showMainMenu,
+              actionKey: 'show_main_menu',
+              echoAsUser: false,
+            ),
+          ],
+        ],
+      );
+    }
   }
 
   Future<void> _cancelBillingSubscription() async {
@@ -2550,6 +2606,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         break;
       case 'open_app_store_subscriptions':
         callback = _openAppStoreSubscriptions;
+        break;
+      case 'restore_app_store_purchase':
+        callback = _restoreAppStorePurchase;
         break;
       case 'launch_payment_url':
         final url = action.payload['url'] as String?;

@@ -12,7 +12,7 @@ import 'store_billing_service.dart';
 class BillingController extends ChangeNotifier {
   BillingController({
     required AppSlidesRepository repository,
-    StoreBillingService? storeBilling,
+    StoreBillingClient? storeBilling,
   })  : _repository = repository,
         _storeBilling = storeBilling ??
             (AppConfig.useNativeStoreBilling ? StoreBillingService() : null);
@@ -21,12 +21,13 @@ class BillingController extends ChangeNotifier {
   static const Duration _paymentPollTimeout = Duration(minutes: 30);
 
   final AppSlidesRepository _repository;
-  final StoreBillingService? _storeBilling;
+  final StoreBillingClient? _storeBilling;
 
   BillingSummary? _summary;
   BillingPayment? _payment;
   bool _loadingSummary = false;
   bool _creatingPayment = false;
+  bool _restoringPurchase = false;
   bool _canceling = false;
   String? _error;
   Timer? _pollTimer;
@@ -38,6 +39,7 @@ class BillingController extends ChangeNotifier {
   BillingPayment? get payment => _payment;
   bool get loadingSummary => _loadingSummary;
   bool get creatingPayment => _creatingPayment;
+  bool get restoringPurchase => _restoringPurchase;
   bool get canceling => _canceling;
   String? get error => _error;
   bool get paymentPollingTimedOut => _paymentPollingTimedOut;
@@ -135,6 +137,40 @@ class BillingController extends ChangeNotifier {
       _error = _describeError(error);
     } finally {
       _canceling = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> restoreAppStorePurchase() async {
+    _restoringPurchase = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final billing = _storeBilling;
+      if (billing == null || billing.provider != StoreBillingProvider.appStore) {
+        throw const StoreBillingException(
+          'App Store purchase restoration is not configured in this build.',
+        );
+      }
+
+      final purchase = await billing.restoreLatestPurchase();
+      final payment = await _repository.verifyAppStorePurchase(
+        productId: purchase.productId,
+        transactionId: purchase.transactionId,
+        verificationData: purchase.verificationData,
+        verificationSource: purchase.verificationSource,
+        localVerificationData: purchase.localVerificationData,
+      );
+      _payment = payment;
+      _summary = payment.summary;
+      if (payment.isSuccessful) {
+        await billing.completePurchase(purchase.purchaseDetails);
+      }
+    } catch (error) {
+      _error = _describeError(error);
+    } finally {
+      _restoringPurchase = false;
       notifyListeners();
     }
   }

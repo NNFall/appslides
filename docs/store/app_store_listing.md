@@ -74,3 +74,5 @@ flutter build ipa --release \
 ```
 
 Keep App Store/TestFlight submission disabled until metadata, privacy URLs, screenshots, subscriptions, signing, and backend HTTPS readiness are checked in App Store Connect.
+
+The iOS balance/subscription screen must show **Restore App Store purchase**. This is required for users who reinstall the app or move to another iPhone, and it is expected during Apple review for subscription apps.

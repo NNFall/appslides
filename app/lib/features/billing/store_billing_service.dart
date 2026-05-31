@@ -40,7 +40,21 @@ class StoreBillingException implements Exception {
   String toString() => message;
 }
 
-class StoreBillingService {
+abstract class StoreBillingClient {
+  bool get available;
+  StoreBillingProvider get provider;
+
+  Future<void> initialize();
+  Future<void> refreshProducts();
+  String? productIdForPlan(String planKey);
+  String? priceForPlan(String planKey);
+  Future<StorePurchaseResult> buyPlan(String planKey);
+  Future<StorePurchaseResult> restoreLatestPurchase();
+  Future<void> completePurchase(PurchaseDetails purchase);
+  Future<void> dispose();
+}
+
+class StoreBillingService implements StoreBillingClient {
   StoreBillingService({
     InAppPurchase? inAppPurchase,
     StoreBillingProvider? provider,
@@ -51,6 +65,7 @@ class StoreBillingService {
                 : StoreBillingProvider.googlePlay);
 
   static const Duration _purchaseTimeout = Duration(minutes: 10);
+  static const Duration _restoreTimeout = Duration(minutes: 2);
 
   final InAppPurchase _inAppPurchase;
   final StoreBillingProvider _provider;
@@ -59,12 +74,17 @@ class StoreBillingService {
       <String, Completer<PurchaseDetails>>{};
 
   StreamSubscription<List<PurchaseDetails>>? _purchaseSubscription;
+  Completer<PurchaseDetails>? _pendingRestore;
   bool _available = false;
   bool _initialized = false;
 
+  @override
   bool get available => _available;
+
+  @override
   StoreBillingProvider get provider => _provider;
 
+  @override
   Future<void> initialize() async {
     if (_initialized) {
       return;
@@ -75,6 +95,7 @@ class StoreBillingService {
     await refreshProducts();
   }
 
+  @override
   Future<void> refreshProducts() async {
     _available = await _inAppPurchase.isAvailable();
     if (!_available) {
@@ -108,6 +129,7 @@ class StoreBillingService {
       );
   }
 
+  @override
   String? productIdForPlan(String planKey) {
     return switch (_provider) {
       StoreBillingProvider.appStore =>
@@ -117,6 +139,7 @@ class StoreBillingService {
     };
   }
 
+  @override
   String? priceForPlan(String planKey) {
     final productId = productIdForPlan(planKey);
     if (productId == null) {
@@ -125,6 +148,7 @@ class StoreBillingService {
     return _products[productId]?.price;
   }
 
+  @override
   Future<StorePurchaseResult> buyPlan(String planKey) async {
     await initialize();
     if (!_available) {
@@ -183,6 +207,56 @@ class StoreBillingService {
       );
     }
 
+    return _purchaseResultFromDetails(purchase);
+  }
+
+  @override
+  Future<StorePurchaseResult> restoreLatestPurchase() async {
+    await initialize();
+    if (_provider != StoreBillingProvider.appStore) {
+      throw const StoreBillingException(
+        'Purchase restoration is only available for App Store builds.',
+      );
+    }
+    if (!_available) {
+      throw const StoreBillingException(
+        'App Store purchases are not available on this device.',
+      );
+    }
+    if (_pendingRestore != null && !_pendingRestore!.isCompleted) {
+      throw const StoreBillingException(
+        'Purchase restoration is already running.',
+      );
+    }
+
+    final completer = Completer<PurchaseDetails>();
+    _pendingRestore = completer;
+    await _inAppPurchase.restorePurchases();
+
+    try {
+      final purchase = await completer.future.timeout(
+        _restoreTimeout,
+        onTimeout: () {
+          throw const StoreBillingException(
+            'No App Store subscription was found to restore.',
+          );
+        },
+      );
+      return _purchaseResultFromDetails(purchase);
+    } finally {
+      _pendingRestore = null;
+    }
+  }
+
+  StorePurchaseResult _purchaseResultFromDetails(PurchaseDetails purchase) {
+    final serverVerificationData =
+        purchase.verificationData.serverVerificationData;
+    if (serverVerificationData.isEmpty) {
+      throw const StoreBillingException(
+        'Store did not return verification data.',
+      );
+    }
+
     return StorePurchaseResult(
       provider: _provider,
       packageName: _provider == StoreBillingProvider.googlePlay
@@ -197,20 +271,24 @@ class StoreBillingService {
     );
   }
 
+  @override
   Future<void> completePurchase(PurchaseDetails purchase) async {
     if (purchase.pendingCompletePurchase) {
       await _inAppPurchase.completePurchase(purchase);
     }
   }
 
-  Future<void> restorePurchases() async {
-    await initialize();
-    await _inAppPurchase.restorePurchases();
-  }
-
+  @override
   Future<void> dispose() async {
     await _purchaseSubscription?.cancel();
     _purchaseSubscription = null;
+    if (_pendingRestore case final completer?
+        when !completer.isCompleted) {
+      completer.completeError(
+        const StoreBillingException('Store purchase was canceled.'),
+      );
+    }
+    _pendingRestore = null;
     for (final completer in _pendingPurchases.values) {
       if (!completer.isCompleted) {
         completer.completeError(
@@ -224,33 +302,56 @@ class StoreBillingService {
   void _handlePurchaseUpdates(List<PurchaseDetails> purchases) {
     for (final purchase in purchases) {
       final completer = _pendingPurchases[purchase.productID];
-      if (completer == null || completer.isCompleted) {
+      final restoreCompleter = _pendingRestore;
+      if ((completer == null || completer.isCompleted) &&
+          (restoreCompleter == null || restoreCompleter.isCompleted)) {
         continue;
       }
 
       switch (purchase.status) {
         case PurchaseStatus.purchased:
         case PurchaseStatus.restored:
-          _pendingPurchases.remove(purchase.productID);
-          completer.complete(purchase);
+          if (completer != null && !completer.isCompleted) {
+            _pendingPurchases.remove(purchase.productID);
+            completer.complete(purchase);
+          } else if (restoreCompleter != null &&
+              !restoreCompleter.isCompleted &&
+              _isKnownProduct(purchase.productID)) {
+            restoreCompleter.complete(purchase);
+          }
           break;
         case PurchaseStatus.error:
           _pendingPurchases.remove(purchase.productID);
-          completer.completeError(
-            StoreBillingException(
-              purchase.error?.message ?? 'Store purchase failed.',
-            ),
+          final error = StoreBillingException(
+            purchase.error?.message ?? 'Store purchase failed.',
           );
+          if (completer != null && !completer.isCompleted) {
+            completer.completeError(error);
+          } else if (restoreCompleter != null &&
+              !restoreCompleter.isCompleted) {
+            restoreCompleter.completeError(error);
+          }
           break;
         case PurchaseStatus.canceled:
           _pendingPurchases.remove(purchase.productID);
-          completer.completeError(
-            const StoreBillingException('Store purchase was canceled.'),
-          );
+          const error = StoreBillingException('Store purchase was canceled.');
+          if (completer != null && !completer.isCompleted) {
+            completer.completeError(error);
+          } else if (restoreCompleter != null &&
+              !restoreCompleter.isCompleted) {
+            restoreCompleter.completeError(error);
+          }
           break;
         case PurchaseStatus.pending:
           break;
       }
     }
+  }
+
+  bool _isKnownProduct(String productId) {
+    return productId == AppConfig.appStoreWeekProductId ||
+        productId == AppConfig.appStoreMonthProductId ||
+        productId == AppConfig.googlePlayWeekProductId ||
+        productId == AppConfig.googlePlayMonthProductId;
   }
 }

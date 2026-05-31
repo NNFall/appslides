@@ -178,6 +178,7 @@ Codemagic scaffold:
 - Required signing setup: Apple Distribution certificate and App Store provisioning profile/signing access for `com.appslides.slideai`.
 - The workflow runs `flutter analyze`, `flutter test`, and passes Codemagic `BUILD_NUMBER` into `flutter build ipa` so every upload can have a larger iOS build number.
 - The scaffold builds a signed `.ipa` but keeps `submit_to_testflight=false` and `submit_to_app_store=false` until manual review of App Store Connect metadata is complete.
+- Before review, verify the App Store build has the **Restore App Store purchase** button in Balance / Subscription and that it refreshes entitlement state after reinstall/device change.
 
 Do not store `.p8`, `.p12`, `.cer`, `.mobileprovision`, provisioning profiles, generated `.ipa`, `.xcarchive`, or dSYM archives in Git.
 

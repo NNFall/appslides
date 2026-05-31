@@ -16,6 +16,8 @@ Do not commit real Apple secrets. Configure these values in Codemagic UI as encr
 
 The workflow builds from `app/`, runs `flutter analyze` and `flutter test`, uses `APPSLIDES_BILLING_PROVIDER=app_store`, and passes the Codemagic build number into the iOS build. `submit_to_testflight` and `submit_to_app_store` are both false until the App Store Connect record, signing, privacy URLs, screenshots, and review metadata are ready.
 
+The App Store build also exposes a visible **Restore App Store purchase** action in the balance/subscription chat screen. It calls StoreKit restore, verifies the restored transaction on the backend, and refreshes the local entitlement state.
+
 Эта копия проекта находится в `ASappslides` и готовится как отдельный App Store/TestFlight track.
 
 Главное отличие от Android/Google Play версии:
