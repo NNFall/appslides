@@ -493,6 +493,7 @@ class BillingService:
         except AppStoreGatewayError as exc:
             raise RuntimeError(exc.reason) from exc
 
+        self._ensure_app_store_product_matches(product_id, purchase.product_id)
         return await self._apply_app_store_purchase(client_id, plan.key, purchase)
 
     async def restore_app_store_purchase(
@@ -514,6 +515,7 @@ class BillingService:
         except AppStoreGatewayError as exc:
             raise RuntimeError(exc.reason) from exc
 
+        self._ensure_app_store_product_matches(product_id, purchase.product_id)
         return await self._apply_app_store_purchase(client_id, plan.key, purchase)
 
     async def handle_app_store_notification(self, signed_payload: str) -> dict[str, Any]:
@@ -619,6 +621,10 @@ class BillingService:
         if self._app_store_gateway is None or not self._app_store_gateway.is_configured:
             raise RuntimeError('App Store Billing is not configured')
         return self._app_store_gateway
+
+    def _ensure_app_store_product_matches(self, expected_product_id: str, actual_product_id: str) -> None:
+        if expected_product_id != actual_product_id:
+            raise RuntimeError('App Store product id mismatch')
 
     async def _apply_app_store_purchase(
         self,

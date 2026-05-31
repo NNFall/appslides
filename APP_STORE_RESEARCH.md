@@ -652,3 +652,5 @@ Important: App Store Connect privacy labels are not replaced by this file. The l
 Apple Server Notifications can be delivered more than once. Backend processing now treats an already paid App Store `transactionId` for the same `client_id` as idempotent: the notification is accepted, but it does not create another subscription and does not refill the generation limit again.
 
 This is intentionally scoped to the same `client_id`. If the same Apple subscription is restored on another device/client after reinstall, restore can still create access for the new local client because the app does not have account login yet.
+
+Direct verify/restore also checks that the Apple transaction `productId` matches the product requested by the app. If it does not match, backend rejects the purchase instead of applying the wrong tariff.

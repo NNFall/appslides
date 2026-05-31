@@ -15,7 +15,7 @@ if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
 
 from src.domain.billing_service import BillingService  # noqa: E402
-from src.integrations.app_store_gateway import AppStoreGateway  # noqa: E402
+from src.integrations.app_store_gateway import AppStoreGateway, AppStorePurchaseInfo  # noqa: E402
 from src.repositories import billing as billing_repo  # noqa: E402
 from src.repositories.storage import configure_database_path, connect, init_storage  # noqa: E402
 
@@ -39,6 +39,21 @@ class CapturingNotifier:
         provider: str = 'YooKassa',
     ) -> None:
         self.payment_successes.append((client_id, plan_title, provider))
+
+
+class MismatchedAppStoreGateway:
+    is_configured = True
+
+    def verify_purchase(self, **_: object) -> AppStorePurchaseInfo:
+        return AppStorePurchaseInfo(
+            product_id='slide_ai_month',
+            transaction_id='200000000000005',
+            original_transaction_id='200000000000005',
+            status='active',
+            environment='sandbox',
+            expires_at=(datetime.now(UTC) + timedelta(days=30)).isoformat(),
+            auto_renewing=True,
+        )
 
 
 class AppStoreBillingTests(unittest.IsolatedAsyncioTestCase):
@@ -106,6 +121,31 @@ class AppStoreBillingTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result.status, 'paid')
         self.assertEqual(result.plan.key, 'month')
         self.assertEqual(result.summary.active_subscription.provider, 'app_store')
+
+    async def test_verify_app_store_purchase_rejects_product_id_mismatch(self) -> None:
+        service = BillingService(
+            gateway=DisabledYooKassaGateway(),
+            google_play_gateway=DisabledGooglePlayGateway(),
+            app_store_gateway=MismatchedAppStoreGateway(),
+            offer_url='https://example.com/offer',
+            support_username='@support',
+            support_max_url='https://max.ru/example_support',
+            return_url='appslides://billing/return',
+            test_mode=False,
+            notifier=self.notifier,
+        )
+
+        with self.assertRaises(RuntimeError) as ctx:
+            await service.verify_app_store_purchase(
+                client_id='as_ios_client',
+                product_id='slide_ai_week',
+                transaction_id='200000000000005',
+                verification_data='test_app_store_receipt_5',
+                verification_source='app_store',
+                local_verification_data='test_local_receipt_5',
+            )
+
+        self.assertEqual(str(ctx.exception), 'App Store product id mismatch')
 
     async def test_app_store_notification_renewal_refreshes_known_subscription(self) -> None:
         await self.service.verify_app_store_purchase(

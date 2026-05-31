@@ -154,6 +154,7 @@ Apple notification handling:
 - `DID_RENEW`, `SUBSCRIBED` and recovery events are processed through the same purchase application path as direct verification.
 - Repeated notifications with the same App Store `transactionId` are idempotent for the same `client_id`; they must not refill generations or create another active subscription.
 - Restore on a different `client_id` remains allowed because the app has no user account login and the user may reinstall the app.
+- Direct App Store verify/restore rejects a transaction if Apple `productId` does not match the requested product ID.
 
 Required backend env for real App Store Server API:
 
