@@ -624,6 +624,14 @@ Expected encrypted variables/signing assets in Codemagic UI:
 
 The workflow runs from `app/`, fetches Flutter packages, runs `flutter analyze` and `flutter test`, prepares Codemagic keychain/signing profiles, installs CocoaPods, and runs `flutter build ipa --release` with App Store billing dart-defines and Codemagic build number. It does not submit to App Store review and keeps TestFlight submission disabled until the first App Store Connect setup is reviewed manually.
 
+The App Store client build is pointed to the isolated AS backend:
+
+```text
+http://185.171.83.116:8031
+```
+
+The Google Play/PM backend remains on `http://185.171.83.116:8021`.
+
 ## iOS privacy manifest added
 
 Apple requires privacy manifests for apps and SDKs that use privacy-impacting APIs. The iOS Runner target now includes:

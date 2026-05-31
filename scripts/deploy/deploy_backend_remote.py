@@ -39,7 +39,25 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('--port', type=int, default=22)
     parser.add_argument('--remote-dir', default='/root/PMappslides')
     parser.add_argument('--host-port', type=int, default=8021)
+    parser.add_argument('--backend-container-name', default='')
+    parser.add_argument('--admin-bot-container-name', default='')
+    parser.add_argument('--disable-admin-bot', action='store_true')
     return parser.parse_args()
+
+
+def apply_cli_overrides(local_env: dict[str, str], args: argparse.Namespace) -> None:
+    backend_container_name = getattr(args, 'backend_container_name', '').strip()
+    if backend_container_name:
+        local_env['BACKEND_CONTAINER_NAME'] = backend_container_name
+
+    admin_bot_container_name = getattr(args, 'admin_bot_container_name', '').strip()
+    if admin_bot_container_name:
+        local_env['ADMIN_BOT_CONTAINER_NAME'] = admin_bot_container_name
+
+    if getattr(args, 'disable_admin_bot', False):
+        local_env.pop('PM_ADMIN_BOT_TOKEN', None)
+        local_env.pop('PM_ADMIN_BOT_USERNAME', None)
+        local_env.pop('PM_ADMIN_IDS', None)
 
 
 def load_local_env() -> dict[str, str]:
@@ -143,6 +161,14 @@ def build_remote_env(local_env: dict[str, str], host_port: int) -> str:
         'GOOGLE_PLAY_SERVICE_ACCOUNT_FILE',
         'GOOGLE_PLAY_SERVICE_ACCOUNT_JSON',
         'GOOGLE_PLAY_TEST_MODE',
+        'APP_STORE_BUNDLE_ID',
+        'APP_STORE_APP_APPLE_ID',
+        'APP_STORE_ISSUER_ID',
+        'APP_STORE_KEY_ID',
+        'APP_STORE_PRIVATE_KEY',
+        'APP_STORE_PRIVATE_KEY_FILE',
+        'APP_STORE_ENVIRONMENT',
+        'APP_STORE_TEST_MODE',
         'SUPPORT_USERNAME',
         'SUPPORT_MAX_URL',
         'OFFER_URL',
@@ -378,6 +404,7 @@ def main() -> int:
     args = parse_args()
     ensure_required_paths()
     local_env = load_local_env()
+    apply_cli_overrides(local_env, args)
 
     print(f'Deploying backend to {args.user}@{args.host}:{args.remote_dir}')
     remote = RemoteHost(args.host, args.user, args.password, args.port)

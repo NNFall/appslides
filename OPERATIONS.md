@@ -19,10 +19,13 @@ After every large or important change:
 
 - Server IP: `185.171.83.116`
 - SSH user: `root`
-- Remote app dir: `/root/PMappslides`
-- Public backend endpoint: `http://185.171.83.116:8021`
+- Google Play remote app dir: `/root/PMappslides`
+- Google Play public backend endpoint: `http://185.171.83.116:8021`
+- App Store remote app dir: `/root/ASappslides`
+- App Store public backend endpoint: `http://185.171.83.116:8031`
 - Docker service: `appslides_backend`
-- Docker container: `pmappslides_backend`
+- Google Play Docker container: `pmappslides_backend`
+- App Store Docker container: `asappslides_backend`
 
 ## Standard Git Flow
 
@@ -44,6 +47,8 @@ git push
 
 ## Standard Backend Deploy
 
+Google Play / PM stack:
+
 ```powershell
 python scripts\deploy\deploy_backend_remote.py `
   --host 185.171.83.116 `
@@ -53,6 +58,23 @@ python scripts\deploy\deploy_backend_remote.py `
   --remote-dir /root/PMappslides `
   --host-port 8021
 ```
+
+App Store / AS stack:
+
+```powershell
+python scripts\deploy\deploy_backend_remote.py `
+  --host 185.171.83.116 `
+  --user root `
+  --password <SERVER_PASSWORD> `
+  --port 22 `
+  --remote-dir /root/ASappslides `
+  --host-port 8031 `
+  --backend-container-name asappslides_backend `
+  --admin-bot-container-name asappslides_admin_bot `
+  --disable-admin-bot
+```
+
+The AS stack uses a separate data directory, temp directory, Docker container name and public port. Do not deploy App Store backend changes to `/root/PMappslides` unless the same change is intentionally needed in the Google Play build.
 
 The deploy script:
 
@@ -120,6 +142,7 @@ Fixed iOS decisions:
 
 - Bundle ID: `com.appslides.slideai`
 - Display name: `Slide AI`
+- Backend URL: `http://185.171.83.116:8031`
 - Flutter billing provider for iOS: `app_store`
 - App Store product IDs:
   - `slide_ai_week`
@@ -180,11 +203,13 @@ cd ios && pod install && cd ..
 flutter build ios \
   --release \
   --no-codesign \
+  --dart-define=APPSLIDES_BACKEND_BASE_URL=http://185.171.83.116:8031 \
   --dart-define=APPSLIDES_BILLING_PROVIDER=app_store \
   --dart-define=APPSLIDES_APP_STORE_WEEK_PRODUCT_ID=slide_ai_week \
   --dart-define=APPSLIDES_APP_STORE_MONTH_PRODUCT_ID=slide_ai_month
 
 flutter build ipa \
+  --dart-define=APPSLIDES_BACKEND_BASE_URL=http://185.171.83.116:8031 \
   --dart-define=APPSLIDES_BILLING_PROVIDER=app_store \
   --dart-define=APPSLIDES_APP_STORE_WEEK_PRODUCT_ID=slide_ai_week \
   --dart-define=APPSLIDES_APP_STORE_MONTH_PRODUCT_ID=slide_ai_month

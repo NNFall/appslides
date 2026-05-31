@@ -15,6 +15,7 @@ workflows:
       vars:
         BUNDLE_ID: com.appslides.slideai
         APP_STORE_APP_ID: REPLACE_WITH_APP_STORE_CONNECT_APPLE_ID
+        APPSLIDES_BACKEND_BASE_URL: http://185.171.83.116:8031
         APPSLIDES_BILLING_PROVIDER: app_store
         APPSLIDES_APP_STORE_WEEK_PRODUCT_ID: slide_ai_week
         APPSLIDES_APP_STORE_MONTH_PRODUCT_ID: slide_ai_month
@@ -65,6 +66,7 @@ workflows:
           flutter build ipa --release \
             --build-number="$BUILD_NUMBER" \
             --export-options-plist=/Users/builder/export_options.plist \
+            --dart-define=APPSLIDES_BACKEND_BASE_URL="$APPSLIDES_BACKEND_BASE_URL" \
             --dart-define=APPSLIDES_BILLING_PROVIDER="$APPSLIDES_BILLING_PROVIDER" \
             --dart-define=APPSLIDES_APP_STORE_WEEK_PRODUCT_ID="$APPSLIDES_APP_STORE_WEEK_PRODUCT_ID" \
             --dart-define=APPSLIDES_APP_STORE_MONTH_PRODUCT_ID="$APPSLIDES_APP_STORE_MONTH_PRODUCT_ID"

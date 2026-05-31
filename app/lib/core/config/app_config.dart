@@ -24,7 +24,10 @@ class AppConfig {
     'APPSLIDES_APP_STORE_MONTH_PRODUCT_ID',
     defaultValue: 'slide_ai_month',
   );
-  static const String fixedBackendBaseUrl = 'http://185.171.83.116:8021';
+  static const String fixedBackendBaseUrl = String.fromEnvironment(
+    'APPSLIDES_BACKEND_BASE_URL',
+    defaultValue: 'http://185.171.83.116:8021',
+  );
   static const String healthPath = '/v1/health';
   static const String templatesPath = '/v1/templates/presentation';
   static const String outlinePath = '/v1/presentations/outline';
