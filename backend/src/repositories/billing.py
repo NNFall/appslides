@@ -128,6 +128,21 @@ def get_payment(external_payment_id: str) -> StoredPayment | None:
     return _row_to_payment(row)
 
 
+def get_payment_by_payment_method_id(payment_method_id: str) -> StoredPayment | None:
+    with _LOCK:
+        with closing(connect()) as conn:
+            row = conn.execute(
+                '''
+                SELECT * FROM billing_payments
+                WHERE payment_method_id = ?
+                ORDER BY id DESC
+                LIMIT 1
+                ''',
+                (payment_method_id,),
+            ).fetchone()
+    return _row_to_payment(row)
+
+
 def list_open_payments(client_id: str, limit: int = 5) -> list[StoredPayment]:
     safe_limit = max(1, limit)
     with _LOCK:

@@ -42,6 +42,8 @@ GOOGLE_PLAY_RTDN_EVENTS = {
 GOOGLE_PLAY_ACTIVE_NOTIFICATION_TYPES = {1, 2, 4, 6, 7}
 GOOGLE_PLAY_CANCEL_NOTIFICATION_TYPES = {3}
 GOOGLE_PLAY_EXPIRE_NOTIFICATION_TYPES = {5, 10, 12, 13}
+APP_STORE_ACTIVE_NOTIFICATION_TYPES = {'SUBSCRIBED', 'DID_RENEW', 'DID_RECOVER'}
+APP_STORE_EXPIRE_NOTIFICATION_TYPES = {'EXPIRED', 'REFUND', 'REVOKE'}
 
 
 @dataclass(frozen=True)
@@ -523,10 +525,88 @@ class BillingService:
 
         notification_type = str(data.get('notificationType') or 'unknown')
         subtype = str(data.get('subtype') or '')
+        payload_data = data.get('data')
+        if not isinstance(payload_data, dict):
+            return {
+                'status': 'ignored',
+                'event': notification_type,
+                'subtype': subtype,
+                'reason': 'missing_data',
+            }
+
+        signed_transaction_info = str(payload_data.get('signedTransactionInfo') or '').strip()
+        if not signed_transaction_info:
+            return {
+                'status': 'ignored',
+                'event': notification_type,
+                'subtype': subtype,
+                'reason': 'missing_transaction',
+            }
+
+        try:
+            purchase = gateway.purchase_from_signed_transaction(
+                fallback_product_id=str(payload_data.get('productId') or ''),
+                fallback_transaction_id=str(payload_data.get('transactionId') or ''),
+                signed_transaction_info=signed_transaction_info,
+            )
+        except AppStoreGatewayError as exc:
+            raise RuntimeError(exc.reason) from exc
+
+        try:
+            plan = get_plan_by_app_store_product_id(purchase.product_id)
+        except ValueError:
+            return {
+                'status': 'ignored',
+                'event': notification_type,
+                'subtype': subtype,
+                'reason': 'unknown_product',
+                'product_id': purchase.product_id,
+            }
+
+        existing_payment = (
+            billing_repo.get_payment(purchase.transaction_id)
+            or billing_repo.get_payment_by_payment_method_id(purchase.original_transaction_id)
+        )
+        if existing_payment is None:
+            return {
+                'status': 'ignored',
+                'event': notification_type,
+                'subtype': subtype,
+                'reason': 'unknown_original_transaction',
+                'original_transaction_id': purchase.original_transaction_id,
+            }
+
+        client_id = existing_payment.client_id
+        if notification_type in APP_STORE_EXPIRE_NOTIFICATION_TYPES:
+            self._expire_latest_app_store_subscription(client_id)
+            if billing_repo.get_payment(purchase.transaction_id) is not None:
+                billing_repo.update_payment_status(purchase.transaction_id, 'canceled')
+            return {
+                'status': 'processed',
+                'event': notification_type,
+                'subtype': subtype,
+                'client_id': client_id,
+            }
+
+        if notification_type in APP_STORE_ACTIVE_NOTIFICATION_TYPES:
+            if purchase.is_active:
+                await self._apply_app_store_purchase(client_id, plan.key, purchase)
+            else:
+                self._expire_latest_app_store_subscription(client_id)
+                if billing_repo.get_payment(purchase.transaction_id) is not None:
+                    billing_repo.update_payment_status(purchase.transaction_id, 'failed')
+            return {
+                'status': 'processed',
+                'event': notification_type,
+                'subtype': subtype,
+                'client_id': client_id,
+            }
+
         return {
             'status': 'processed',
             'event': notification_type,
             'subtype': subtype,
+            'client_id': client_id,
         }
 
     async def cancel_subscription(self, client_id: str) -> BillingSummary:
@@ -602,6 +682,12 @@ class BillingService:
     def _expire_latest_google_play_subscription(self, client_id: str) -> None:
         subscription = billing_repo.get_latest_subscription(client_id)
         if subscription is None or subscription.provider != 'google_play':
+            return
+        billing_repo.expire_subscription(subscription.id)
+
+    def _expire_latest_app_store_subscription(self, client_id: str) -> None:
+        subscription = billing_repo.get_latest_subscription(client_id)
+        if subscription is None or subscription.provider != 'app_store':
             return
         billing_repo.expire_subscription(subscription.id)
 

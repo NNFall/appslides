@@ -58,3 +58,19 @@ Test account is not required because the app does not use account registration. 
 - Screenshots for required iPhone sizes.
 - Apple Developer Team ID and signing setup.
 - App Store Server API key configured on backend.
+
+## CI/TestFlight Notes
+
+Use the root `codemagic.yaml` workflow `ios-testflight-scaffold` as the first macOS CI scaffold. Codemagic must contain encrypted placeholder groups named `codemagic_app_store_connect` and `codemagic_ios_signing`; real Apple keys, certificates, and profiles must stay outside Git.
+
+The scaffold builds the iOS App Store flavor with:
+
+```bash
+flutter build ipa --release \
+  --build-number="$BUILD_NUMBER" \
+  --dart-define=APPSLIDES_BILLING_PROVIDER=app_store \
+  --dart-define=APPSLIDES_APP_STORE_WEEK_PRODUCT_ID=slide_ai_week \
+  --dart-define=APPSLIDES_APP_STORE_MONTH_PRODUCT_ID=slide_ai_month
+```
+
+Keep App Store/TestFlight submission disabled until metadata, privacy URLs, screenshots, subscriptions, signing, and backend HTTPS readiness are checked in App Store Connect.

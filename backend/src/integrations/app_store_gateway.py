@@ -127,6 +127,19 @@ class AppStoreGateway:
             raise AppStoreGatewayError('App Store notification payload is empty.')
         return self._decode_jws_payload(signed_payload)
 
+    def purchase_from_signed_transaction(
+        self,
+        *,
+        fallback_product_id: str,
+        fallback_transaction_id: str,
+        signed_transaction_info: str,
+    ) -> AppStorePurchaseInfo:
+        return self._purchase_from_signed_transaction(
+            fallback_product_id=fallback_product_id,
+            fallback_transaction_id=fallback_transaction_id,
+            signed_transaction_info=signed_transaction_info,
+        )
+
     def _test_purchase(self, product_id: str, transaction_id: str) -> AppStorePurchaseInfo:
         safe_transaction_id = transaction_id.strip() or 'test_app_store_transaction'
         return AppStorePurchaseInfo(

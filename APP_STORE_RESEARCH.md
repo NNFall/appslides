@@ -607,3 +607,19 @@ Includes 50 AI presentation generations per month, PPTX and PDF export, presenta
 - MacStadium pricing: https://macstadium.com/pricing
 - MacInCloud checkout/features: https://checkout.macincloud.com/select
 - MacInCloud Pay-As-You-Go checkout: https://checkout.macincloud.com/select/payg
+
+## Codemagic scaffold added
+
+The root `codemagic.yaml` now contains a safe iOS/TestFlight scaffold for the App Store track. It uses placeholder Codemagic env groups only:
+
+- `codemagic_app_store_connect`
+- `codemagic_ios_signing`
+
+Expected encrypted variables/signing assets in Codemagic UI:
+
+- `APP_STORE_CONNECT_PRIVATE_KEY`
+- `APP_STORE_CONNECT_KEY_IDENTIFIER`
+- `APP_STORE_CONNECT_ISSUER_ID`
+- Apple Distribution signing assets or automatic signing access for `com.appslides.slideai`
+
+The workflow runs from `app/`, fetches Flutter packages, runs `flutter analyze` and `flutter test`, prepares Codemagic keychain/signing profiles, installs CocoaPods, and runs `flutter build ipa --release` with App Store billing dart-defines and Codemagic build number. It does not submit to App Store review and keeps TestFlight submission disabled until the first App Store Connect setup is reviewed manually.

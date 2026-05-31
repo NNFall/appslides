@@ -1,0 +1,85 @@
+workflows:
+  ios-testflight-scaffold:
+    name: iOS TestFlight scaffold
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    working_directory: app
+
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+      groups:
+        - codemagic_app_store_connect
+        - codemagic_ios_signing
+      vars:
+        BUNDLE_ID: com.appslides.slideai
+        APP_STORE_APP_ID: REPLACE_WITH_APP_STORE_CONNECT_APPLE_ID
+        APPSLIDES_BILLING_PROVIDER: app_store
+        APPSLIDES_APP_STORE_WEEK_PRODUCT_ID: slide_ai_week
+        APPSLIDES_APP_STORE_MONTH_PRODUCT_ID: slide_ai_month
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.appslides.slideai
+
+    cache:
+      cache_paths:
+        - $HOME/.pub-cache
+        - $HOME/Library/Caches/CocoaPods
+        - ios/Pods
+        - app/ios/Pods
+
+    scripts:
+      - name: Get Flutter packages
+        script: |
+          flutter pub get
+
+      - name: Analyze Flutter project
+        script: |
+          flutter analyze
+
+      - name: Run Flutter tests
+        script: |
+          flutter test
+
+      - name: Initialize keychain
+        script: |
+          keychain initialize
+
+      - name: Fetch App Store signing files
+        script: |
+          app-store-connect fetch-signing-files "$BUNDLE_ID" --type IOS_APP_STORE --create
+
+      - name: Apply signing profiles
+        script: |
+          keychain add-certificates
+          xcode-project use-profiles
+
+      - name: Install CocoaPods dependencies
+        script: |
+          cd ios
+          pod install
+
+      - name: Build signed IPA
+        script: |
+          flutter build ipa --release \
+            --build-number="$BUILD_NUMBER" \
+            --export-options-plist=/Users/builder/export_options.plist \
+            --dart-define=APPSLIDES_BILLING_PROVIDER="$APPSLIDES_BILLING_PROVIDER" \
+            --dart-define=APPSLIDES_APP_STORE_WEEK_PRODUCT_ID="$APPSLIDES_APP_STORE_WEEK_PRODUCT_ID" \
+            --dart-define=APPSLIDES_APP_STORE_MONTH_PRODUCT_ID="$APPSLIDES_APP_STORE_MONTH_PRODUCT_ID"
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - build/ios/archive/*.xcarchive
+      - app/build/ios/ipa/*.ipa
+      - app/build/ios/archive/*.xcarchive
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
+
+    publishing:
+      app_store_connect:
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+        submit_to_testflight: false
+        submit_to_app_store: false

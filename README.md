@@ -1,5 +1,21 @@
 # AppSlides App Store Track
 
+## Codemagic iOS/TestFlight scaffold
+
+The repository root contains a safe `codemagic.yaml` scaffold for a signed Flutter iOS IPA build. It is intentionally configured with placeholder Codemagic groups only:
+
+- `codemagic_app_store_connect`
+- `codemagic_ios_signing`
+
+Do not commit real Apple secrets. Configure these values in Codemagic UI as encrypted variables or signing assets:
+
+- `APP_STORE_CONNECT_PRIVATE_KEY`
+- `APP_STORE_CONNECT_KEY_IDENTIFIER`
+- `APP_STORE_CONNECT_ISSUER_ID`
+- Apple Distribution certificate and provisioning profile/signing access for `com.appslides.slideai`
+
+The workflow builds from `app/`, runs `flutter analyze` and `flutter test`, uses `APPSLIDES_BILLING_PROVIDER=app_store`, and passes the Codemagic build number into the iOS build. `submit_to_testflight` and `submit_to_app_store` are both false until the App Store Connect record, signing, privacy URLs, screenshots, and review metadata are ready.
+
 Эта копия проекта находится в `ASappslides` и готовится как отдельный App Store/TestFlight track.
 
 Главное отличие от Android/Google Play версии:
