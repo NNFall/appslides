@@ -18,6 +18,14 @@ The workflow builds from `app/`, runs `flutter analyze` and `flutter test`, uses
 
 The App Store build also exposes a visible **Restore App Store purchase** action in the balance/subscription chat screen. It calls StoreKit restore, verifies the restored transaction on the backend, and refreshes the local entitlement state.
 
+The iOS project includes `app/ios/Runner/PrivacyInfo.xcprivacy` and a local validator:
+
+```powershell
+python scripts\validate_ios_privacy_manifest.py
+```
+
+This covers the App Store privacy manifest file required by Apple for required-reason APIs used by app-local preferences and local files. App Store Connect privacy labels are filled separately in the Apple web console.
+
 Эта копия проекта находится в `ASappslides` и готовится как отдельный App Store/TestFlight track.
 
 Главное отличие от Android/Google Play версии:

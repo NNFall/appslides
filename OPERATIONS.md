@@ -125,6 +125,22 @@ Fixed iOS decisions:
   - `slide_ai_week`
   - `slide_ai_month`
 
+iOS privacy manifest:
+
+- File: `app/ios/Runner/PrivacyInfo.xcprivacy`
+- It is included in the `Runner` target resources.
+- It declares no tracking and no collected data in the manifest itself.
+- It declares required-reason API usage for app-local preferences and local file metadata:
+  - `NSPrivacyAccessedAPICategoryUserDefaults` with reason `CA92.1`
+  - `NSPrivacyAccessedAPICategoryFileTimestamp` with reason `C617.1`
+- Before any TestFlight/App Store build, run:
+
+```powershell
+python scripts\validate_ios_privacy_manifest.py
+```
+
+App Store Connect privacy labels are still separate from this file. They must describe the real product behavior: presentation prompts and uploaded files go to the backend/AI services, a pseudonymous client ID is used for billing/entitlements, and purchases are processed through Apple IAP for the iOS build.
+
 Backend endpoints added for Apple IAP:
 
 ```text
@@ -206,6 +222,12 @@ python -c "import telegram_admin_bot.main; print('admin bot import ok')"
 & 'C:\Users\User\develop\flutter\bin\flutter.bat' test
 & 'C:\Users\User\develop\flutter\bin\flutter.bat' build web
 & 'C:\Users\User\develop\flutter\bin\flutter.bat' build apk
+```
+
+### iOS / App Store Config
+
+```powershell
+python scripts\validate_ios_privacy_manifest.py
 ```
 
 ### Google Play Android Build

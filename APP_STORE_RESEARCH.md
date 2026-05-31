@@ -623,3 +623,26 @@ Expected encrypted variables/signing assets in Codemagic UI:
 - Apple Distribution signing assets or automatic signing access for `com.appslides.slideai`
 
 The workflow runs from `app/`, fetches Flutter packages, runs `flutter analyze` and `flutter test`, prepares Codemagic keychain/signing profiles, installs CocoaPods, and runs `flutter build ipa --release` with App Store billing dart-defines and Codemagic build number. It does not submit to App Store review and keeps TestFlight submission disabled until the first App Store Connect setup is reviewed manually.
+
+## iOS privacy manifest added
+
+Apple requires privacy manifests for apps and SDKs that use privacy-impacting APIs. The iOS Runner target now includes:
+
+```text
+app/ios/Runner/PrivacyInfo.xcprivacy
+```
+
+The manifest declares:
+
+- no tracking;
+- no collected data in the manifest file;
+- `NSPrivacyAccessedAPICategoryUserDefaults` with reason `CA92.1`;
+- `NSPrivacyAccessedAPICategoryFileTimestamp` with reason `C617.1`.
+
+This matches the current app behavior: local preferences are used for the app/client session and local files are stored/opened for chat history, generated presentations and conversions. Before TestFlight/App Store builds, run:
+
+```powershell
+python scripts\validate_ios_privacy_manifest.py
+```
+
+Important: App Store Connect privacy labels are not replaced by this file. The labels still need to describe prompts/files sent to the backend/AI services, pseudonymous client ID usage and Apple IAP purchase processing.
