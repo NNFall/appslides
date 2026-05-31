@@ -5,6 +5,7 @@ import json
 import sys
 import tempfile
 import unittest
+from contextlib import closing
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -16,7 +17,7 @@ if str(BACKEND_DIR) not in sys.path:
 from src.domain.billing_service import BillingService  # noqa: E402
 from src.integrations.app_store_gateway import AppStoreGateway  # noqa: E402
 from src.repositories import billing as billing_repo  # noqa: E402
-from src.repositories.storage import configure_database_path, init_storage  # noqa: E402
+from src.repositories.storage import configure_database_path, connect, init_storage  # noqa: E402
 
 
 class DisabledYooKassaGateway:
@@ -138,6 +139,40 @@ class AppStoreBillingTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(payment.status, 'paid')
         self.assertEqual(payment.payment_method_id, '200000000000001')
 
+    async def test_app_store_duplicate_renewal_notification_is_idempotent(self) -> None:
+        await self.service.verify_app_store_purchase(
+            client_id='as_ios_client',
+            product_id='slide_ai_week',
+            transaction_id='200000000000001',
+            verification_data='test_app_store_receipt_1',
+            verification_source='app_store',
+            local_verification_data='test_local_receipt_1',
+        )
+        signed_payload = _app_store_notification_payload(
+            notification_type='DID_RENEW',
+            product_id='slide_ai_week',
+            transaction_id='200000000000003',
+            original_transaction_id='200000000000001',
+            expires_at=datetime.now(UTC) + timedelta(days=7),
+        )
+        await self.service.handle_app_store_notification(signed_payload)
+        self.assertEqual(_count_app_store_subscriptions('as_ios_client'), 2)
+
+        billing_repo.decrement_subscription('as_ios_client')
+        active_before_duplicate = billing_repo.get_active_subscription('as_ios_client')
+        self.assertIsNotNone(active_before_duplicate)
+        self.assertEqual(active_before_duplicate.remaining, 9)
+
+        result = await self.service.handle_app_store_notification(signed_payload)
+
+        self.assertEqual(result['status'], 'processed')
+        self.assertEqual(result['event'], 'DID_RENEW')
+        self.assertEqual(_count_app_store_subscriptions('as_ios_client'), 2)
+        active_after_duplicate = billing_repo.get_active_subscription('as_ios_client')
+        self.assertIsNotNone(active_after_duplicate)
+        self.assertEqual(active_after_duplicate.id, active_before_duplicate.id)
+        self.assertEqual(active_after_duplicate.remaining, 9)
+
     async def test_app_store_notification_expired_marks_known_subscription_expired(self) -> None:
         await self.service.verify_app_store_purchase(
             client_id='as_ios_client',
@@ -222,6 +257,19 @@ def _app_store_notification_payload(
             },
         }
     )
+
+
+def _count_app_store_subscriptions(client_id: str) -> int:
+    with closing(connect()) as conn:
+        row = conn.execute(
+            '''
+            SELECT COUNT(*)
+            FROM billing_subscriptions
+            WHERE client_id = ? AND provider = 'app_store'
+            ''',
+            (client_id,),
+        ).fetchone()
+    return int(row[0] if row else 0)
 
 
 def _fake_jws(payload: dict) -> str:

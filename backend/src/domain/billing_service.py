@@ -652,6 +652,22 @@ class BillingService:
                 payment_method_id=purchase.original_transaction_id,
             )
 
+        if (
+            purchase.is_active
+            and existing_payment is not None
+            and existing_payment.status == 'paid'
+            and existing_payment.client_id == client_id
+        ):
+            summary = await self.get_summary(client_id)
+            return BillingPaymentResult(
+                payment_id=external_id,
+                plan=plan,
+                status=status,
+                confirmation_url=None,
+                test_mode=False,
+                summary=summary,
+            )
+
         if purchase.is_active:
             billing_repo.create_subscription(
                 client_id=client_id,
