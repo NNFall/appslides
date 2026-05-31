@@ -1,5 +1,38 @@
 # App
 
+## App Store Track
+
+Эта копия клиента готовится для iOS/App Store.
+
+- iOS Bundle ID: `com.appslides.slideai`.
+- Display name: `Slide AI`.
+- Версия сейчас берётся из `pubspec.yaml`.
+- Для App Store сборки нужно передавать `--dart-define=APPSLIDES_BILLING_PROVIDER=app_store`.
+- Product IDs для Apple In-App Purchase:
+  - `slide_ai_week`
+  - `slide_ai_month`
+- Финальный `.ipa` нельзя собрать на Windows. На Mac/Codemagic нужно выполнить `flutter pub get`, `pod install` в `ios/`, затем `flutter build ipa`.
+- Signing, Team ID, provisioning profile и App Store Connect API key добавляются только на этапе TestFlight/upload.
+
+Пример команды для macOS/CI:
+
+```bash
+cd app
+flutter pub get
+cd ios && pod install && cd ..
+flutter build ios \
+  --release \
+  --no-codesign \
+  --dart-define=APPSLIDES_BILLING_PROVIDER=app_store \
+  --dart-define=APPSLIDES_APP_STORE_WEEK_PRODUCT_ID=slide_ai_week \
+  --dart-define=APPSLIDES_APP_STORE_MONTH_PRODUCT_ID=slide_ai_month
+
+flutter build ipa \
+  --dart-define=APPSLIDES_BILLING_PROVIDER=app_store \
+  --dart-define=APPSLIDES_APP_STORE_WEEK_PRODUCT_ID=slide_ai_week \
+  --dart-define=APPSLIDES_APP_STORE_MONTH_PRODUCT_ID=slide_ai_month
+```
+
 ## Active UI Direction
 
 - Current active client UI is no longer a tabbed mobile app shell.
@@ -36,15 +69,13 @@
 ## Current Runtime
 
 - Mobile/web client is now hard-wired to the remote backend:
-  - `http://185.171.83.116:8011`
+  - `http://185.171.83.116:8021`
 - Local URL switching inside the app is intentionally removed.
 - The chat now drives billing from the same conversation:
   - `/balance` loads live subscription state from backend;
-  - plan selection opens YooKassa checkout in live mode;
-  - payment status is polled back into the chat every `20 seconds` for up to `30 minutes`;
-  - returning to the app from YooKassa triggers an immediate payment re-check;
+  - Android builds use Google Play Billing;
+  - iOS/App Store builds use Apple In-App Purchase via the `app_store` provider;
   - if the user was blocked on the template step, successful payment resumes presentation creation automatically;
-  - temporary polling transport errors do not immediately break the wait flow;
   - generation is blocked when balance is exhausted.
 - Network failure policy:
   - transport failures are normalized into a user-facing Russian error message;
@@ -133,7 +164,7 @@ app/
   - ведет persistent-index локальных файлов
   - открывает и удаляет локальные файлы
 - backend endpoint теперь зафиксирован:
-  - приложение всегда использует `http://185.171.83.116:8011`
+  - приложение всегда использует `http://185.171.83.116:8021`
   - локальное переключение URL из `Settings` отключено
   - в `Settings` оставлена только проверка `/v1/health`
 - в среде разработки установлен Flutter SDK:

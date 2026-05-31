@@ -2,17 +2,20 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import hashlib
 import json
 from dataclasses import dataclass
 from typing import Any, Literal
 
 from src.domain.billing_plans import (
     BillingPlan,
+    get_plan_by_app_store_product_id,
     get_plan,
     get_plan_by_google_play_product_id,
     list_plans,
 )
 from src.integrations.admin_notifier import AdminNotifier
+from src.integrations.app_store_gateway import AppStoreGateway, AppStoreGatewayError
 from src.integrations.google_play_gateway import GooglePlayGateway, GooglePlayGatewayError
 from src.integrations.yookassa_gateway import (
     YooKassaGateway,
@@ -69,6 +72,7 @@ class BillingService:
         *,
         gateway: YooKassaGateway,
         google_play_gateway: GooglePlayGateway,
+        app_store_gateway: AppStoreGateway | None = None,
         offer_url: str,
         support_username: str,
         support_max_url: str,
@@ -78,6 +82,7 @@ class BillingService:
     ) -> None:
         self._gateway = gateway
         self._google_play_gateway = google_play_gateway
+        self._app_store_gateway = app_store_gateway
         self._offer_url = offer_url
         self._support_username = support_username
         self._support_max_url = support_max_url
@@ -461,11 +466,138 @@ class BillingService:
 
         return {'status': 'processed', 'event': event, 'client_id': client_id}
 
+    async def verify_app_store_purchase(
+        self,
+        *,
+        client_id: str,
+        product_id: str,
+        transaction_id: str | None,
+        verification_data: str,
+        verification_source: str,
+        local_verification_data: str | None,
+    ) -> BillingPaymentResult:
+        gateway = self._require_app_store_gateway()
+        billing_repo.touch_client(client_id)
+        plan = get_plan_by_app_store_product_id(product_id)
+        try:
+            purchase = await asyncio.to_thread(
+                gateway.verify_purchase,
+                product_id=product_id,
+                transaction_id=transaction_id,
+                verification_data=verification_data,
+                verification_source=verification_source,
+                local_verification_data=local_verification_data,
+            )
+        except AppStoreGatewayError as exc:
+            raise RuntimeError(exc.reason) from exc
+
+        return await self._apply_app_store_purchase(client_id, plan.key, purchase)
+
+    async def restore_app_store_purchase(
+        self,
+        *,
+        client_id: str,
+        product_id: str,
+        original_transaction_id: str,
+    ) -> BillingPaymentResult:
+        gateway = self._require_app_store_gateway()
+        billing_repo.touch_client(client_id)
+        plan = get_plan_by_app_store_product_id(product_id)
+        try:
+            purchase = await asyncio.to_thread(
+                gateway.restore_purchase,
+                product_id=product_id,
+                original_transaction_id=original_transaction_id,
+            )
+        except AppStoreGatewayError as exc:
+            raise RuntimeError(exc.reason) from exc
+
+        return await self._apply_app_store_purchase(client_id, plan.key, purchase)
+
+    async def handle_app_store_notification(self, signed_payload: str) -> dict[str, Any]:
+        gateway = self._require_app_store_gateway()
+        try:
+            data = await asyncio.to_thread(gateway.decode_notification, signed_payload)
+        except AppStoreGatewayError as exc:
+            raise RuntimeError(exc.reason) from exc
+
+        notification_type = str(data.get('notificationType') or 'unknown')
+        subtype = str(data.get('subtype') or '')
+        return {
+            'status': 'processed',
+            'event': notification_type,
+            'subtype': subtype,
+        }
+
     async def cancel_subscription(self, client_id: str) -> BillingSummary:
         canceled = billing_repo.cancel_subscription(client_id)
         if canceled:
             await self._notifier.notify_subscription_canceled(client_id)
         return await self.get_summary(client_id)
+
+    def _require_app_store_gateway(self) -> AppStoreGateway:
+        if self._app_store_gateway is None or not self._app_store_gateway.is_configured:
+            raise RuntimeError('App Store Billing is not configured')
+        return self._app_store_gateway
+
+    async def _apply_app_store_purchase(
+        self,
+        client_id: str,
+        plan_key: str,
+        purchase,
+    ) -> BillingPaymentResult:
+        plan = get_plan(plan_key)
+        external_id = purchase.transaction_id or self._fallback_app_store_payment_id(
+            purchase.original_transaction_id,
+        )
+        existing_payment = billing_repo.get_payment(external_id)
+
+        status = 'paid' if purchase.is_active else 'failed'
+        if existing_payment is None:
+            billing_repo.create_payment(
+                client_id=client_id,
+                provider='app_store',
+                amount=plan.price_rub,
+                currency='APPLE',
+                plan_key=plan.key,
+                external_payment_id=external_id,
+                status=status,
+                payment_method_id=purchase.original_transaction_id,
+                confirmation_url=None,
+            )
+        else:
+            billing_repo.update_payment_status(
+                external_id,
+                status,
+                payment_method_id=purchase.original_transaction_id,
+            )
+
+        if purchase.is_active:
+            billing_repo.create_subscription(
+                client_id=client_id,
+                plan_key=plan.key,
+                limit=plan.limit,
+                days=plan.days,
+                provider='app_store',
+                auto_renew=1 if plan.recurring and purchase.auto_renewing else 0,
+                payment_method_id=purchase.original_transaction_id,
+            )
+            if existing_payment is None or existing_payment.status != 'paid':
+                await self._notifier.notify_payment_success(client_id, plan.title, provider='App Store')
+
+        summary = await self.get_summary(client_id)
+        return BillingPaymentResult(
+            payment_id=external_id,
+            plan=plan,
+            status=status,
+            confirmation_url=None,
+            test_mode=False,
+            summary=summary,
+        )
+
+    def _fallback_app_store_payment_id(self, value: str) -> str:
+        digest = hashlib.sha256(value.encode('utf-8')).hexdigest()[:32]
+        return f'appstore_{digest}'
 
     def _expire_latest_google_play_subscription(self, client_id: str) -> None:
         subscription = billing_repo.get_latest_subscription(client_id)

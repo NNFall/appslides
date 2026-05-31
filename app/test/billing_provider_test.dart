@@ -1,0 +1,16 @@
+import 'package:appslides/core/config/app_config.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+void main() {
+  test('App Store product ids mirror subscription plan keys', () {
+    expect(AppConfig.appStoreProductIdForPlan('week'), 'slide_ai_week');
+    expect(AppConfig.appStoreProductIdForPlan('month'), 'slide_ai_month');
+    expect(AppConfig.appStoreProductIdForPlan('one10'), isNull);
+  });
+
+  test('default build still uses native Google Play billing provider', () {
+    expect(AppConfig.useGooglePlayBilling, isTrue);
+    expect(AppConfig.useAppStoreBilling, isFalse);
+    expect(AppConfig.useNativeStoreBilling, isTrue);
+  });
+}

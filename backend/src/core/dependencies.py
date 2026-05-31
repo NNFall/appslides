@@ -10,6 +10,7 @@ from src.domain.conversion_service import ConversionService
 from src.domain.presentation_outline_service import PresentationOutlineService
 from src.domain.presentation_render_service import PresentationRenderService
 from src.integrations.admin_notifier import AdminNotifier
+from src.integrations.app_store_gateway import AppStoreGateway
 from src.integrations.google_play_gateway import GooglePlayGateway
 from src.integrations.yookassa_gateway import YooKassaGateway
 from src.integrations.text_generation import PresentationGenerationClient
@@ -97,11 +98,27 @@ def get_google_play_gateway() -> GooglePlayGateway:
 
 
 @lru_cache(maxsize=1)
+def get_app_store_gateway() -> AppStoreGateway:
+    settings = get_settings()
+    return AppStoreGateway(
+        bundle_id=settings.app_store_bundle_id,
+        app_apple_id=settings.app_store_app_apple_id,
+        issuer_id=settings.app_store_issuer_id,
+        key_id=settings.app_store_key_id,
+        private_key=settings.app_store_private_key,
+        private_key_file=settings.app_store_private_key_file,
+        environment=settings.app_store_environment,
+        test_mode=settings.app_store_test_mode,
+    )
+
+
+@lru_cache(maxsize=1)
 def get_billing_service() -> BillingService:
     settings = get_settings()
     return BillingService(
         gateway=get_yookassa_gateway(),
         google_play_gateway=get_google_play_gateway(),
+        app_store_gateway=get_app_store_gateway(),
         offer_url=settings.offer_url,
         support_username=settings.support_username,
         support_max_url=settings.support_max_url,

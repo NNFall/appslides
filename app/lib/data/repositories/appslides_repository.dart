@@ -129,6 +129,32 @@ class AppSlidesRepository {
     );
   }
 
+  Future<BillingPayment> verifyAppStorePurchase({
+    required String productId,
+    required String verificationData,
+    required String verificationSource,
+    String? transactionId,
+    String? localVerificationData,
+  }) {
+    return _api.verifyAppStorePurchase(
+      productId: productId,
+      verificationData: verificationData,
+      verificationSource: verificationSource,
+      transactionId: transactionId,
+      localVerificationData: localVerificationData,
+    );
+  }
+
+  Future<BillingPayment> restoreAppStorePurchase({
+    required String productId,
+    required String originalTransactionId,
+  }) {
+    return _api.restoreAppStorePurchase(
+      productId: productId,
+      originalTransactionId: originalTransactionId,
+    );
+  }
+
   Future<BillingSummary> cancelBillingSubscription() {
     return _api.cancelBillingSubscription();
   }

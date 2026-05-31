@@ -213,6 +213,40 @@ class AppSlidesApiClient {
     return BillingPayment.fromJson(payload);
   }
 
+  Future<BillingPayment> verifyAppStorePurchase({
+    required String productId,
+    required String verificationData,
+    required String verificationSource,
+    String? transactionId,
+    String? localVerificationData,
+  }) async {
+    final payload = await _postJson(
+      path: AppConfig.appStoreVerifyPath,
+      body: <String, Object?>{
+        'product_id': productId,
+        'transaction_id': transactionId,
+        'verification_data': verificationData,
+        'verification_source': verificationSource,
+        'local_verification_data': localVerificationData,
+      },
+    );
+    return BillingPayment.fromJson(payload);
+  }
+
+  Future<BillingPayment> restoreAppStorePurchase({
+    required String productId,
+    required String originalTransactionId,
+  }) async {
+    final payload = await _postJson(
+      path: AppConfig.appStoreRestorePath,
+      body: <String, Object>{
+        'product_id': productId,
+        'original_transaction_id': originalTransactionId,
+      },
+    );
+    return BillingPayment.fromJson(payload);
+  }
+
   Future<BillingSummary> cancelBillingSubscription() async {
     return _withNetworkHandling(() async {
       final response = await _client

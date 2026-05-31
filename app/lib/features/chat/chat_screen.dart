@@ -1409,7 +1409,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           case 'waiting_for_capture':
             _clearBillingProgressMessage();
             _appendBotMessage(
-              '💳 **Checkout created**\nOpen Google Play checkout, complete the purchase, then tap **Check payment**.',
+              '💳 **Checkout created**\nOpen ${_storeName()} checkout, complete the purchase, then tap **Check payment**.',
               keyboard: _buildPendingPaymentKeyboard(payment),
             );
             if (payment.confirmationUrl case final confirmationUrl?) {
@@ -1499,6 +1499,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       buffer.writeln('**Valid until:** ${_shortDate(active.endsAt)}');
       if (active.provider == 'google_play') {
         buffer.writeln('Subscription is managed by Google Play.');
+      } else if (active.provider == 'app_store') {
+        buffer.writeln('Subscription is managed by App Store.');
       } else if (active.provider == 'yookassa') {
         buffer.writeln(
           active.autoRenew
@@ -1530,8 +1532,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
 
     buffer.writeln();
-    if (AppConfig.useGooglePlayBilling) {
-      buffer.writeln('Payment is handled securely by Google Play.');
+    if (AppConfig.useNativeStoreBilling) {
+      buffer.writeln('Payment is handled securely by ${_storeName()}.');
     } else {
       buffer.writeln(
         'By continuing to checkout, you agree to the [terms](${summary.offerUrl}).',
@@ -1550,6 +1552,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           '⚙️ Manage in Google Play',
           _openGooglePlaySubscriptions,
           actionKey: 'open_google_play_subscriptions',
+        ),
+      ]);
+    } else if (AppConfig.useAppStoreBilling &&
+        active != null &&
+        active.isActive) {
+      rows.add([
+        _action(
+          '⚙️ Manage App Store subscription',
+          _openAppStoreSubscriptions,
+          actionKey: 'open_app_store_subscriptions',
         ),
       ]);
     } else if (active != null && active.isActive && active.autoRenew) {
@@ -1793,8 +1805,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     controller.clearPayment();
     _clearBillingProgressMessage();
     _billingProgressMessageId = _appendBotMessage(
-      AppConfig.useGooglePlayBilling
-          ? '_Opening Google Play checkout..._'
+      AppConfig.useNativeStoreBilling
+          ? '_Opening ${_storeName()} checkout..._'
           : '_Creating checkout..._',
     );
     await controller.startCheckout(planKey: planKey, renew: renew);
@@ -1887,6 +1899,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
+  Future<void> _openAppStoreSubscriptions() async {
+    final uri = Uri.parse('https://apps.apple.com/account/subscriptions');
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
   String _currentTelegramSupportMarkdownLink() {
     final username = _currentSupportUsername();
     final normalized =
@@ -1957,10 +1974,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   String _planTariffLine(BillingPlan plan) {
     final storePrice = _billingController?.storePriceForPlan(plan.key);
-    final priceLabel = AppConfig.useGooglePlayBilling && storePrice != null
+    final priceLabel = AppConfig.useNativeStoreBilling && storePrice != null
         ? storePrice
         : '${plan.priceRub} ₽';
-    if (AppConfig.useGooglePlayBilling) {
+    if (AppConfig.useNativeStoreBilling) {
       return switch (plan.key) {
         'week' => '$priceLabel / week — ${plan.limit} generations',
         'month' => '$priceLabel / month — ${plan.limit} generations',
@@ -1974,6 +1991,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       'one40' => '$priceLabel — ${plan.limit} generations',
       _ => '$priceLabel — ${plan.limit} generations',
     };
+  }
+
+  String _storeName() {
+    if (AppConfig.useAppStoreBilling) {
+      return 'App Store';
+    }
+    if (AppConfig.useGooglePlayBilling) {
+      return 'Google Play';
+    }
+    return 'store';
   }
 
   String _shortDate(String value) {
@@ -2520,6 +2547,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         break;
       case 'open_google_play_subscriptions':
         callback = _openGooglePlaySubscriptions;
+        break;
+      case 'open_app_store_subscriptions':
+        callback = _openAppStoreSubscriptions;
         break;
       case 'launch_payment_url':
         final url = action.payload['url'] as String?;

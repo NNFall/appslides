@@ -1,4 +1,23 @@
-# AppSlides
+# AppSlides App Store Track
+
+Эта копия проекта находится в `ASappslides` и готовится как отдельный App Store/TestFlight track.
+
+Главное отличие от Android/Google Play версии:
+
+- iOS Bundle ID: `com.appslides.slideai`;
+- имя приложения на устройстве: `Slide AI`;
+- iOS-подписки должны идти через Apple In-App Purchase / StoreKit;
+- backend получает отдельные App Store endpoints: `/v1/billing/app-store/verify`, `/restore`, `/notifications`;
+- Apple ключи, Team ID и signing не хранятся в репозитории и понадобятся только на этапе TestFlight/upload;
+- финальная `.ipa` сборка требует macOS + Xcode, MacInCloud или CI вроде Codemagic.
+
+Текущий статус App Store подготовки:
+
+- Flutter iOS shell приведён к App Store Bundle ID.
+- Добавлен iOS `Podfile` для CocoaPods/Flutter plugins.
+- В клиент добавлен billing-provider split: `google_play` для Android и `app_store` для iOS.
+- В backend добавлен testable App Store billing skeleton и env-настройки для будущей App Store Server API verification.
+- Локальная Windows-разработка может проверять Dart/Python код, но не может собрать финальный подписанный `.ipa`.
 
 Мобильное приложение и backend-сервис для создания презентаций в формате чат-бота.
 
@@ -13,7 +32,7 @@
 - Конвертировать файлы между `PDF`, `DOCX` и `PPTX`.
 - Показывать историю переписки прямо в приложении.
 - Сохранять историю чата локально на устройстве между перезапусками.
-- Работать с оплатой подписки через `YooKassa`.
+- Работать с подписками через native store billing: Google Play для Android и Apple In-App Purchase для iOS/App Store track.
 
 ## Как это выглядит
 
@@ -25,7 +44,7 @@
 
 ![Выбор количества слайдов](docs/images/readme_generation_step.png)
 
-### Подписка и YooKassa
+### Подписка
 
 ![Экран подписки YooKassa](docs/images/readme_subscription.png)
 
@@ -52,13 +71,13 @@
 
 ### `app/`
 
-Flutter-приложение для Android.  
+Flutter-приложение для Android/iOS.
 Именно здесь находится интерфейс чата, локальная история, работа с файлами и взаимодействие с backend.
 
 ### `backend/`
 
 Python backend на `FastAPI`.  
-Он отвечает за генерацию контента, сборку презентаций, конвертацию файлов, оплату через `YooKassa` и выдачу артефактов приложению.
+Он отвечает за генерацию контента, сборку презентаций, конвертацию файлов, проверку подписок и выдачу артефактов приложению.
 
 ### `telegrambot/`
 
@@ -72,7 +91,7 @@ Python backend на `FastAPI`.
 - подключаться к удалённому backend на сервере;
 - генерировать презентации и собирать файлы;
 - показывать и восстанавливать чат после перезапуска приложения;
-- работать с подпиской через `YooKassa` в боевом режиме;
+- работать с подпиской через store billing в зависимости от сборки;
 - использовать реальные шаблоны презентаций на backend.
 
 ## Для кого это

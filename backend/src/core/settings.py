@@ -130,6 +130,14 @@ class Settings:
     google_play_service_account_file: str
     google_play_service_account_json: str
     google_play_test_mode: bool
+    app_store_bundle_id: str
+    app_store_app_apple_id: str
+    app_store_issuer_id: str
+    app_store_key_id: str
+    app_store_private_key: str
+    app_store_private_key_file: str
+    app_store_environment: str
+    app_store_test_mode: bool
     auto_renew_interval: int
     admin_bot_token: str
     admin_ids: list[str]
@@ -201,6 +209,14 @@ def load_settings() -> Settings:
         google_play_service_account_file=os.getenv('GOOGLE_PLAY_SERVICE_ACCOUNT_FILE', '').strip(),
         google_play_service_account_json=os.getenv('GOOGLE_PLAY_SERVICE_ACCOUNT_JSON', '').strip(),
         google_play_test_mode=os.getenv('GOOGLE_PLAY_TEST_MODE', '0') == '1',
+        app_store_bundle_id=os.getenv('APP_STORE_BUNDLE_ID', 'com.appslides.slideai').strip(),
+        app_store_app_apple_id=os.getenv('APP_STORE_APP_APPLE_ID', '').strip(),
+        app_store_issuer_id=os.getenv('APP_STORE_ISSUER_ID', '').strip(),
+        app_store_key_id=os.getenv('APP_STORE_KEY_ID', '').strip(),
+        app_store_private_key=os.getenv('APP_STORE_PRIVATE_KEY', '').strip(),
+        app_store_private_key_file=os.getenv('APP_STORE_PRIVATE_KEY_FILE', '').strip(),
+        app_store_environment=os.getenv('APP_STORE_ENVIRONMENT', 'sandbox').strip().lower(),
+        app_store_test_mode=os.getenv('APP_STORE_TEST_MODE', '0') == '1',
         auto_renew_interval=int(os.getenv('AUTO_RENEW_INTERVAL', '60')),
         admin_bot_token=os.getenv('ADMIN_BOT_TOKEN', '').strip(),
         admin_ids=_split_strings(os.getenv('ADMIN_IDS', '')),

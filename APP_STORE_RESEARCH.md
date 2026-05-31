@@ -1,8 +1,8 @@
 # AppSlides: research по публикации в App Store
 
-Дата: 2026-05-29
+Дата: 2026-05-31
 
-Статус: исследование. Работу по iOS/App Store пока не начинаем, пока не закрыта текущая Google Play-ветка.
+Статус: начата подготовка отдельной копии `ASappslides` под iOS/App Store. Google Play ветка остаётся базой, но App Store получает отдельный billing-provider и iOS build track.
 
 ## Короткий вывод
 
@@ -269,9 +269,9 @@ Codemagic на момент research показывает free tier с 500 macOS
 - Environment: Sandbox/Production.
 - App Store Server Notifications V2 URL после реализации endpoint.
 
-## Текущее состояние PMappslides
+## Текущее состояние ASappslides
 
-Актуально для папки `PMappslides`, не для старого `appslides`.
+Актуально для папки `ASappslides`, не для старого `appslides`.
 
 - Flutter-приложение уже содержит `in_app_purchase` в `app/pubspec.yaml`.
 - Android/Google Play product IDs сейчас:
@@ -279,11 +279,12 @@ Codemagic на момент research показывает free tier с 500 macOS
   - `slide_ai_month`
 - Backend уже умеет Google Play verification через Google Play Developer API.
 - iOS-папка есть: `app/ios`.
-- Текущий iOS bundle id в Xcode project: `com.appslides.appslides`.
-- Нужно решить финальный iOS bundle id. Логичнее использовать `com.appslides.slideai`, если он свободен в Apple Developer.
-- iOS-specific StoreKit flow для Apple подписок еще нужно проверить и доработать.
-- Backend App Store Server API verification еще не реализован.
-- App Store Server Notifications V2 endpoint еще не реализован.
+- Текущий iOS bundle id в Xcode project: `com.appslides.slideai`.
+- Display name для iOS: `Slide AI`.
+- Добавлен iOS `Podfile`; на Mac/Codemagic нужно выполнить `pod install`.
+- Flutter billing-provider split добавлен: Android использует `google_play`, iOS build должен использовать `app_store`.
+- Backend App Store Server API skeleton добавлен: `/verify`, `/restore`, `/notifications`.
+- Реальная App Store Server API verification требует Apple ключи и HTTPS production endpoint.
 
 ## Что надо будет поменять в приложении для App Store
 
@@ -580,7 +581,7 @@ Includes 50 AI presentation generations per month, PPTX and PDF export, presenta
 
 ## Открытые вопросы
 
-- Финальный iOS Bundle ID: `com.appslides.slideai` или оставить `com.appslides.appslides`.
+- Финальный iOS Bundle ID сейчас принят как `com.appslides.slideai`; нужно подтвердить доступность в Apple Developer.
 - Будет ли iPad поддерживаться или ограничиваемся iPhone.
 - Какая страна/язык первой публикации.
 - Цены в Apple tiers.

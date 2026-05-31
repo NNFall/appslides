@@ -20,6 +20,7 @@ class BillingPlanItem(BaseModel):
     days: Annotated[int, Field(ge=1)]
     recurring: bool
     google_play_product_id: str | None = None
+    app_store_product_id: str | None = None
 
 
 class BillingSubscriptionItem(BaseModel):
@@ -70,3 +71,26 @@ class VerifyGooglePlayPurchaseRequest(BaseModel):
     package_name: Annotated[str, StringConstraints(strip_whitespace=True, min_length=3, max_length=255)]
     product_id: Annotated[str, StringConstraints(strip_whitespace=True, min_length=3, max_length=255)]
     purchase_token: Annotated[str, StringConstraints(strip_whitespace=True, min_length=8, max_length=4096)]
+
+
+class VerifyAppStorePurchaseRequest(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+
+    product_id: Annotated[str, StringConstraints(strip_whitespace=True, min_length=3, max_length=255)]
+    transaction_id: Annotated[str, StringConstraints(strip_whitespace=True, min_length=3, max_length=255)] | None = None
+    verification_data: Annotated[str, StringConstraints(strip_whitespace=True, min_length=8, max_length=8192)]
+    verification_source: Annotated[str, StringConstraints(strip_whitespace=True, min_length=3, max_length=64)]
+    local_verification_data: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=8192)] | None = None
+
+
+class RestoreAppStorePurchaseRequest(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+
+    product_id: Annotated[str, StringConstraints(strip_whitespace=True, min_length=3, max_length=255)]
+    original_transaction_id: Annotated[str, StringConstraints(strip_whitespace=True, min_length=3, max_length=255)]
+
+
+class AppStoreNotificationRequest(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+
+    signedPayload: Annotated[str, StringConstraints(strip_whitespace=True, min_length=8, max_length=20000)]

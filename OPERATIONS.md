@@ -112,6 +112,63 @@ Do not delete these blindly. Safe candidates after confirmation:
 
 Docker cache pruning should not stop running containers, but future builds can be slower because layers need to be downloaded or rebuilt again.
 
+## App Store / iOS Track
+
+Current App Store copy: `ASappslides`.
+
+Fixed iOS decisions:
+
+- Bundle ID: `com.appslides.slideai`
+- Display name: `Slide AI`
+- Flutter billing provider for iOS: `app_store`
+- App Store product IDs:
+  - `slide_ai_week`
+  - `slide_ai_month`
+
+Backend endpoints added for Apple IAP:
+
+```text
+POST /v1/billing/app-store/verify
+POST /v1/billing/app-store/restore
+POST /v1/billing/app-store/notifications
+```
+
+Required backend env for real App Store Server API:
+
+```text
+APP_STORE_BUNDLE_ID=com.appslides.slideai
+APP_STORE_APP_APPLE_ID=
+APP_STORE_ISSUER_ID=
+APP_STORE_KEY_ID=
+APP_STORE_PRIVATE_KEY=
+APP_STORE_PRIVATE_KEY_FILE=
+APP_STORE_ENVIRONMENT=sandbox
+APP_STORE_TEST_MODE=0
+```
+
+Local tests can use `APP_STORE_TEST_MODE=1`; production must use Apple keys from App Store Connect. Do not commit `.p8` keys.
+
+macOS/Codemagic build command:
+
+```bash
+cd app
+flutter pub get
+cd ios && pod install && cd ..
+flutter build ios \
+  --release \
+  --no-codesign \
+  --dart-define=APPSLIDES_BILLING_PROVIDER=app_store \
+  --dart-define=APPSLIDES_APP_STORE_WEEK_PRODUCT_ID=slide_ai_week \
+  --dart-define=APPSLIDES_APP_STORE_MONTH_PRODUCT_ID=slide_ai_month
+
+flutter build ipa \
+  --dart-define=APPSLIDES_BILLING_PROVIDER=app_store \
+  --dart-define=APPSLIDES_APP_STORE_WEEK_PRODUCT_ID=slide_ai_week \
+  --dart-define=APPSLIDES_APP_STORE_MONTH_PRODUCT_ID=slide_ai_month
+```
+
+Windows limitation: local Windows can run Flutter analyzer/tests and backend tests, but cannot produce the final signed `.ipa`.
+
 ## Local Validation Before Push
 
 ### Backend

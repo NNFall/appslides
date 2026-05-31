@@ -16,6 +16,14 @@ class AppConfig {
     'APPSLIDES_GOOGLE_PLAY_MONTH_PRODUCT_ID',
     defaultValue: 'slide_ai_month',
   );
+  static const String appStoreWeekProductId = String.fromEnvironment(
+    'APPSLIDES_APP_STORE_WEEK_PRODUCT_ID',
+    defaultValue: 'slide_ai_week',
+  );
+  static const String appStoreMonthProductId = String.fromEnvironment(
+    'APPSLIDES_APP_STORE_MONTH_PRODUCT_ID',
+    defaultValue: 'slide_ai_month',
+  );
   static const String fixedBackendBaseUrl = 'http://185.171.83.116:8021';
   static const String healthPath = '/v1/health';
   static const String templatesPath = '/v1/templates/presentation';
@@ -27,6 +35,8 @@ class AppConfig {
   static const String billingSummaryPath = '/v1/billing/summary';
   static const String billingPaymentsPath = '/v1/billing/payments';
   static const String googlePlayVerifyPath = '/v1/billing/google-play/verify';
+  static const String appStoreVerifyPath = '/v1/billing/app-store/verify';
+  static const String appStoreRestorePath = '/v1/billing/app-store/restore';
   static const String billingCancelSubscriptionPath =
       '/v1/billing/subscription/cancel';
   static const String promoRedeemPath = '/v1/promo/redeem';
@@ -48,6 +58,9 @@ class AppConfig {
   static String get defaultBackendBaseUrl => fixedBackendBaseUrl;
 
   static bool get useGooglePlayBilling => billingProvider == 'google_play';
+  static bool get useAppStoreBilling => billingProvider == 'app_store';
+  static bool get useNativeStoreBilling =>
+      useGooglePlayBilling || useAppStoreBilling;
 
   static String? googlePlayProductIdForPlan(String planKey) {
     return switch (planKey) {
@@ -55,6 +68,24 @@ class AppConfig {
       'month' => googlePlayMonthProductId,
       _ => null,
     };
+  }
+
+  static String? appStoreProductIdForPlan(String planKey) {
+    return switch (planKey) {
+      'week' => appStoreWeekProductId,
+      'month' => appStoreMonthProductId,
+      _ => null,
+    };
+  }
+
+  static String? nativeStoreProductIdForPlan(String planKey) {
+    if (useAppStoreBilling) {
+      return appStoreProductIdForPlan(planKey);
+    }
+    if (useGooglePlayBilling) {
+      return googlePlayProductIdForPlan(planKey);
+    }
+    return null;
   }
 
   const AppConfig._();

@@ -9,7 +9,10 @@ from src.domain.billing_service import BillingService
 from src.schemas.billing import (
     BillingPaymentResponse,
     BillingSummaryResponse,
+    AppStoreNotificationRequest,
     CreateBillingPaymentRequest,
+    RestoreAppStorePurchaseRequest,
+    VerifyAppStorePurchaseRequest,
     VerifyGooglePlayPurchaseRequest,
 )
 
@@ -46,6 +49,7 @@ def _summary_response(summary) -> BillingSummaryResponse:
                 'days': plan.days,
                 'recurring': plan.recurring,
                 'google_play_product_id': plan.google_play_product_id,
+                'app_store_product_id': plan.app_store_product_id,
             }
             for plan in summary.plans
         ],
@@ -131,6 +135,60 @@ async def handle_google_play_rtdn(
 ) -> dict[str, Any]:
     try:
         return await service.handle_google_play_rtdn(payload)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+
+
+@router.post('/app-store/verify', response_model=BillingPaymentResponse)
+async def verify_app_store_purchase(
+    payload: VerifyAppStorePurchaseRequest,
+    client_id: str = Depends(get_known_client_id),
+    service: BillingService = Depends(get_billing_service),
+) -> BillingPaymentResponse:
+    try:
+        result = await service.verify_app_store_purchase(
+            client_id=client_id,
+            product_id=payload.product_id,
+            transaction_id=payload.transaction_id,
+            verification_data=payload.verification_data,
+            verification_source=payload.verification_source,
+            local_verification_data=payload.local_verification_data,
+        )
+    except RuntimeError as exc:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+    return _payment_response(result)
+
+
+@router.post('/app-store/restore', response_model=BillingPaymentResponse)
+async def restore_app_store_purchase(
+    payload: RestoreAppStorePurchaseRequest,
+    client_id: str = Depends(get_known_client_id),
+    service: BillingService = Depends(get_billing_service),
+) -> BillingPaymentResponse:
+    try:
+        result = await service.restore_app_store_purchase(
+            client_id=client_id,
+            product_id=payload.product_id,
+            original_transaction_id=payload.original_transaction_id,
+        )
+    except RuntimeError as exc:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+    return _payment_response(result)
+
+
+@router.post('/app-store/notifications')
+async def handle_app_store_notification(
+    payload: AppStoreNotificationRequest,
+    service: BillingService = Depends(get_billing_service),
+) -> dict[str, Any]:
+    try:
+        return await service.handle_app_store_notification(payload.signedPayload)
     except RuntimeError as exc:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc
     except ValueError as exc:

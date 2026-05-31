@@ -1,9 +1,29 @@
 ﻿# Backend
 
+## App Store Track
+
+Эта копия backend готовится для iOS/App Store alongside Google Play.
+
+- Android/Google Play verification остаётся на `/v1/billing/google-play/verify`.
+- iOS/App Store verification добавлена отдельным контуром:
+  - `POST /v1/billing/app-store/verify`
+  - `POST /v1/billing/app-store/restore`
+  - `POST /v1/billing/app-store/notifications`
+- Для локальных тестов есть `APP_STORE_TEST_MODE=1`.
+- Для настоящего App Store Server API понадобятся:
+  - `APP_STORE_BUNDLE_ID=com.appslides.slideai`
+  - `APP_STORE_APP_APPLE_ID`
+  - `APP_STORE_ISSUER_ID`
+  - `APP_STORE_KEY_ID`
+  - `APP_STORE_PRIVATE_KEY` или `APP_STORE_PRIVATE_KEY_FILE`
+  - `APP_STORE_ENVIRONMENT=sandbox|production`
+- Apple private key нельзя класть в git. Он задаётся только через env/secret storage на сервере или CI.
+- Для iOS production желательно перевести backend URL на HTTPS до TestFlight/App Review.
+
 ## Current Runtime
 
-- Production backend is deployed on:
-  - `http://185.171.83.116:8011`
+- Production backend for the Google/PM track is deployed on:
+  - `http://185.171.83.116:8021`
 - Mobile/web client is fixed to this endpoint.
 - Server layout on the remote host:
   - `/root/appslides/backend`
@@ -14,7 +34,7 @@
 - SQLite is mounted outside the container:
   - `/root/appslides/data/appslides.db`
 - Fonts are not uploaded separately; the container uses system font fallbacks.
-- Billing target for the current MVP is `YooKassa` in live mode, wired through backend APIs and chat-style client flow.
+- Billing target for App Store is Apple In-App Purchase. YooKassa remains legacy/RuStore context, Google Play remains Android context.
 - Billing summary/generation checks now auto-sync unfinished YooKassa payments, so a paid subscription can become active without the user manually reopening a specific payment poll route.
 - Backend now forwards legacy-style admin notifications into the separate Telegram admin bot using `ADMIN_BOT_TOKEN + ADMIN_IDS`.
 - Current notification events mirrored from the legacy Telegram bot:
