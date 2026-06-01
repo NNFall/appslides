@@ -631,6 +631,7 @@ http://185.171.83.116:8031
 ```
 
 The Google Play/PM backend remains on `http://185.171.83.116:8021`.
+The AS backend deploy must use `--billing-profile app-store`, so the generated production `.env` contains Apple IAP settings but does not inherit YooKassa or Google Play billing credentials from legacy local env files.
 
 ## iOS privacy manifest added
 

@@ -29,6 +29,7 @@ BACKEND_SKIP_PARTS = {
     '.mypy_cache',
 }
 BACKEND_SKIP_SUFFIXES = {'.pyc', '.pyo'}
+APP_STORE_DISABLED_BILLING_PREFIXES = ('YOOKASSA_', 'GOOGLE_PLAY_')
 
 
 def parse_args() -> argparse.Namespace:
@@ -42,6 +43,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('--backend-container-name', default='')
     parser.add_argument('--admin-bot-container-name', default='')
     parser.add_argument('--disable-admin-bot', action='store_true')
+    parser.add_argument(
+        '--billing-profile',
+        choices=('default', 'app-store'),
+        default='default',
+        help='Use app-store to deploy an Apple-only billing backend env.',
+    )
     return parser.parse_args()
 
 
@@ -58,6 +65,14 @@ def apply_cli_overrides(local_env: dict[str, str], args: argparse.Namespace) -> 
         local_env.pop('PM_ADMIN_BOT_TOKEN', None)
         local_env.pop('PM_ADMIN_BOT_USERNAME', None)
         local_env.pop('PM_ADMIN_IDS', None)
+
+    if getattr(args, 'billing_profile', 'default') == 'app-store':
+        for key in tuple(local_env):
+            if key.startswith(APP_STORE_DISABLED_BILLING_PREFIXES):
+                local_env.pop(key, None)
+        local_env.setdefault('APP_STORE_BUNDLE_ID', 'com.appslides.slideai')
+        local_env.setdefault('APP_STORE_ENVIRONMENT', 'sandbox')
+        local_env.setdefault('APP_STORE_TEST_MODE', '0')
 
 
 def load_local_env() -> dict[str, str]:

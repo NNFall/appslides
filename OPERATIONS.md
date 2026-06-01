@@ -71,10 +71,12 @@ python scripts\deploy\deploy_backend_remote.py `
   --host-port 8031 `
   --backend-container-name asappslides_backend `
   --admin-bot-container-name asappslides_admin_bot `
-  --disable-admin-bot
+  --disable-admin-bot `
+  --billing-profile app-store
 ```
 
 The AS stack uses a separate data directory, temp directory, Docker container name and public port. Do not deploy App Store backend changes to `/root/PMappslides` unless the same change is intentionally needed in the Google Play build.
+`--billing-profile app-store` removes YooKassa and Google Play billing env from the generated server `.env`; App Store billing is the only paid-access contour for this backend.
 
 The deploy script:
 
