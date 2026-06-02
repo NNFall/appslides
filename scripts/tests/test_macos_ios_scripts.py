@@ -26,3 +26,5 @@ def test_macos_bootstrap_script_checks_required_ios_tools() -> None:
     assert "xcodebuild -version" in content
     assert "pod --version" in content
     assert "git clone" in content
+    assert "gem install --user-install" in content
+    assert "sudo -n true" in content

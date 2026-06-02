@@ -5,6 +5,9 @@ REPO_URL="${REPO_URL:-https://github.com/NNFall/appslides.git}"
 PROJECT_DIR="${PROJECT_DIR:-$HOME/ASappslides}"
 BRANCH="${BRANCH:-codex/app-store-prep}"
 FLUTTER_DIR="${FLUTTER_DIR:-$HOME/development/flutter}"
+COCOAPODS_VERSION="${COCOAPODS_VERSION:-1.15.2}"
+
+export PATH="$FLUTTER_DIR/bin:$HOME/.gem/ruby/2.6.0/bin:$PATH"
 
 echo "== macOS =="
 sw_vers || true
@@ -34,8 +37,14 @@ flutter --version
 flutter doctor -v
 
 if ! command -v pod >/dev/null 2>&1; then
-  echo "CocoaPods not found. Installing with gem."
-  sudo gem install cocoapods
+  if sudo -n true 2>/dev/null; then
+    echo "CocoaPods not found. Installing with sudo gem."
+    sudo gem install cocoapods
+  else
+    echo "CocoaPods not found and sudo is unavailable. Installing user-local CocoaPods $COCOAPODS_VERSION."
+    gem install --user-install cocoapods -v "$COCOAPODS_VERSION" --no-document
+    export PATH="$HOME/.gem/ruby/2.6.0/bin:$PATH"
+  fi
 fi
 pod --version
 
