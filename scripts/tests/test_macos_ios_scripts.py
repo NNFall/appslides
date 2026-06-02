@@ -27,4 +27,7 @@ def test_macos_bootstrap_script_checks_required_ios_tools() -> None:
     assert "pod --version" in content
     assert "git clone" in content
     assert "gem install --user-install" in content
+    assert "ffi\" -v \"1.15.5" in content
+    assert "activesupport\" -v \"6.1.7.10" in content
     assert "sudo -n true" in content
+    assert "RUBYOPT=\"-rlogger" in content

@@ -6,6 +6,10 @@ BRANCH="${BRANCH:-codex/app-store-prep}"
 BUILD_NUMBER="${BUILD_NUMBER:-1}"
 
 export PATH="$HOME/development/flutter/bin:$PATH"
+export PATH="$HOME/.gem/ruby/2.6.0/bin:$PATH"
+export LANG="${LANG:-en_US.UTF-8}"
+export LC_ALL="${LC_ALL:-en_US.UTF-8}"
+export RUBYOPT="-rlogger ${RUBYOPT:-}"
 
 cd "$PROJECT_DIR"
 git fetch origin
