@@ -39,6 +39,22 @@ flutter build ios --release --no-codesign \
 Built build/ios/iphoneos/Runner.app (29.5MB)
 ```
 
+Также успешно выполнена simulator-сборка:
+
+```bash
+flutter build ios --simulator --debug \
+  --dart-define=APPSLIDES_BACKEND_BASE_URL=http://185.171.83.116:8031 \
+  --dart-define=APPSLIDES_BILLING_PROVIDER=app_store \
+  --dart-define=APPSLIDES_APP_STORE_WEEK_PRODUCT_ID=slide_ai_week \
+  --dart-define=APPSLIDES_APP_STORE_MONTH_PRODUCT_ID=slide_ai_month
+```
+
+Результат:
+
+```text
+Built build/ios/iphonesimulator/Runner.app
+```
+
 Локально скачан unsigned artifact:
 
 ```text
@@ -69,6 +85,15 @@ No development certificates available to code sign app for device deployment
 ```
 
 Причина: на MacInCloud пока не настроены Apple Developer certificate, provisioning profile и Team в Xcode для `com.appslides.slideai`.
+
+Дополнительная проверка signing:
+
+```text
+security find-identity -v -p codesigning
+0 valid identities found
+```
+
+В Xcode UserData пока нет сохранённого Apple account/team, а в build settings нет `DEVELOPMENT_TEAM`.
 
 ## Следующие шаги для подписанного IPA
 

@@ -4,6 +4,7 @@ set -euo pipefail
 PROJECT_DIR="${PROJECT_DIR:-$HOME/ASappslides}"
 BRANCH="${BRANCH:-codex/app-store-prep}"
 BUILD_NUMBER="${BUILD_NUMBER:-1}"
+SYNC_GIT="${SYNC_GIT:-0}"
 
 export PATH="$HOME/development/flutter/bin:$PATH"
 export PATH="$HOME/.gem/ruby/2.6.0/bin:$PATH"
@@ -12,9 +13,11 @@ export LC_ALL="${LC_ALL:-en_US.UTF-8}"
 export RUBYOPT="-rlogger ${RUBYOPT:-}"
 
 cd "$PROJECT_DIR"
-git fetch origin
-git checkout "$BRANCH"
-git pull --ff-only origin "$BRANCH"
+if [[ "$SYNC_GIT" == "1" ]]; then
+  git fetch origin
+  git checkout "$BRANCH"
+  git pull --ff-only origin "$BRANCH"
+fi
 
 cd app
 flutter pub get

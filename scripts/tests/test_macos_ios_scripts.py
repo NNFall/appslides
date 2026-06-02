@@ -16,6 +16,8 @@ def test_macos_ios_build_script_targets_as_backend_and_app_store_billing() -> No
     assert "APPSLIDES_APP_STORE_WEEK_PRODUCT_ID=slide_ai_week" in content
     assert "APPSLIDES_APP_STORE_MONTH_PRODUCT_ID=slide_ai_month" in content
     assert "185.171.83.116:8021" not in content
+    assert 'SYNC_GIT="${SYNC_GIT:-0}"' in content
+    assert 'if [[ "$SYNC_GIT" == "1" ]]' in content
     assert "flutter precache --ios" in content
     assert "flutter build ios --release --no-codesign" in content
 

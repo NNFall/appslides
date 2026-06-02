@@ -244,6 +244,15 @@ cd "$HOME/ASappslides"
 ./scripts/macos/build_ios_app_store.sh
 ```
 
+If the Mac checkout needs to be synced from Git before a build, use:
+
+```bash
+cd "$HOME/ASappslides"
+SYNC_GIT=1 ./scripts/macos/build_ios_app_store.sh
+```
+
+Use `SYNC_GIT=1` only when the Mac working copy is clean or when generated Flutter/CocoaPods files can be discarded intentionally.
+
 Signed IPA build after Apple signing is configured:
 
 ```bash
