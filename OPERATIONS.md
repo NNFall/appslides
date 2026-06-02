@@ -251,6 +251,12 @@ cd "$HOME/ASappslides"
 BUILD_SIGNED_IPA=1 BUILD_NUMBER=<NEXT_BUILD_NUMBER> ./scripts/macos/build_ios_app_store.sh
 ```
 
+Current MacInCloud build status is tracked in:
+
+```text
+IOS_BUILD_STATUS.md
+```
+
 Codemagic scaffold:
 
 - Config file: `codemagic.yaml` in the repository root.

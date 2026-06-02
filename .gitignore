@@ -63,6 +63,7 @@ app/ios/**/*.moved-aside
 releases/*.aab
 releases/*.apk
 runtime_logs/
+build_artifacts/
 
 old_design/flutter_ui_v1/app/.dart_tool/
 old_design/flutter_ui_v1/app/build/
