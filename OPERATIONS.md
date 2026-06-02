@@ -219,6 +219,38 @@ flutter build ipa \
 
 Windows limitation: local Windows can run Flutter analyzer/tests and backend tests, but cannot produce the final signed `.ipa`.
 
+MacInCloud manual build access:
+
+- MacInCloud IP: `195.82.43.14`
+- RDP port: `6000`
+- RDP connection file prepared locally: `%TEMP%\macincloud_ff314\MacinCloud_ASappslides_1440x900_IP.rdp`
+- SSH port `22` is reachable, but password authentication for the provided Mac user currently fails. Use RDP first, then enable macOS Remote Login if command-line automation over SSH is needed.
+- Do not commit MacInCloud usernames/passwords or Apple credentials.
+- Always log out from the Apple menu after finishing the MacInCloud session; closing the RDP window alone can keep billing time running.
+
+First setup inside the MacInCloud Terminal:
+
+```bash
+git clone https://github.com/NNFall/appslides.git "$HOME/ASappslides"
+cd "$HOME/ASappslides"
+git checkout codex/app-store-prep
+./scripts/macos/bootstrap_ios_builder.sh
+```
+
+Repeatable unsigned iOS build check inside the MacInCloud Terminal:
+
+```bash
+cd "$HOME/ASappslides"
+./scripts/macos/build_ios_app_store.sh
+```
+
+Signed IPA build after Apple signing is configured:
+
+```bash
+cd "$HOME/ASappslides"
+BUILD_SIGNED_IPA=1 BUILD_NUMBER=<NEXT_BUILD_NUMBER> ./scripts/macos/build_ios_app_store.sh
+```
+
 Codemagic scaffold:
 
 - Config file: `codemagic.yaml` in the repository root.

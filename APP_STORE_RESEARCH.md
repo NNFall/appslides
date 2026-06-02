@@ -663,3 +663,25 @@ Apple Server Notifications can be delivered more than once. Backend processing n
 This is intentionally scoped to the same `client_id`. If the same Apple subscription is restored on another device/client after reinstall, restore can still create access for the new local client because the app does not have account login yet.
 
 Direct verify/restore also checks that the Apple transaction `productId` matches the product requested by the app. If it does not match, backend rejects the purchase instead of applying the wrong tariff.
+
+## MacInCloud access status
+
+MacinCloud access was received for the first iOS build attempt.
+
+Current safe technical facts:
+
+- RDP target: `195.82.43.14:6000`.
+- The hostname from MacInCloud instructions did not resolve locally, so the generated local RDP profile uses the IP address.
+- TCP port `6000` is reachable and an RDP session was launched from Windows.
+- TCP port `22` is reachable and returns an OpenSSH banner.
+- SSH password authentication with the provided Mac user currently fails, so command automation over SSH is blocked until Remote Login/SSH is enabled or MacInCloud allows SSH for the account.
+- Credentials are intentionally not stored in repository files.
+
+Repository scripts added for manual Mac work:
+
+```text
+scripts/macos/bootstrap_ios_builder.sh
+scripts/macos/build_ios_app_store.sh
+```
+
+The bootstrap script checks Xcode, Flutter, Git and CocoaPods, clones/updates the repository and installs iOS pods. The build script runs Flutter checks and creates an unsigned iOS release build against the isolated AS backend `http://185.171.83.116:8031` with App Store billing product IDs `slide_ai_week` and `slide_ai_month`. A signed `.ipa` is attempted only when `BUILD_SIGNED_IPA=1` and Apple signing is already configured on the Mac.
