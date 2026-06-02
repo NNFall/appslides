@@ -18,6 +18,7 @@ git pull --ff-only origin "$BRANCH"
 
 cd app
 flutter pub get
+flutter precache --ios
 flutter analyze
 flutter test
 

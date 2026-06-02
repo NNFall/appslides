@@ -74,6 +74,7 @@ git pull --ff-only origin "$BRANCH"
 
 cd app
 flutter pub get
+flutter precache --ios
 cd ios
 pod install
 

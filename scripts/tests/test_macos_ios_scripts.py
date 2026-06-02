@@ -16,6 +16,7 @@ def test_macos_ios_build_script_targets_as_backend_and_app_store_billing() -> No
     assert "APPSLIDES_APP_STORE_WEEK_PRODUCT_ID=slide_ai_week" in content
     assert "APPSLIDES_APP_STORE_MONTH_PRODUCT_ID=slide_ai_month" in content
     assert "185.171.83.116:8021" not in content
+    assert "flutter precache --ios" in content
     assert "flutter build ios --release --no-codesign" in content
 
 
@@ -26,6 +27,7 @@ def test_macos_bootstrap_script_checks_required_ios_tools() -> None:
     assert "xcodebuild -version" in content
     assert "pod --version" in content
     assert "git clone" in content
+    assert "flutter precache --ios" in content
     assert "gem install --user-install" in content
     assert "ffi\" -v \"1.15.5" in content
     assert "activesupport\" -v \"6.1.7.10" in content
