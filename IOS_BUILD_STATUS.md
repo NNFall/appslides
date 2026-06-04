@@ -9,19 +9,19 @@
 Финальный локальный артефакт после скачивания с Mac:
 
 ```text
-build_artifacts/ios/SlideAI_build_24.ipa
+build_artifacts/ios/SlideAI_build_25.ipa
 ```
 
 Размер:
 
 ```text
-24,974,191 bytes
+24,974,351 bytes
 ```
 
 SHA-256:
 
 ```text
-43ddfee6298964ed7b4998dadce385566ad1dd2327e4919673616565c0031ed0
+b4458a30b8e8baa3bac302c61b138561b612740a1a4a66effb85c54d010dba39
 ```
 
 Параметры сборки:
@@ -36,10 +36,11 @@ SHA-256:
 - Team ID: `WH73RJDJXC`
 - Provisioning profile: `Macin`
 - Export method: `app-store-connect`
-- Build number: `24`
+- Build number: `25`
 - Backend для iOS/App Store: `http://185.171.83.116:8031`
 - Billing provider для iOS: `app_store`
 - Product IDs: `slide_ai_week`, `slide_ai_month`
+- In-App Purchase capability: enabled for the iOS Runner target
 
 ## Что было исправлено
 
@@ -104,13 +105,31 @@ app/build/ios/ipa/*.ipa
 
 ```bash
 flutter build ipa --release \
-  --build-number=24 \
+  --build-number=25 \
   --export-options-plist=build/ios/AppStoreExportOptions.plist \
   --dart-define=APPSLIDES_BACKEND_BASE_URL=http://185.171.83.116:8031 \
   --dart-define=APPSLIDES_BILLING_PROVIDER=app_store \
   --dart-define=APPSLIDES_APP_STORE_WEEK_PRODUCT_ID=slide_ai_week \
   --dart-define=APPSLIDES_APP_STORE_MONTH_PRODUCT_ID=slide_ai_month
 ```
+
+## App Store subscriptions
+
+Для iOS-сборки приложение запрашивает StoreKit products:
+
+```text
+slide_ai_week
+slide_ai_month
+```
+
+Если в TestFlight при покупке появляется `StoreKit: Failed to get response from platform`, нужно проверить App Store Connect:
+
+- В приложении `com.appslides.slideai` должны быть созданы auto-renewable subscriptions с product IDs `slide_ai_week` и `slide_ai_month`.
+- Цены должны быть заданы в долларах, например `$1.99 / week` и `$4.99 / month`.
+- Подписки должны быть доступны для sandbox/TestFlight, обычно статус `Ready to Submit` достаточен для тестирования.
+- После изменения продуктов Apple может обновлять sandbox metadata не мгновенно; иногда нужно подождать до 30-60 минут и переустановить TestFlight build.
+
+В UI App Store fallback-цены теперь показываются в USD даже до успешной загрузки StoreKit metadata.
 
 Также ранее успешно проходили:
 
