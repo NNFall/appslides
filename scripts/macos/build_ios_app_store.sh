@@ -5,6 +5,10 @@ PROJECT_DIR="${PROJECT_DIR:-$HOME/ASappslides}"
 BRANCH="${BRANCH:-codex/app-store-prep}"
 BUILD_NUMBER="${BUILD_NUMBER:-1}"
 SYNC_GIT="${SYNC_GIT:-0}"
+IOS_TEAM_ID="${IOS_TEAM_ID:-WH73RJDJXC}"
+IOS_BUNDLE_ID="${IOS_BUNDLE_ID:-com.appslides.slideai}"
+IOS_PROVISIONING_PROFILE="${IOS_PROVISIONING_PROFILE:-Macin}"
+IOS_EXPORT_METHOD="${IOS_EXPORT_METHOD:-app-store-connect}"
 
 export PATH="$HOME/development/flutter/bin:$PATH"
 export PATH="$HOME/.gem/ruby/2.6.0/bin:$PATH"
@@ -36,8 +40,37 @@ flutter build ios --release --no-codesign \
   --dart-define=APPSLIDES_APP_STORE_MONTH_PRODUCT_ID=slide_ai_month
 
 if [[ "${BUILD_SIGNED_IPA:-0}" == "1" ]]; then
+  EXPORT_OPTIONS_PLIST="${EXPORT_OPTIONS_PLIST:-$PWD/build/ios/AppStoreExportOptions.plist}"
+  mkdir -p "$(dirname "$EXPORT_OPTIONS_PLIST")"
+  cat > "$EXPORT_OPTIONS_PLIST" <<PLIST
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>method</key>
+  <string>$IOS_EXPORT_METHOD</string>
+  <key>teamID</key>
+  <string>$IOS_TEAM_ID</string>
+  <key>signingStyle</key>
+  <string>manual</string>
+  <key>signingCertificate</key>
+  <string>Apple Distribution</string>
+  <key>provisioningProfiles</key>
+  <dict>
+    <key>$IOS_BUNDLE_ID</key>
+    <string>$IOS_PROVISIONING_PROFILE</string>
+  </dict>
+  <key>stripSwiftSymbols</key>
+  <true/>
+  <key>destination</key>
+  <string>export</string>
+</dict>
+</plist>
+PLIST
+
   flutter build ipa --release \
     --build-number="$BUILD_NUMBER" \
+    --export-options-plist="$EXPORT_OPTIONS_PLIST" \
     --dart-define=APPSLIDES_BACKEND_BASE_URL=http://185.171.83.116:8031 \
     --dart-define=APPSLIDES_BILLING_PROVIDER=app_store \
     --dart-define=APPSLIDES_APP_STORE_WEEK_PRODUCT_ID=slide_ai_week \

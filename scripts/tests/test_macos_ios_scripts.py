@@ -20,6 +20,11 @@ def test_macos_ios_build_script_targets_as_backend_and_app_store_billing() -> No
     assert 'if [[ "$SYNC_GIT" == "1" ]]' in content
     assert "flutter precache --ios" in content
     assert "flutter build ios --release --no-codesign" in content
+    assert 'IOS_EXPORT_METHOD="${IOS_EXPORT_METHOD:-app-store-connect}"' in content
+    assert 'IOS_PROVISIONING_PROFILE="${IOS_PROVISIONING_PROFILE:-Macin}"' in content
+    assert "AppStoreExportOptions.plist" in content
+    assert "<key>provisioningProfiles</key>" in content
+    assert '--export-options-plist="$EXPORT_OPTIONS_PLIST"' in content
 
 
 def test_macos_bootstrap_script_checks_required_ios_tools() -> None:
