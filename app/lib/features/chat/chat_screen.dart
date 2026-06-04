@@ -2983,7 +2983,7 @@ class _ChatHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 58,
+      height: 64,
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(14, 7, 14, 7),
       decoration: BoxDecoration(
@@ -2994,25 +2994,40 @@ class _ChatHeader extends StatelessWidget {
           ),
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Row(
         children: [
-          const Text(
-            'Slide AI',
-            style: TextStyle(
-              fontSize: 13.8,
-              fontWeight: FontWeight.w600,
+          ClipOval(
+            child: Image.asset(
+              'assets/brand/slide_ai_avatar.jpg',
+              width: 42,
+              height: 42,
+              fit: BoxFit.cover,
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 2),
-          const Text(
-            'bot',
-            style: TextStyle(
-              fontSize: 11,
-              color: Color(0xFF9AA1AA),
+          const SizedBox(width: 10),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  AppConfig.appName,
+                  style: TextStyle(
+                    fontSize: 13.8,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                SizedBox(height: 2),
+                Text(
+                  'bot',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Color(0xFF9AA1AA),
+                  ),
+                ),
+              ],
             ),
           ),
         ],

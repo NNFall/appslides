@@ -12,7 +12,7 @@ void main() {
       ),
     );
 
-    expect(find.text('AppSlides'), findsOneWidget);
+    expect(find.text('Slide AI: PPTX & PDF Maker'), findsOneWidget);
     expect(find.textContaining('Outline API ready'), findsOneWidget);
   });
 }

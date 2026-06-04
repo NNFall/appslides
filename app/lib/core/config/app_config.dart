@@ -1,5 +1,5 @@
 class AppConfig {
-  static const String appName = 'AppSlides';
+  static const String appName = 'Slide AI: PPTX & PDF Maker';
   static const String billingProvider = String.fromEnvironment(
     'APPSLIDES_BILLING_PROVIDER',
     defaultValue: 'google_play',
