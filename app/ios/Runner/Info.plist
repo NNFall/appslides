@@ -26,6 +26,12 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Slide AI may use the camera only when you choose to attach or import an image for your presentation.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Slide AI may access location metadata only when iOS requires it for selected photos or imported media.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Slide AI may access your photo library only when you choose to attach, import, or save presentation media.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
