@@ -9,19 +9,19 @@
 Финальный локальный артефакт после скачивания с Mac:
 
 ```text
-build_artifacts/ios/SlideAI_build_23.ipa
+build_artifacts/ios/SlideAI_build_24.ipa
 ```
 
 Размер:
 
 ```text
-24,973,996 bytes
+24,974,191 bytes
 ```
 
 SHA-256:
 
 ```text
-4a6d3bef61b152864b0b284a75b0f939b36d101472d45bab58685e4ffec5dc3c
+43ddfee6298964ed7b4998dadce385566ad1dd2327e4919673616565c0031ed0
 ```
 
 Параметры сборки:
@@ -36,7 +36,7 @@ SHA-256:
 - Team ID: `WH73RJDJXC`
 - Provisioning profile: `Macin`
 - Export method: `app-store-connect`
-- Build number: `23`
+- Build number: `24`
 - Backend для iOS/App Store: `http://185.171.83.116:8031`
 - Billing provider для iOS: `app_store`
 - Product IDs: `slide_ai_week`, `slide_ai_month`
@@ -104,7 +104,7 @@ app/build/ios/ipa/*.ipa
 
 ```bash
 flutter build ipa --release \
-  --build-number=23 \
+  --build-number=24 \
   --export-options-plist=build/ios/AppStoreExportOptions.plist \
   --dart-define=APPSLIDES_BACKEND_BASE_URL=http://185.171.83.116:8031 \
   --dart-define=APPSLIDES_BILLING_PROVIDER=app_store \
