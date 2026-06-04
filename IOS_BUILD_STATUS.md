@@ -9,19 +9,19 @@
 Финальный локальный артефакт после скачивания с Mac:
 
 ```text
-build_artifacts/ios/SlideAI_build_26.ipa
+build_artifacts/ios/SlideAI_build_27.ipa
 ```
 
 Размер:
 
 ```text
-25,553,028 bytes
+25,553,023 bytes
 ```
 
 SHA-256:
 
 ```text
-c95935fdabebd1c506387a8be7301e8d15a74fad35b42b771f0f8cef8d8bdd6b
+6b874c92e053acb628dcef46460675cef696ade97fc9e9823129bae11d9ab026
 ```
 
 Параметры сборки:
@@ -36,13 +36,14 @@ c95935fdabebd1c506387a8be7301e8d15a74fad35b42b771f0f8cef8d8bdd6b
 - Team ID: `WH73RJDJXC`
 - Provisioning profile: `Macin`
 - Export method: `app-store-connect`
-- Build number: `26`
+- Build number: `27`
 - Display name: `Slide AI: PPTX & PDF Maker`
 - App icon: custom red Slide AI icon from `app/assets/brand/slide_ai_avatar.jpg`
 - Backend для iOS/App Store: `http://185.171.83.116:8031`
 - Billing provider для iOS: `app_store`
 - Product IDs: `slide_ai_week`, `slide_ai_month`
 - In-App Purchase capability: enabled for the iOS Runner target
+- Clean iOS build cache before archive: enabled by default through `CLEAN_IOS_BUILD=1`
 
 ## Что было исправлено
 
@@ -107,7 +108,7 @@ app/build/ios/ipa/*.ipa
 
 ```bash
 flutter build ipa --release \
-  --build-number=26 \
+  --build-number=27 \
   --export-options-plist=build/ios/AppStoreExportOptions.plist \
   --dart-define=APPSLIDES_BACKEND_BASE_URL=http://185.171.83.116:8031 \
   --dart-define=APPSLIDES_BILLING_PROVIDER=app_store \
@@ -155,4 +156,5 @@ python scripts/validate_ios_privacy_manifest.py
 - Android SDK на Mac не нужен для iOS/App Store сборки.
 - `open_filex` пока не поддерживает Swift Package Manager для iOS. Сейчас это предупреждение Flutter, не ошибка.
 - Xcode предупреждает, что в будущем часть StoreKit 1 API будет deprecated. Текущая сборка проходит, но позже может потребоваться обновление `in_app_purchase_storekit`.
-- Flutter показывает предупреждение, что iOS launch image похож на placeholder. Иконка приложения заменена на кастомную Slide AI, launch screen можно доработать отдельно перед финальной модерацией.
+- Flutter показывает предупреждение, что iOS launch image похож на placeholder. Иконка приложения заменена на кастомную Slide AI.
+- Если Transporter показывает старую Flutter-иконку, нужно загружать IPA, собранный после чистки Flutter/Xcode cache. Начиная с build `27`, `scripts/macos/build_ios_app_store.sh` по умолчанию выполняет `flutter clean`, удаляет `build/ios` и `~/Library/Developer/Xcode/DerivedData/Runner-*` перед archive.
