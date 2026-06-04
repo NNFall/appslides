@@ -9,19 +9,19 @@
 Финальный локальный артефакт после скачивания с Mac:
 
 ```text
-build_artifacts/ios/SlideAI_build_25.ipa
+build_artifacts/ios/SlideAI_build_26.ipa
 ```
 
 Размер:
 
 ```text
-24,974,351 bytes
+25,553,028 bytes
 ```
 
 SHA-256:
 
 ```text
-b4458a30b8e8baa3bac302c61b138561b612740a1a4a66effb85c54d010dba39
+c95935fdabebd1c506387a8be7301e8d15a74fad35b42b771f0f8cef8d8bdd6b
 ```
 
 Параметры сборки:
@@ -36,7 +36,9 @@ b4458a30b8e8baa3bac302c61b138561b612740a1a4a66effb85c54d010dba39
 - Team ID: `WH73RJDJXC`
 - Provisioning profile: `Macin`
 - Export method: `app-store-connect`
-- Build number: `25`
+- Build number: `26`
+- Display name: `Slide AI: PPTX & PDF Maker`
+- App icon: custom red Slide AI icon from `app/assets/brand/slide_ai_avatar.jpg`
 - Backend для iOS/App Store: `http://185.171.83.116:8031`
 - Billing provider для iOS: `app_store`
 - Product IDs: `slide_ai_week`, `slide_ai_month`
@@ -105,7 +107,7 @@ app/build/ios/ipa/*.ipa
 
 ```bash
 flutter build ipa --release \
-  --build-number=25 \
+  --build-number=26 \
   --export-options-plist=build/ios/AppStoreExportOptions.plist \
   --dart-define=APPSLIDES_BACKEND_BASE_URL=http://185.171.83.116:8031 \
   --dart-define=APPSLIDES_BILLING_PROVIDER=app_store \
@@ -153,4 +155,4 @@ python scripts/validate_ios_privacy_manifest.py
 - Android SDK на Mac не нужен для iOS/App Store сборки.
 - `open_filex` пока не поддерживает Swift Package Manager для iOS. Сейчас это предупреждение Flutter, не ошибка.
 - Xcode предупреждает, что в будущем часть StoreKit 1 API будет deprecated. Текущая сборка проходит, но позже может потребоваться обновление `in_app_purchase_storekit`.
-- Flutter показывает предупреждение, что iOS app icon и launch image похожи на placeholder. Для реальной модерации App Store желательно отдельно проверить иконку и launch screen.
+- Flutter показывает предупреждение, что iOS launch image похож на placeholder. Иконка приложения заменена на кастомную Slide AI, launch screen можно доработать отдельно перед финальной модерацией.
