@@ -11,5 +11,6 @@ def test_release_and_profile_use_app_store_signing_team() -> None:
     content = PBXPROJ.read_text(encoding="utf-8")
 
     assert "DEVELOPMENT_TEAM = WH73RJDJXC;" in content
-    assert content.count('"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution";') >= 2
     assert "PRODUCT_BUNDLE_IDENTIFIER = com.appslides.slideai;" in content
+    assert content.count('"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";') == 1
+    assert '"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution";' not in content
