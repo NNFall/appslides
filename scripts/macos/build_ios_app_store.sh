@@ -44,7 +44,7 @@ if [[ "${BUILD_SIGNED_IPA:-0}" == "1" ]]; then
   if [[ -n "${MAC_KEYCHAIN_PASSWORD:-}" ]]; then
     security unlock-keychain -p "$MAC_KEYCHAIN_PASSWORD" "$MAC_KEYCHAIN_PATH"
     security set-keychain-settings -lut 21600 "$MAC_KEYCHAIN_PATH"
-    security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$MAC_KEYCHAIN_PASSWORD" "$MAC_KEYCHAIN_PATH"
+    security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$MAC_KEYCHAIN_PASSWORD" "$MAC_KEYCHAIN_PATH" >/dev/null
   fi
 
   EXPORT_OPTIONS_PLIST="${EXPORT_OPTIONS_PLIST:-$PWD/build/ios/AppStoreExportOptions.plist}"
