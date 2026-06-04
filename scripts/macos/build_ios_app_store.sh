@@ -25,6 +25,12 @@ if [[ "$SYNC_GIT" == "1" ]]; then
 fi
 
 cd app
+if [[ "${CLEAN_IOS_BUILD:-1}" == "1" ]]; then
+  flutter clean
+  rm -rf build/ios
+  rm -rf "$HOME/Library/Developer/Xcode/DerivedData/Runner-"*
+fi
+
 flutter pub get
 flutter precache --ios
 flutter analyze
