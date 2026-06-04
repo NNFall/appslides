@@ -9,6 +9,7 @@ IOS_TEAM_ID="${IOS_TEAM_ID:-WH73RJDJXC}"
 IOS_BUNDLE_ID="${IOS_BUNDLE_ID:-com.appslides.slideai}"
 IOS_PROVISIONING_PROFILE="${IOS_PROVISIONING_PROFILE:-Macin}"
 IOS_EXPORT_METHOD="${IOS_EXPORT_METHOD:-app-store-connect}"
+MAC_KEYCHAIN_PATH="${MAC_KEYCHAIN_PATH:-$HOME/Library/Keychains/login.keychain-db}"
 
 export PATH="$HOME/development/flutter/bin:$PATH"
 export PATH="$HOME/.gem/ruby/2.6.0/bin:$PATH"
@@ -40,6 +41,12 @@ flutter build ios --release --no-codesign \
   --dart-define=APPSLIDES_APP_STORE_MONTH_PRODUCT_ID=slide_ai_month
 
 if [[ "${BUILD_SIGNED_IPA:-0}" == "1" ]]; then
+  if [[ -n "${MAC_KEYCHAIN_PASSWORD:-}" ]]; then
+    security unlock-keychain -p "$MAC_KEYCHAIN_PASSWORD" "$MAC_KEYCHAIN_PATH"
+    security set-keychain-settings -lut 21600 "$MAC_KEYCHAIN_PATH"
+    security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$MAC_KEYCHAIN_PASSWORD" "$MAC_KEYCHAIN_PATH"
+  fi
+
   EXPORT_OPTIONS_PLIST="${EXPORT_OPTIONS_PLIST:-$PWD/build/ios/AppStoreExportOptions.plist}"
   mkdir -p "$(dirname "$EXPORT_OPTIONS_PLIST")"
   cat > "$EXPORT_OPTIONS_PLIST" <<PLIST

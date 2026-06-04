@@ -25,6 +25,9 @@ def test_macos_ios_build_script_targets_as_backend_and_app_store_billing() -> No
     assert "AppStoreExportOptions.plist" in content
     assert "<key>provisioningProfiles</key>" in content
     assert '--export-options-plist="$EXPORT_OPTIONS_PLIST"' in content
+    assert "MAC_KEYCHAIN_PASSWORD" in content
+    assert "security unlock-keychain" in content
+    assert "security set-key-partition-list" in content
 
 
 def test_macos_bootstrap_script_checks_required_ios_tools() -> None:

@@ -84,7 +84,10 @@ exportArchive "Runner.app" requires a provisioning profile
 
 ```bash
 cd ~/ASappslides
-BUILD_SIGNED_IPA=1 BUILD_NUMBER=<NEXT_BUILD_NUMBER> ./scripts/macos/build_ios_app_store.sh
+MAC_KEYCHAIN_PASSWORD='<MAC_PASSWORD>' \
+BUILD_SIGNED_IPA=1 \
+BUILD_NUMBER=<NEXT_BUILD_NUMBER> \
+./scripts/macos/build_ios_app_store.sh
 ```
 
 Важно: `BUILD_NUMBER` всегда должен быть больше предыдущего загруженного билда в App Store Connect.
