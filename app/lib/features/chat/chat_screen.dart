@@ -24,6 +24,7 @@ import '../../domain/models/presentation_template.dart';
 import '../../domain/models/promo_redeem_result.dart';
 import '../../domain/models/remote_job.dart';
 import '../../domain/models/saved_file_entry.dart';
+import '../billing/billing_plan_formatter.dart';
 import '../billing/billing_controller.dart';
 import '../converter/converter_controller.dart';
 import '../presentation/presentation_controller.dart';
@@ -2019,34 +2020,29 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   String _planOptionLabel(BillingPlan plan) {
-    return switch (plan.key) {
-      'week' => '🔥 ${_planTariffLine(plan)}',
-      'month' => '⭐ ${_planTariffLine(plan)}',
-      'one10' => '⭐ ${_planTariffLine(plan)}',
-      'one40' => '⭐ ${_planTariffLine(plan)}',
-      _ => '${plan.priceRub}  — ${plan.limit} generations',
-    };
+    return _billingPlanFormatter().optionLabel(plan);
   }
 
   String _planTariffLine(BillingPlan plan) {
-    final storePrice = _billingController?.storePriceForPlan(plan.key);
-    final priceLabel = AppConfig.useNativeStoreBilling && storePrice != null
-        ? storePrice
-        : '${plan.priceRub} ₽';
-    if (AppConfig.useNativeStoreBilling) {
-      return switch (plan.key) {
-        'week' => '$priceLabel / week — ${plan.limit} generations',
-        'month' => '$priceLabel / month — ${plan.limit} generations',
-        _ => '$priceLabel — ${plan.limit} generations',
-      };
+    return _billingPlanFormatter().tariffLine(plan);
+  }
+
+  BillingPlanFormatter _billingPlanFormatter() {
+    final storePrices = <String, String>{};
+    final controller = _billingController;
+    if (controller != null) {
+      for (final key in const ['week', 'month', 'one10', 'one40']) {
+        final price = controller.storePriceForPlan(key);
+        if (price != null && price.trim().isNotEmpty) {
+          storePrices[key] = price;
+        }
+      }
     }
-    return switch (plan.key) {
-      'week' => '$priceLabel / week — ${plan.limit} generations',
-      'month' => '$priceLabel / month — ${plan.limit} generations',
-      'one10' => '$priceLabel — ${plan.limit} generations',
-      'one40' => '$priceLabel — ${plan.limit} generations',
-      _ => '$priceLabel — ${plan.limit} generations',
-    };
+    return BillingPlanFormatter(
+      storeBillingEnabled: AppConfig.useNativeStoreBilling,
+      appStoreBillingEnabled: AppConfig.useAppStoreBilling,
+      storePriceForPlan: storePrices,
+    );
   }
 
   String _storeName() {

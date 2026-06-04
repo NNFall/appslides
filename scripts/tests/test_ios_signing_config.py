@@ -15,6 +15,9 @@ def test_release_and_profile_use_app_store_signing_team() -> None:
     assert content.count("CODE_SIGN_STYLE = Manual;") >= 2
     assert content.count("PROVISIONING_PROFILE_SPECIFIER = Macin;") >= 2
     assert "PRODUCT_BUNDLE_IDENTIFIER = com.appslides.slideai;" in content
+    assert "SystemCapabilities" in content
+    assert "com.apple.InAppPurchase" in content
+    assert "enabled = 1;" in content
     assert 'CODE_SIGN_IDENTITY = "iPhone Developer";' in content
     assert content.count('"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";') == 1
     assert '"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution";' not in content
