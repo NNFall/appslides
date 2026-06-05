@@ -77,15 +77,14 @@ class AdminNotifierFormattingTests(unittest.IsolatedAsyncioTestCase):
         )
         message = notifier.messages[-1]
         self.assertIn("User ID:", message)
-        self.assertIn("client-1234", message)
-        self.assertIn("abcdef", message)
+        self.assertIn("client-1234567890abcdef", message)
         self.assertIn("payment-1", message)
         self.assertIn("199", message)
 
     async def test_auto_renew_error_format(self) -> None:
         notifier = CapturingNotifier()
         await notifier.notify_auto_renew_error(
-            client_id="client-123",
+            client_id="client-1234567890abcdef",
             plan_key="week",
             plan_title="plan",
             tokens=10,
@@ -96,7 +95,7 @@ class AdminNotifierFormattingTests(unittest.IsolatedAsyncioTestCase):
             expires_subscription=True,
         )
         message = notifier.messages[-1]
-        self.assertIn("client-123", message)
+        self.assertIn("client-1234567890abcdef", message)
         self.assertIn("payment_method_id missing", message)
         self.assertIn("expired", message)
 

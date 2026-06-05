@@ -237,7 +237,7 @@ class AdminNotifier:
     ) -> None:
         await self.notify(
             f"{_bold('Автосписание - УСПЕХ')}\n"
-            f"{_bold('User ID:')} {_code(_display_client_id(client_id))}\n"
+            f"{_bold('User ID:')} {_code(client_id)}\n"
             f"{_bold('Тариф:')} {html.escape(plan_key)} ({html.escape(plan_title)} - {tokens} генераций)\n"
             f"{_bold('Сумма:')} {amount_rub}₽\n"
             f"{_bold('Status:')} {html.escape(status)}\n"
@@ -260,7 +260,7 @@ class AdminNotifier:
     ) -> None:
         lines = [
             _bold("Автосписание - ОШИБКА"),
-            f"{_bold('User ID:')} {_code(_display_client_id(client_id))}",
+            f"{_bold('User ID:')} {_code(client_id)}",
             f"{_bold('Тариф:')} {html.escape(plan_key)} ({html.escape(plan_title)} - {tokens} генераций)",
             f"{_bold('Сумма:')} {amount_rub}₽",
             f"{_bold('Status:')} {html.escape(status)}",
