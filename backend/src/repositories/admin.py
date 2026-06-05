@@ -165,6 +165,13 @@ def resolve_client_id(raw_client_id: str) -> tuple[str | None, list[str]]:
         return None, []
 
     normalized = query.lower()
+    normalized_candidates = [normalized]
+    for marker in ('…', '...'):
+        if marker in normalized:
+            tail = normalized.rsplit(marker, 1)[-1].strip()
+            if tail:
+                normalized_candidates.append(tail)
+
     with _LOCK:
         with closing(connect()) as conn:
             rows = conn.execute(
@@ -181,16 +188,24 @@ def resolve_client_id(raw_client_id: str) -> tuple[str | None, list[str]]:
     if not known_ids:
         return None, []
 
-    exact = [item for item in known_ids if item.lower() == normalized]
+    exact = [item for item in known_ids if any(item.lower() == candidate for candidate in normalized_candidates)]
     if len(exact) == 1:
         return exact[0], exact
 
     # Admins often paste the short tail of the id, so try suffix first.
-    suffix = [item for item in known_ids if item.lower().endswith(normalized)]
+    suffix = [
+        item
+        for item in known_ids
+        if any(item.lower().endswith(candidate) for candidate in normalized_candidates)
+    ]
     if len(suffix) == 1:
         return suffix[0], suffix
 
-    contains = [item for item in known_ids if normalized in item.lower()]
+    contains = [
+        item
+        for item in known_ids
+        if any(candidate in item.lower() for candidate in normalized_candidates)
+    ]
     if len(contains) == 1:
         return contains[0], contains
 
