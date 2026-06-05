@@ -44,6 +44,7 @@ SHA-256:
 - Product IDs: `slide_ai_week`, `slide_ai_month`
 - In-App Purchase capability: enabled for the iOS Runner target
 - Clean iOS build cache before archive: enabled by default through `CLEAN_IOS_BUILD=1`
+- TestFlight backend mode: `/root/ASappslides/.env` currently uses `APP_STORE_ENVIRONMENT=sandbox` and `APP_STORE_TEST_MODE=1`. This is temporary for TestFlight purchase checks until real App Store Server API credentials are added.
 
 ## Что было исправлено
 
@@ -158,3 +159,4 @@ python scripts/validate_ios_privacy_manifest.py
 - Xcode предупреждает, что в будущем часть StoreKit 1 API будет deprecated. Текущая сборка проходит, но позже может потребоваться обновление `in_app_purchase_storekit`.
 - Flutter показывает предупреждение, что iOS launch image похож на placeholder. Иконка приложения заменена на кастомную Slide AI.
 - Если Transporter показывает старую Flutter-иконку, нужно загружать IPA, собранный после чистки Flutter/Xcode cache. Начиная с build `27`, `scripts/macos/build_ios_app_store.sh` по умолчанию выполняет `flutter clean`, удаляет `build/ios` и `~/Library/Developer/Xcode/DerivedData/Runner-*` перед archive.
+- Если TestFlight покупка проходит в Apple, но приложение показывает `App Store Billing is not configured`, значит backend не видит App Store Server API credentials и `APP_STORE_TEST_MODE` выключен. Для TestFlight можно временно включить `APP_STORE_TEST_MODE=1`; перед production нужно выключить test mode и указать реальные `APP_STORE_ISSUER_ID`, `APP_STORE_KEY_ID` и `.p8` private key.
