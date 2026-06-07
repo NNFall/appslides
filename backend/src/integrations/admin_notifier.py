@@ -91,7 +91,7 @@ class AdminNotifier:
     async def notify_new_client(self, client_id: str, tag: str = "без метки") -> None:
         await self.notify(
             f"{_bold('👤 Новый пользователь')}\n"
-            f"{_bold('User ID:')} {_code(_display_client_id(client_id))}\n"
+            f"{_bold('User ID:')} {_code(client_id)}\n"
             f"{_bold('Метка:')} {html.escape(tag)}"
         )
 

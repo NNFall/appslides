@@ -22,14 +22,13 @@ class CapturingNotifier(AdminNotifier):
 
 
 class AdminNotifierFormattingTests(unittest.IsolatedAsyncioTestCase):
-    async def test_new_client_message_uses_short_id_and_html_markup(self) -> None:
+    async def test_new_client_message_uses_full_id_and_html_markup(self) -> None:
         notifier = CapturingNotifier()
         await notifier.notify_new_client("appslides_monhlids_f677777d2d08d0e059", "tag")
         message = notifier.messages[-1]
         self.assertIn("<b>", message)
         self.assertIn("User ID:", message)
-        self.assertIn("appslides_m", message)
-        self.assertIn("d0e059", message)
+        self.assertIn("appslides_monhlids_f677777d2d08d0e059", message)
         self.assertIn("tag", message)
 
     async def test_outline_created_message_contains_short_id_and_slide_count(self) -> None:
