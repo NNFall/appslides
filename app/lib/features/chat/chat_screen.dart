@@ -1535,6 +1535,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     buffer.writeln();
     if (AppConfig.useNativeStoreBilling) {
       buffer.writeln('Payment is handled securely by ${_storeName()}.');
+      buffer.writeln();
+      buffer.writeln(_buildSubscriptionDisclosureText(summary));
     } else {
       buffer.writeln(
         'By continuing to checkout, you agree to the [terms](${summary.offerUrl}).',
@@ -1665,7 +1667,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
     _appendBotMessage(
       '**Your presentation is almost ready!** ✅\n'
-      'Choose a subscription to finish the final step and receive the completed presentation.',
+      'Choose a subscription to finish the final step and receive the completed presentation.\n\n'
+      '${_buildSubscriptionDisclosureText(summary)}',
       keyboard: rows,
     );
   }
@@ -1674,6 +1677,32 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     return summary.plans
         .where((plan) => plan.recurring)
         .toList(growable: false);
+  }
+
+  String _buildSubscriptionDisclosureText(BillingSummary summary) {
+    final buffer = StringBuffer('**Subscription details**');
+    final plans = _visibleBillingPlans(summary);
+    for (final plan in plans) {
+      buffer.writeln();
+      buffer.writeln('- ${_subscriptionTitle(plan)}: ${_planTariffLine(plan)}');
+    }
+    if (plans.isNotEmpty) {
+      buffer.writeln();
+    }
+    buffer.write(
+      'Subscriptions renew automatically until canceled. '
+      'Review the [Privacy Policy](${AppConfig.privacyPolicyUrl}) and '
+      '[Terms of Use (EULA)](${AppConfig.termsOfUseUrl}) before subscribing.',
+    );
+    return buffer.toString();
+  }
+
+  String _subscriptionTitle(BillingPlan plan) {
+    return switch (plan.key) {
+      'week' => 'Weekly Subscription',
+      'month' => 'Monthly Subscription',
+      _ => '${plan.title} Subscription',
+    };
   }
 
   String _buildPaymentSuccessText(BillingSummary summary) {
@@ -1797,9 +1826,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     ];
 
     _appendBotMessage(
-      renew
-          ? '**Renew subscription**\nChoose a plan to renew:'
-          : '**Choose a subscription** 👇',
+      '${renew ? '**Renew subscription**\nChoose a plan to renew:' : '**Choose a subscription** 👇'}\n\n'
+      '${_buildSubscriptionDisclosureText(summary)}',
       keyboard: rows,
     );
   }

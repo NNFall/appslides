@@ -17,6 +17,12 @@ void main() {
     expect(AppConfig.appStoreProductIdForPlan('one10'), isNull);
   });
 
+  test('App Store subscription disclosures have required links', () {
+    expect(AppConfig.privacyPolicyUrl, startsWith('https://'));
+    expect(AppConfig.termsOfUseUrl, startsWith('https://'));
+    expect(AppConfig.termsOfUseUrl, contains('stdeula'));
+  });
+
   test('default build still uses native Google Play billing provider', () {
     expect(AppConfig.useGooglePlayBilling, isTrue);
     expect(AppConfig.useAppStoreBilling, isFalse);

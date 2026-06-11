@@ -24,6 +24,15 @@ class AppConfig {
     'APPSLIDES_APP_STORE_MONTH_PRODUCT_ID',
     defaultValue: 'slide_ai_month',
   );
+  static const String privacyPolicyUrl = String.fromEnvironment(
+    'APPSLIDES_PRIVACY_POLICY_URL',
+    defaultValue: 'https://dimonk95.github.io/slide_ai/',
+  );
+  static const String termsOfUseUrl = String.fromEnvironment(
+    'APPSLIDES_TERMS_OF_USE_URL',
+    defaultValue:
+        'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/',
+  );
   static const String fixedBackendBaseUrl = String.fromEnvironment(
     'APPSLIDES_BACKEND_BASE_URL',
     defaultValue: 'http://185.171.83.116:8021',
