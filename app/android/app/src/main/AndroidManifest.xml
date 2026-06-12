@@ -14,7 +14,7 @@
         android:name="android.permission.READ_MEDIA_VIDEO"
         tools:node="remove" />
     <application
-        android:label="Slide AI"
+        android:label="Slide AI: PPTX &amp; PDF Maker"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"

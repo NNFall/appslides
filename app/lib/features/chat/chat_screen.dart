@@ -2914,7 +2914,7 @@ class _ChatHeader extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const Text(
-            'Slide AI',
+            'Slide AI: PPTX & PDF Maker',
             style: TextStyle(
               fontSize: 13.8,
               fontWeight: FontWeight.w600,

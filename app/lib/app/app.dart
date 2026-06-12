@@ -10,7 +10,7 @@ class AppSlidesApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Slide AI',
+      title: 'Slide AI: PPTX & PDF Maker',
       debugShowCheckedModeBanner: false,
       theme: buildAppTheme(),
       home: const AppScope(
