@@ -27,6 +27,11 @@ def test_build_remote_env_passes_app_store_settings() -> None:
     assert 'APP_STORE_PRIVATE_KEY_FILE=/data/appstore/AuthKey_TEST.p8' in remote_env
     assert 'APP_STORE_ENVIRONMENT=sandbox' in remote_env
     assert 'APP_STORE_TEST_MODE=1' in remote_env
+    assert 'PRIVACY_POLICY_URL=https://dimonk95.github.io/slideaiappgoogle' in remote_env
+    assert (
+        'TERMS_OF_USE_URL=https://www.apple.com/legal/internet-services/itunes/dev/stdeula/'
+        in remote_env
+    )
 
 
 def test_apply_cli_overrides_sets_isolated_container_names() -> None:

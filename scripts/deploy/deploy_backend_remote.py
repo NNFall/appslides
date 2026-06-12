@@ -187,6 +187,8 @@ def build_remote_env(local_env: dict[str, str], host_port: int) -> str:
         'SUPPORT_USERNAME',
         'SUPPORT_MAX_URL',
         'OFFER_URL',
+        'PRIVACY_POLICY_URL',
+        'TERMS_OF_USE_URL',
         'AUTO_RENEW_INTERVAL',
         'ADMIN_IDS',
         'APP_SHARE_URL',
@@ -196,6 +198,15 @@ def build_remote_env(local_env: dict[str, str], host_port: int) -> str:
         value = local_env.get(key)
         if value:
             env[key] = value
+
+    env.setdefault(
+        'PRIVACY_POLICY_URL',
+        env.get('OFFER_URL', 'https://dimonk95.github.io/slideaiappgoogle'),
+    )
+    env.setdefault(
+        'TERMS_OF_USE_URL',
+        'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/',
+    )
 
     pm_admin_bot_token = local_env.get('PM_ADMIN_BOT_TOKEN', '').strip()
     if pm_admin_bot_token:
