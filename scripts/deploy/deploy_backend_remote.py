@@ -201,7 +201,7 @@ def build_remote_env(local_env: dict[str, str], host_port: int) -> str:
 
     env.setdefault(
         'PRIVACY_POLICY_URL',
-        env.get('OFFER_URL', 'https://dimonk95.github.io/slideaiappgoogle'),
+        'https://dimonk95.github.io/slideaiappgoogle',
     )
     env.setdefault(
         'TERMS_OF_USE_URL',
