@@ -70,6 +70,17 @@ def apply_cli_overrides(local_env: dict[str, str], args: argparse.Namespace) -> 
         for key in tuple(local_env):
             if key.startswith(APP_STORE_DISABLED_BILLING_PREFIXES):
                 local_env.pop(key, None)
+        app_store_privacy_url = (
+            local_env.get('APP_STORE_PRIVACY_POLICY_URL')
+            or local_env.get('PRIVACY_POLICY_URL')
+            or 'https://dimonk95.github.io/slideaiappgoogle'
+        )
+        local_env['OFFER_URL'] = local_env.get('APP_STORE_OFFER_URL', app_store_privacy_url)
+        local_env['PRIVACY_POLICY_URL'] = app_store_privacy_url
+        local_env.setdefault(
+            'TERMS_OF_USE_URL',
+            'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/',
+        )
         local_env.setdefault('APP_STORE_BUNDLE_ID', 'com.appslides.slideai')
         local_env.setdefault('APP_STORE_ENVIRONMENT', 'sandbox')
         local_env.setdefault('APP_STORE_TEST_MODE', '0')

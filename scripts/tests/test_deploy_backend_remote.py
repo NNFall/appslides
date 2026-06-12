@@ -65,6 +65,7 @@ def test_app_store_billing_profile_removes_non_apple_billing_settings() -> None:
         'GOOGLE_PLAY_PACKAGE_NAME': 'com.appslides.slideai',
         'GOOGLE_PLAY_SERVICE_ACCOUNT_JSON': '{"type":"service_account"}',
         'GOOGLE_PLAY_TEST_MODE': '1',
+        'OFFER_URL': 'https://legacy.example.com/offer',
         'APP_STORE_BUNDLE_ID': 'com.appslides.slideai',
         'APP_STORE_ENVIRONMENT': 'sandbox',
     }
@@ -83,6 +84,8 @@ def test_app_store_billing_profile_removes_non_apple_billing_settings() -> None:
     assert 'KIE_API_KEY=keep-ai-key' in remote_env
     assert 'APP_STORE_BUNDLE_ID=com.appslides.slideai' in remote_env
     assert 'APP_STORE_ENVIRONMENT=sandbox' in remote_env
+    assert 'OFFER_URL=https://dimonk95.github.io/slideaiappgoogle' in remote_env
+    assert 'PRIVACY_POLICY_URL=https://dimonk95.github.io/slideaiappgoogle' in remote_env
     assert 'YOOKASSA_' not in remote_env
     assert 'GOOGLE_PLAY_' not in remote_env
 
