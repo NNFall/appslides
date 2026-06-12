@@ -39,6 +39,8 @@ def _summary_response(summary) -> BillingSummaryResponse:
         support_username=summary.support_username,
         support_max_url=summary.support_max_url,
         offer_url=summary.offer_url,
+        privacy_policy_url=summary.privacy_policy_url,
+        terms_of_use_url=summary.terms_of_use_url,
         test_mode=summary.test_mode,
         plans=[
             {

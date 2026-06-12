@@ -6,6 +6,7 @@ import '../data/repositories/appslides_repository.dart';
 import '../data/repositories/backend_config_repository.dart';
 import '../data/repositories/chat_transcript_repository.dart';
 import '../data/repositories/client_session_repository.dart';
+import '../data/repositories/legal_links_repository.dart';
 import '../data/repositories/local_history_repository.dart';
 import '../data/repositories/saved_files_repository.dart';
 
@@ -59,6 +60,13 @@ class AppScope extends StatefulWidget {
     return scope!.chatTranscriptRepository;
   }
 
+  static LegalLinksRepository legalLinksOf(BuildContext context) {
+    final scope =
+        context.dependOnInheritedWidgetOfExactType<_AppScopeInherited>();
+    assert(scope != null, 'AppScope is missing above this context');
+    return scope!.legalLinksRepository;
+  }
+
   @override
   State<AppScope> createState() => _AppScopeState();
 }
@@ -79,6 +87,8 @@ class _AppScopeState extends State<AppScope> {
   );
   late final ChatTranscriptRepository _chatTranscriptRepository =
       ChatTranscriptRepository();
+  late final LegalLinksRepository _legalLinksRepository =
+      LegalLinksRepository();
 
   @override
   void initState() {
@@ -88,6 +98,7 @@ class _AppScopeState extends State<AppScope> {
     unawaited(_historyRepository.restore());
     unawaited(_savedFilesRepository.restore());
     unawaited(_chatTranscriptRepository.restore());
+    unawaited(_legalLinksRepository.restore());
   }
 
   @override
@@ -97,6 +108,7 @@ class _AppScopeState extends State<AppScope> {
     _savedFilesRepository.dispose();
     _historyRepository.dispose();
     _chatTranscriptRepository.dispose();
+    _legalLinksRepository.dispose();
     _repository.dispose();
     super.dispose();
   }
@@ -108,6 +120,7 @@ class _AppScopeState extends State<AppScope> {
       chatTranscriptRepository: _chatTranscriptRepository,
       clientSessionRepository: _clientSessionRepository,
       historyRepository: _historyRepository,
+      legalLinksRepository: _legalLinksRepository,
       repository: _repository,
       savedFilesRepository: _savedFilesRepository,
       child: widget.child,
@@ -121,6 +134,7 @@ class _AppScopeInherited extends InheritedWidget {
     required this.chatTranscriptRepository,
     required this.clientSessionRepository,
     required this.historyRepository,
+    required this.legalLinksRepository,
     required this.repository,
     required this.savedFilesRepository,
     required super.child,
@@ -130,6 +144,7 @@ class _AppScopeInherited extends InheritedWidget {
   final ChatTranscriptRepository chatTranscriptRepository;
   final ClientSessionRepository clientSessionRepository;
   final LocalHistoryRepository historyRepository;
+  final LegalLinksRepository legalLinksRepository;
   final AppSlidesRepository repository;
   final SavedFilesRepository savedFilesRepository;
 
@@ -138,6 +153,7 @@ class _AppScopeInherited extends InheritedWidget {
     return backendConfigRepository != oldWidget.backendConfigRepository ||
         chatTranscriptRepository != oldWidget.chatTranscriptRepository ||
         clientSessionRepository != oldWidget.clientSessionRepository ||
+        legalLinksRepository != oldWidget.legalLinksRepository ||
         repository != oldWidget.repository ||
         historyRepository != oldWidget.historyRepository ||
         savedFilesRepository != oldWidget.savedFilesRepository;

@@ -1,4 +1,5 @@
 import 'package:appslides/data/repositories/appslides_repository.dart';
+import 'package:appslides/core/config/app_config.dart';
 import 'package:appslides/domain/models/billing_payment.dart';
 import 'package:appslides/domain/models/billing_plan.dart';
 import 'package:appslides/domain/models/billing_subscription.dart';
@@ -142,6 +143,8 @@ BillingSummary _summary() {
     supportUsername: '@support',
     supportMaxUrl: 'https://max.ru/support',
     offerUrl: 'https://example.com/offer',
+    privacyPolicyUrl: AppConfig.privacyPolicyUrl,
+    termsOfUseUrl: AppConfig.termsOfUseUrl,
     testMode: false,
     plans: [_weekPlan()],
     activeSubscription: BillingSubscription(

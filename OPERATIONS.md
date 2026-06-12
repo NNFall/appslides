@@ -311,6 +311,14 @@ python -c "import telegram_admin_bot.main; print('admin bot import ok')"
 python scripts\validate_ios_privacy_manifest.py
 ```
 
+Legal links for the App Store subscription flow are controlled by backend env and returned in `/v1/billing/summary`.
+The Flutter app caches the last valid HTTPS values locally, so Privacy Policy / EULA links can be updated on the server without rebuilding the app:
+
+```env
+PRIVACY_POLICY_URL=https://dimonk95.github.io/slideaiappgoogle
+TERMS_OF_USE_URL=https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+```
+
 ### Google Play Android Build
 
 Google Play build work happens in `app/`.

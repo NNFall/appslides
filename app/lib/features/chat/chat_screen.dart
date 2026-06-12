@@ -13,6 +13,7 @@ import '../../data/api/appslides_api_client.dart';
 import '../../data/repositories/backend_config_repository.dart';
 import '../../data/repositories/chat_transcript_repository.dart';
 import '../../data/repositories/client_session_repository.dart';
+import '../../data/repositories/legal_links_repository.dart';
 import '../../data/repositories/local_history_repository.dart';
 import '../../data/repositories/saved_files_repository.dart';
 import '../../domain/models/billing_payment.dart';
@@ -49,6 +50,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   BackendConfigRepository? _backendConfigRepository;
   ChatTranscriptRepository? _chatTranscriptRepository;
   ClientSessionRepository? _clientSessionRepository;
+  LegalLinksRepository? _legalLinksRepository;
   LocalHistoryRepository? _historyRepository;
   SavedFilesRepository? _savedFilesRepository;
 
@@ -92,6 +94,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _backendConfigRepository = AppScope.backendConfigOf(context);
     _chatTranscriptRepository = AppScope.transcriptOf(context);
     _clientSessionRepository = AppScope.clientSessionOf(context);
+    _legalLinksRepository = AppScope.legalLinksOf(context);
     _historyRepository = AppScope.historyOf(context);
     _savedFilesRepository = AppScope.savedFilesOf(context);
 
@@ -302,6 +305,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     await billingController.refreshSummary();
     final summary = billingController.summary;
     if (summary != null && summary.remainingGenerations > 0) {
+      _rememberLegalLinks(summary);
       await _resumePendingPresentationAfterPayment();
     }
   }
@@ -367,6 +371,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (summary == null) {
       return;
     }
+    _rememberLegalLinks(summary);
 
     if (_pendingTemplateAfterPayment != null &&
         summary.remainingGenerations > 0) {
@@ -491,9 +496,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _handlePromoRedeemSuccess(PromoRedeemResult result) async {
+    _rememberLegalLinks(result.summary);
     final billingController = _billingController;
     if (billingController != null) {
       await billingController.refreshSummary();
+      final refreshedSummary = billingController.summary;
+      if (refreshedSummary != null) {
+        _rememberLegalLinks(refreshedSummary);
+      }
     }
 
     _appendBotMessage(
@@ -508,6 +518,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         result.summary.remainingGenerations > 0) {
       await _resumePendingPresentationAfterPayment();
     }
+  }
+
+  void _rememberLegalLinks(BillingSummary summary) {
+    final repository = _legalLinksRepository;
+    if (repository == null) {
+      return;
+    }
+    unawaited(repository.saveFromSummary(summary));
   }
 
   Future<void> _showMainMenu() async {
@@ -582,6 +600,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       );
       return;
     }
+    _rememberLegalLinks(summary);
 
     _appendBotMessage(
       _buildBalanceText(summary),
@@ -990,6 +1009,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         );
         return;
       }
+      _rememberLegalLinks(summary);
       if (summary.remainingGenerations <= 0) {
         _pendingTemplateAfterPayment = template;
         await _showPendingPresentationPaywall(summary);
@@ -1388,6 +1408,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       return;
     }
 
+    final summary = controller.summary;
+    if (summary != null) {
+      _rememberLegalLinks(summary);
+    }
+
     final payment = controller.payment;
     if (payment != null &&
         controller.paymentPollingTimedOut &&
@@ -1402,6 +1427,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
 
     if (payment != null) {
+      _rememberLegalLinks(payment.summary);
       final statusKey = '${payment.paymentId}:${payment.status}';
       if (statusKey != _lastBillingPaymentStatusKey) {
         _lastBillingPaymentStatusKey = statusKey;
@@ -1680,6 +1706,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   String _buildSubscriptionDisclosureText(BillingSummary summary) {
+    final privacyPolicyUrl = _legalLinkOrFallback(
+      summary.privacyPolicyUrl,
+      _legalLinksRepository?.privacyPolicyUrl ?? AppConfig.privacyPolicyUrl,
+    );
+    final termsOfUseUrl = _legalLinkOrFallback(
+      summary.termsOfUseUrl,
+      _legalLinksRepository?.termsOfUseUrl ?? AppConfig.termsOfUseUrl,
+    );
     final buffer = StringBuffer('**Subscription details**');
     final plans = _visibleBillingPlans(summary);
     for (final plan in plans) {
@@ -1691,10 +1725,18 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
     buffer.write(
       'Subscriptions renew automatically until canceled. '
-      'Review the [Privacy Policy](${AppConfig.privacyPolicyUrl}) and '
-      '[Terms of Use (EULA)](${AppConfig.termsOfUseUrl}) before subscribing.',
+      'Review the [Privacy Policy]($privacyPolicyUrl) and '
+      '[Terms of Use (EULA)]($termsOfUseUrl) before subscribing.',
     );
     return buffer.toString();
+  }
+
+  String _legalLinkOrFallback(String value, String fallback) {
+    final uri = Uri.tryParse(value.trim());
+    if (uri == null || uri.scheme != 'https' || uri.host.isEmpty) {
+      return fallback;
+    }
+    return uri.toString();
   }
 
   String _subscriptionTitle(BillingPlan plan) {
@@ -1797,6 +1839,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       );
       return;
     }
+    _rememberLegalLinks(summary);
 
     final plans = _visibleBillingPlans(summary);
     final rows = <List<_ChatAction>>[

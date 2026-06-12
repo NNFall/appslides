@@ -125,6 +125,8 @@ def get_billing_service() -> BillingService:
         return_url=settings.yookassa_return_url or settings.offer_url,
         test_mode=settings.yookassa_test_mode,
         notifier=get_admin_notifier(),
+        privacy_policy_url=settings.privacy_policy_url,
+        terms_of_use_url=settings.terms_of_use_url,
     )
 
 

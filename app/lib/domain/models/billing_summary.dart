@@ -1,5 +1,6 @@
 import 'billing_plan.dart';
 import 'billing_subscription.dart';
+import '../../core/config/app_config.dart';
 
 class BillingSummary {
   const BillingSummary({
@@ -7,6 +8,8 @@ class BillingSummary {
     required this.supportUsername,
     required this.supportMaxUrl,
     required this.offerUrl,
+    required this.privacyPolicyUrl,
+    required this.termsOfUseUrl,
     required this.testMode,
     required this.plans,
     required this.activeSubscription,
@@ -17,6 +20,8 @@ class BillingSummary {
   final String supportUsername;
   final String supportMaxUrl;
   final String offerUrl;
+  final String privacyPolicyUrl;
+  final String termsOfUseUrl;
   final bool testMode;
   final List<BillingPlan> plans;
   final BillingSubscription? activeSubscription;
@@ -37,6 +42,14 @@ class BillingSummary {
       supportUsername: json['support_username'] as String,
       supportMaxUrl: (json['support_max_url'] as String?) ?? '',
       offerUrl: json['offer_url'] as String,
+      privacyPolicyUrl: _legalUrlOrFallback(
+        json['privacy_policy_url'],
+        AppConfig.privacyPolicyUrl,
+      ),
+      termsOfUseUrl: _legalUrlOrFallback(
+        json['terms_of_use_url'],
+        AppConfig.termsOfUseUrl,
+      ),
       testMode: json['test_mode'] as bool? ?? false,
       plans: rawPlans
           .whereType<Map>()
@@ -53,5 +66,17 @@ class BillingSummary {
               ? BillingSubscription.fromJson(rawLatest.cast<String, dynamic>())
               : null,
     );
+  }
+
+  static String _legalUrlOrFallback(Object? value, String fallback) {
+    final raw = value?.toString().trim() ?? '';
+    final uri = Uri.tryParse(raw);
+    if (uri == null || !uri.hasScheme || uri.host.isEmpty) {
+      return fallback;
+    }
+    if (uri.scheme != 'https') {
+      return fallback;
+    }
+    return uri.toString();
   }
 }

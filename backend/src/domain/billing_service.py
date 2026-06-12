@@ -53,6 +53,8 @@ class BillingSummary:
     support_username: str
     support_max_url: str
     offer_url: str
+    privacy_policy_url: str
+    terms_of_use_url: str
     test_mode: bool
     active_subscription: billing_repo.StoredSubscription | None
     latest_valid_subscription: billing_repo.StoredSubscription | None
@@ -81,6 +83,8 @@ class BillingService:
         return_url: str,
         test_mode: bool,
         notifier: AdminNotifier,
+        privacy_policy_url: str = 'https://dimonk95.github.io/slideaiappgoogle',
+        terms_of_use_url: str = 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/',
     ) -> None:
         self._gateway = gateway
         self._google_play_gateway = google_play_gateway
@@ -91,6 +95,8 @@ class BillingService:
         self._return_url = return_url
         self._test_mode = test_mode
         self._notifier = notifier
+        self._privacy_policy_url = privacy_policy_url
+        self._terms_of_use_url = terms_of_use_url
 
     @property
     def is_configured(self) -> bool:
@@ -107,6 +113,8 @@ class BillingService:
             support_username=self._support_username,
             support_max_url=self._support_max_url,
             offer_url=self._offer_url,
+            privacy_policy_url=self._privacy_policy_url,
+            terms_of_use_url=self._terms_of_use_url,
             test_mode=self._test_mode,
             active_subscription=active,
             latest_valid_subscription=latest,

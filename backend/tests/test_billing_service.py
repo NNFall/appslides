@@ -64,6 +64,8 @@ class BillingServiceErrorHandlingTests(unittest.IsolatedAsyncioTestCase):
             gateway=RecurringUnsupportedGateway(),
             google_play_gateway=DisabledGooglePlayGateway(),
             offer_url='https://example.com/offer',
+            privacy_policy_url='https://example.com/privacy',
+            terms_of_use_url='https://www.apple.com/legal/internet-services/itunes/dev/stdeula/',
             support_username='@support',
             support_max_url='https://max.ru/example_support',
             return_url='appslides://billing/return',
@@ -87,6 +89,15 @@ class BillingServiceErrorHandlingTests(unittest.IsolatedAsyncioTestCase):
             'Recurring payments are not enabled for this store yet. Try again later or choose a one-time plan.',
         )
         self.assertEqual(billing_repo.list_open_payments('appslides_test_client'), [])
+
+    async def test_summary_includes_legal_links(self) -> None:
+        summary = await self.service.get_summary('appslides_test_client')
+
+        self.assertEqual(summary.privacy_policy_url, 'https://example.com/privacy')
+        self.assertEqual(
+            summary.terms_of_use_url,
+            'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/',
+        )
 
     async def test_auto_renew_loop_handles_gateway_error_without_crashing(self) -> None:
         subscription = billing_repo.create_subscription(

@@ -42,6 +42,8 @@ class BillingSummaryResponse(BaseModel):
     support_username: str
     support_max_url: str
     offer_url: str
+    privacy_policy_url: str
+    terms_of_use_url: str
     test_mode: bool
     plans: list[BillingPlanItem]
     active_subscription: BillingSubscriptionItem | None

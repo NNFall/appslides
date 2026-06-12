@@ -105,6 +105,8 @@ class Settings:
     support_username: str
     support_max_url: str
     offer_url: str
+    privacy_policy_url: str
+    terms_of_use_url: str
 
     data_dir: Path
     database_path: Path
@@ -185,7 +187,15 @@ def load_settings() -> Settings:
         fonts_dir=_resolve_path(os.getenv('FONTS_DIR', ''), default_fonts_dir),
         support_username=os.getenv('SUPPORT_USERNAME', '@your_tracksupport'),
         support_max_url=os.getenv('SUPPORT_MAX_URL', '').strip(),
-        offer_url=os.getenv('OFFER_URL', 'https://dimonk95.github.io/slide_ai/'),
+        offer_url=os.getenv('OFFER_URL', 'https://dimonk95.github.io/slideaiappgoogle'),
+        privacy_policy_url=os.getenv(
+            'PRIVACY_POLICY_URL',
+            os.getenv('OFFER_URL', 'https://dimonk95.github.io/slideaiappgoogle'),
+        ).strip(),
+        terms_of_use_url=os.getenv(
+            'TERMS_OF_USE_URL',
+            'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/',
+        ).strip(),
         data_dir=_resolve_path(os.getenv('DATA_DIR', ''), default_data_dir),
         database_path=_resolve_path(os.getenv('DATABASE_PATH', ''), default_database_path),
         temp_dir=_resolve_path(os.getenv('TEMP_DIR', ''), default_temp_dir),

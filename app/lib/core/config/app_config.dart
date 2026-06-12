@@ -26,7 +26,7 @@ class AppConfig {
   );
   static const String privacyPolicyUrl = String.fromEnvironment(
     'APPSLIDES_PRIVACY_POLICY_URL',
-    defaultValue: 'https://dimonk95.github.io/slide_ai/',
+    defaultValue: 'https://dimonk95.github.io/slideaiappgoogle',
   );
   static const String termsOfUseUrl = String.fromEnvironment(
     'APPSLIDES_TERMS_OF_USE_URL',
