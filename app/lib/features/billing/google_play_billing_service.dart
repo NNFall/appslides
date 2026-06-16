@@ -30,14 +30,19 @@ class GooglePlayBillingException implements Exception {
 class GooglePlayBillingService {
   GooglePlayBillingService({
     InAppPurchase? inAppPurchase,
-  }) : _inAppPurchase = inAppPurchase ?? InAppPurchase.instance;
+    Duration restoreSettleDelay = const Duration(seconds: 3),
+  })  : _inAppPurchase = inAppPurchase ?? InAppPurchase.instance,
+        _restoreSettleDelay = restoreSettleDelay;
 
   static const Duration _purchaseTimeout = Duration(minutes: 10);
 
   final InAppPurchase _inAppPurchase;
+  final Duration _restoreSettleDelay;
   final Map<String, ProductDetails> _products = <String, ProductDetails>{};
   final Map<String, Completer<PurchaseDetails>> _pendingPurchases =
       <String, Completer<PurchaseDetails>>{};
+  final Map<String, PurchaseDetails> _latestPurchases =
+      <String, PurchaseDetails>{};
 
   StreamSubscription<List<PurchaseDetails>>? _purchaseSubscription;
   bool _available = false;
@@ -125,6 +130,10 @@ class GooglePlayBillingService {
     );
     if (!launched) {
       _pendingPurchases.remove(productId);
+      final restoredPurchase = await _restoredPurchaseForProduct(productId);
+      if (restoredPurchase != null) {
+        return restoredPurchase;
+      }
       throw const GooglePlayBillingException(
         'Google Play purchase flow was not opened.',
       );
@@ -165,6 +174,49 @@ class GooglePlayBillingService {
     await _inAppPurchase.restorePurchases();
   }
 
+  Future<List<GooglePlayPurchaseResult>> restoreKnownPurchases() async {
+    await initialize();
+    if (!_available) {
+      throw const GooglePlayBillingException(
+        'Google Play Billing is not available on this device.',
+      );
+    }
+
+    await _inAppPurchase.restorePurchases();
+    await Future<void>.delayed(_restoreSettleDelay);
+
+    final productIds = <String>{
+      AppConfig.googlePlayWeekProductId,
+      AppConfig.googlePlayMonthProductId,
+    };
+    final purchases = <GooglePlayPurchaseResult>[];
+    for (final productId in productIds) {
+      final purchase = _latestPurchases[productId];
+      if (purchase == null) {
+        continue;
+      }
+      final purchaseToken = purchase.verificationData.serverVerificationData;
+      if (purchaseToken.isEmpty) {
+        continue;
+      }
+      purchases.add(
+        GooglePlayPurchaseResult(
+          packageName: AppConfig.googlePlayPackageName,
+          productId: purchase.productID,
+          purchaseToken: purchaseToken,
+          purchaseDetails: purchase,
+        ),
+      );
+    }
+
+    if (purchases.isEmpty) {
+      throw const GooglePlayBillingException(
+        'No active Google Play purchases were found for this account.',
+      );
+    }
+    return purchases;
+  }
+
   Future<void> dispose() async {
     await _purchaseSubscription?.cancel();
     _purchaseSubscription = null;
@@ -182,35 +234,55 @@ class GooglePlayBillingService {
   void _handlePurchaseUpdates(List<PurchaseDetails> purchases) {
     for (final purchase in purchases) {
       final completer = _pendingPurchases[purchase.productID];
-      if (completer == null || completer.isCompleted) {
-        continue;
-      }
 
       switch (purchase.status) {
         case PurchaseStatus.purchased:
         case PurchaseStatus.restored:
-          _pendingPurchases.remove(purchase.productID);
-          completer.complete(purchase);
+          _latestPurchases[purchase.productID] = purchase;
+          if (completer != null && !completer.isCompleted) {
+            _pendingPurchases.remove(purchase.productID);
+            completer.complete(purchase);
+          }
           break;
         case PurchaseStatus.error:
-          _pendingPurchases.remove(purchase.productID);
-          completer.completeError(
-            GooglePlayBillingException(
-              purchase.error?.message ?? 'Google Play purchase failed.',
-            ),
-          );
+          if (completer != null && !completer.isCompleted) {
+            _pendingPurchases.remove(purchase.productID);
+            completer.completeError(
+              GooglePlayBillingException(
+                purchase.error?.message ?? 'Google Play purchase failed.',
+              ),
+            );
+          }
           break;
         case PurchaseStatus.canceled:
-          _pendingPurchases.remove(purchase.productID);
-          completer.completeError(
-            const GooglePlayBillingException(
-              'Google Play purchase was canceled.',
-            ),
-          );
+          if (completer != null && !completer.isCompleted) {
+            _pendingPurchases.remove(purchase.productID);
+            completer.completeError(
+              const GooglePlayBillingException(
+                'Google Play purchase was canceled.',
+              ),
+            );
+          }
           break;
         case PurchaseStatus.pending:
           break;
       }
     }
+  }
+
+  Future<GooglePlayPurchaseResult?> _restoredPurchaseForProduct(
+    String productId,
+  ) async {
+    try {
+      final restored = await restoreKnownPurchases();
+      for (final purchase in restored) {
+        if (purchase.productId == productId) {
+          return purchase;
+        }
+      }
+    } on GooglePlayBillingException {
+      return null;
+    }
+    return null;
   }
 }
