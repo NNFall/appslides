@@ -116,6 +116,7 @@ async def verify_google_play_purchase(
             package_name=payload.package_name,
             product_id=payload.product_id,
             purchase_token=payload.purchase_token,
+            restored=payload.restored,
         )
     except RuntimeError as exc:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc

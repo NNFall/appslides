@@ -201,6 +201,7 @@ class AppSlidesApiClient {
     required String packageName,
     required String productId,
     required String purchaseToken,
+    bool restored = false,
   }) async {
     final payload = await _postJson(
       path: AppConfig.googlePlayVerifyPath,
@@ -208,6 +209,7 @@ class AppSlidesApiClient {
         'package_name': packageName,
         'product_id': productId,
         'purchase_token': purchaseToken,
+        'restored': restored,
       },
     );
     return BillingPayment.fromJson(payload);

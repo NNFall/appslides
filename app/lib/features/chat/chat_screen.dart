@@ -1568,15 +1568,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           actionKey: 'show_plan_options',
         ),
       ]);
-      if (AppConfig.useGooglePlayBilling) {
-        rows.add([
-          _action(
-            '🔄 Restore Google Play purchase',
-            _restoreGooglePlayPurchases,
-            actionKey: 'restore_google_play_purchase',
-          ),
-        ]);
-      }
     }
 
     rows.add([
@@ -1819,50 +1810,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       return;
     }
     await controller.pollPayment(paymentId);
-  }
-
-  Future<void> _restoreGooglePlayPurchases() async {
-    final controller = _billingController;
-    if (controller == null) {
-      return;
-    }
-
-    _clearBillingProgressMessage();
-    _billingProgressMessageId = _appendBotMessage(
-      '_Restoring Google Play purchase..._',
-    );
-    final restored = await controller.restoreGooglePlayPurchases();
-    _clearBillingProgressMessage();
-    if (restored) {
-      final summary = controller.summary;
-      _appendBotMessage(
-        '✅ Google Play purchase restored. Subscription is active.',
-        keyboard: summary == null
-            ? _mainMenuOnlyKeyboard()
-            : _buildBalanceKeyboard(summary),
-      );
-    } else {
-      _appendBotMessage(
-        '❌ ${controller.error ?? 'Could not restore Google Play purchase.'}',
-        keyboard: [
-          [
-            _action(
-              '🔄 Restore Google Play purchase',
-              _restoreGooglePlayPurchases,
-              actionKey: 'restore_google_play_purchase',
-            ),
-          ],
-          [
-            _action(
-              '🏠 Main menu',
-              _showMainMenu,
-              actionKey: 'show_main_menu',
-              echoAsUser: false,
-            ),
-          ],
-        ],
-      );
-    }
   }
 
   Future<void> _cancelBillingSubscription() async {
@@ -2573,9 +2520,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         break;
       case 'open_google_play_subscriptions':
         callback = _openGooglePlaySubscriptions;
-        break;
-      case 'restore_google_play_purchase':
-        callback = _restoreGooglePlayPurchases;
         break;
       case 'launch_payment_url':
         final url = action.payload['url'] as String?;

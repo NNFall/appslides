@@ -101,54 +101,6 @@ class BillingController extends ChangeNotifier {
     }
   }
 
-  Future<bool> restoreGooglePlayPurchases() async {
-    final billing = _googlePlayBilling;
-    if (billing == null) {
-      _error = 'Google Play Billing is not configured in this build.';
-      notifyListeners();
-      return false;
-    }
-
-    _creatingPayment = true;
-    _error = null;
-    notifyListeners();
-
-    try {
-      final purchases = await billing.restoreKnownPurchases();
-      Object? lastError;
-      for (final purchase in purchases) {
-        try {
-          final payment = await _repository.verifyGooglePlayPurchase(
-            packageName: purchase.packageName,
-            productId: purchase.productId,
-            purchaseToken: purchase.purchaseToken,
-          );
-          if (payment.isSuccessful) {
-            await billing.completePurchase(purchase.purchaseDetails);
-            _payment = payment;
-            _summary = payment.summary;
-            notifyListeners();
-            return true;
-          }
-        } catch (error) {
-          lastError = error;
-        }
-      }
-      if (lastError != null) {
-        _error = _describeError(lastError);
-      } else {
-        _error = 'No active Google Play purchases were found for this account.';
-      }
-      return false;
-    } catch (error) {
-      _error = _describeError(error);
-      return false;
-    } finally {
-      _creatingPayment = false;
-      notifyListeners();
-    }
-  }
-
   Future<void> pollPayment(String paymentId) async {
     if (_pollingInFlight) {
       return;
@@ -218,6 +170,7 @@ class BillingController extends ChangeNotifier {
       packageName: purchase.packageName,
       productId: purchase.productId,
       purchaseToken: purchase.purchaseToken,
+      restored: purchase.restored,
     );
     if (payment.isSuccessful) {
       await billing.completePurchase(purchase.purchaseDetails);

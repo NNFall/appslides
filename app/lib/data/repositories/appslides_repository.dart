@@ -121,11 +121,13 @@ class AppSlidesRepository {
     required String packageName,
     required String productId,
     required String purchaseToken,
+    bool restored = false,
   }) {
     return _api.verifyGooglePlayPurchase(
       packageName: packageName,
       productId: productId,
       purchaseToken: purchaseToken,
+      restored: restored,
     );
   }
 

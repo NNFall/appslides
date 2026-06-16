@@ -70,3 +70,4 @@ class VerifyGooglePlayPurchaseRequest(BaseModel):
     package_name: Annotated[str, StringConstraints(strip_whitespace=True, min_length=3, max_length=255)]
     product_id: Annotated[str, StringConstraints(strip_whitespace=True, min_length=3, max_length=255)]
     purchase_token: Annotated[str, StringConstraints(strip_whitespace=True, min_length=8, max_length=4096)]
+    restored: bool = False

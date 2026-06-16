@@ -130,6 +130,17 @@ class AdminNotifier:
             f"{_bold('Plan:')} {html.escape(plan_title)}"
         )
 
+    async def notify_google_play_subscription_restored(
+        self,
+        client_id: str,
+        plan_title: str,
+    ) -> None:
+        await self.notify(
+            f"{_bold('Google Play subscription restored')}\n"
+            f"{_bold('User ID:')} {_code(_display_client_id(client_id))}\n"
+            f"{_bold('Plan:')} {html.escape(plan_title)}"
+        )
+
     async def notify_subscription_canceled(self, client_id: str) -> None:
         await self.notify(
             f"{_bold('❌ Subscription canceled')}\n"

@@ -10,12 +10,14 @@ class GooglePlayPurchaseResult {
     required this.productId,
     required this.purchaseToken,
     required this.purchaseDetails,
+    this.restored = false,
   });
 
   final String packageName;
   final String productId;
   final String purchaseToken;
   final PurchaseDetails purchaseDetails;
+  final bool restored;
 }
 
 class GooglePlayBillingException implements Exception {
@@ -160,6 +162,7 @@ class GooglePlayBillingService {
       productId: purchase.productID,
       purchaseToken: purchaseToken,
       purchaseDetails: purchase,
+      restored: purchase.status == PurchaseStatus.restored,
     );
   }
 
@@ -205,6 +208,7 @@ class GooglePlayBillingService {
           productId: purchase.productID,
           purchaseToken: purchaseToken,
           purchaseDetails: purchase,
+          restored: true,
         ),
       );
     }

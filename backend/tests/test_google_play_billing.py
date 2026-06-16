@@ -29,6 +29,7 @@ class DisabledGooglePlayGateway:
 class CapturingNotifier:
     def __init__(self) -> None:
         self.payment_successes: list[tuple[str, str]] = []
+        self.google_play_restores: list[tuple[str, str]] = []
 
     async def notify_payment_success(
         self,
@@ -37,6 +38,13 @@ class CapturingNotifier:
         provider: str = 'YooKassa',
     ) -> None:
         self.payment_successes.append((client_id, f'{provider}: {plan_title}'))
+
+    async def notify_google_play_subscription_restored(
+        self,
+        client_id: str,
+        plan_title: str,
+    ) -> None:
+        self.google_play_restores.append((client_id, plan_title))
 
 
 class ActiveGooglePlayGateway:
@@ -107,6 +115,20 @@ class GooglePlayBillingTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(payment.provider, 'google_play')
         self.assertEqual(payment.status, 'paid')
 
+    async def test_verify_restored_google_play_purchase_notifies_restore(self) -> None:
+        result = await self.service.verify_google_play_purchase(
+            client_id='as_google_client',
+            package_name='com.appslides.slideai',
+            product_id='slide_ai_week',
+            purchase_token='restored-purchase-token-1',
+            restored=True,
+        )
+
+        self.assertEqual(result.status, 'paid')
+        self.assertIsNotNone(result.summary.active_subscription)
+        self.assertEqual(self.notifier.payment_successes, [])
+        self.assertEqual(self.notifier.google_play_restores, [('as_google_client', 'Weekly')])
+
     async def test_google_play_rtdn_test_notification_does_not_require_gateway(self) -> None:
         service = BillingService(
             gateway=DisabledYooKassaGateway(),
@@ -155,6 +177,28 @@ class GooglePlayBillingTests(unittest.IsolatedAsyncioTestCase):
         payment = billing_repo.get_payment('purchase-token-1')
         self.assertIsNotNone(payment)
         self.assertEqual(payment.payment_method_id, 'GPA.renewal-2')
+
+    async def test_google_play_rtdn_restart_notifies_restore(self) -> None:
+        await self.service.verify_google_play_purchase(
+            client_id='as_google_client',
+            package_name='com.appslides.slideai',
+            product_id='slide_ai_week',
+            purchase_token='purchase-token-1',
+        )
+        billing_repo.expire_subscription(
+            billing_repo.get_latest_subscription('as_google_client').id
+        )
+        payload = _pubsub_payload(
+            notification_type=7,
+            purchase_token='purchase-token-1',
+            product_id='slide_ai_week',
+        )
+
+        result = await self.service.handle_google_play_rtdn(payload)
+
+        self.assertEqual(result['status'], 'processed')
+        self.assertEqual(result['event'], 'restarted')
+        self.assertEqual(self.notifier.google_play_restores, [('as_google_client', 'Weekly')])
 
     async def test_google_play_rtdn_expired_marks_known_subscription_expired(self) -> None:
         await self.service.verify_google_play_purchase(

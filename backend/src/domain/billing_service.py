@@ -39,6 +39,7 @@ GOOGLE_PLAY_RTDN_EVENTS = {
 GOOGLE_PLAY_ACTIVE_NOTIFICATION_TYPES = {1, 2, 4, 6, 7}
 GOOGLE_PLAY_CANCEL_NOTIFICATION_TYPES = {3}
 GOOGLE_PLAY_EXPIRE_NOTIFICATION_TYPES = {5, 10, 12, 13}
+GOOGLE_PLAY_RESTORE_NOTIFICATION_TYPES = {1, 7}
 
 
 @dataclass(frozen=True)
@@ -69,6 +70,7 @@ class BillingService:
         *,
         gateway: YooKassaGateway,
         google_play_gateway: GooglePlayGateway,
+        app_store_gateway: Any | None = None,
         offer_url: str,
         support_username: str,
         support_max_url: str,
@@ -78,6 +80,7 @@ class BillingService:
     ) -> None:
         self._gateway = gateway
         self._google_play_gateway = google_play_gateway
+        self._app_store_gateway = app_store_gateway
         self._offer_url = offer_url
         self._support_username = support_username
         self._support_max_url = support_max_url
@@ -281,6 +284,7 @@ class BillingService:
         package_name: str,
         product_id: str,
         purchase_token: str,
+        restored: bool = False,
     ) -> BillingPaymentResult:
         if not self._google_play_gateway.is_configured:
             raise RuntimeError('Google Play Billing is not configured')
@@ -290,6 +294,7 @@ class BillingService:
         existing_payment = billing_repo.get_payment(purchase_token)
 
         if existing_payment is not None and existing_payment.status == 'paid':
+            created_subscription = False
             if billing_repo.get_subscription_for_use(client_id) is None:
                 billing_repo.create_subscription(
                     client_id=client_id,
@@ -300,6 +305,9 @@ class BillingService:
                     auto_renew=1 if plan.recurring else 0,
                     payment_method_id=existing_payment.payment_method_id,
                 )
+                created_subscription = True
+            if restored and created_subscription:
+                await self._notifier.notify_google_play_subscription_restored(client_id, plan.title)
             summary = await self.get_summary(client_id)
             return BillingPaymentResult(
                 payment_id=purchase_token,
@@ -360,7 +368,10 @@ class BillingService:
             except GooglePlayGatewayError:
                 # Do not revoke entitlement after a successful verification; log/alerting can be added later.
                 pass
-            await self._notifier.notify_payment_success(client_id, plan.title, provider='Google Play')
+            if restored:
+                await self._notifier.notify_google_play_subscription_restored(client_id, plan.title)
+            else:
+                await self._notifier.notify_payment_success(client_id, plan.title, provider='Google Play')
 
         summary = await self.get_summary(client_id)
         return BillingPaymentResult(
@@ -458,6 +469,8 @@ class BillingService:
             )
             if notification_type == 2:
                 await self._notifier.notify_payment_success(client_id, plan.title, provider='Google Play renewal')
+            elif notification_type in GOOGLE_PLAY_RESTORE_NOTIFICATION_TYPES:
+                await self._notifier.notify_google_play_subscription_restored(client_id, plan.title)
 
         return {'status': 'processed', 'event': event, 'client_id': client_id}
 

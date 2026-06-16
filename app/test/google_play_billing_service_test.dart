@@ -24,6 +24,7 @@ void main() {
     expect(restored, hasLength(1));
     expect(restored.single.productId, 'slide_ai_week');
     expect(restored.single.purchaseToken, 'restored-token-week');
+    expect(restored.single.restored, isTrue);
     await service.dispose();
   });
 }
