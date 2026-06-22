@@ -233,7 +233,15 @@ def get_bot_stats_full() -> dict[str, int | float]:
                 '''
                 SELECT COUNT(DISTINCT client_id) AS c
                 FROM billing_payments
-                WHERE status = 'paid' AND currency = 'RUB'
+                WHERE status = 'paid'
+                ''',
+            )
+            paid_payments = _first_int(
+                conn,
+                '''
+                SELECT COUNT(*) AS c
+                FROM billing_payments
+                WHERE status = 'paid'
                 ''',
             )
             revenue_rub = _first_int(
@@ -241,7 +249,7 @@ def get_bot_stats_full() -> dict[str, int | float]:
                 '''
                 SELECT COALESCE(SUM(amount), 0) AS s
                 FROM billing_payments
-                WHERE status = 'paid' AND currency = 'RUB'
+                WHERE status = 'paid'
                 ''',
                 key='s',
             )
@@ -279,6 +287,7 @@ def get_bot_stats_full() -> dict[str, int | float]:
         'success': success,
         'free_users': free_users,
         'paid_users': paid_users,
+        'paid_payments': paid_payments,
         'active_subs': active_subs,
         'week_subs': week_subs,
         'month_subs': month_subs,
@@ -302,7 +311,6 @@ def get_tag_stats(tag: str) -> dict[str, int]:
                     FROM billing_payments
                     WHERE client_id IN ({placeholders})
                       AND status = 'paid'
-                      AND currency = 'RUB'
                     ''',
                     tuple(client_ids),
                 )
@@ -313,7 +321,6 @@ def get_tag_stats(tag: str) -> dict[str, int]:
                     FROM billing_payments
                     WHERE client_id IN ({placeholders})
                       AND status = 'paid'
-                      AND currency = 'RUB'
                     ''',
                     tuple(client_ids),
                     key='s',
@@ -347,7 +354,6 @@ def get_all_tag_stats_full() -> list[dict[str, int | str]]:
                         FROM billing_payments
                         WHERE client_id IN ({placeholders})
                           AND status = 'paid'
-                          AND currency = 'RUB'
                         ''',
                         tuple(client_ids),
                     )
@@ -358,7 +364,6 @@ def get_all_tag_stats_full() -> list[dict[str, int | str]]:
                         FROM billing_payments
                         WHERE client_id IN ({placeholders})
                           AND status = 'paid'
-                          AND currency = 'RUB'
                         ''',
                         tuple(client_ids),
                         key='s',
@@ -389,7 +394,6 @@ def get_all_tag_stats_full() -> list[dict[str, int | str]]:
                     FROM billing_payments
                     WHERE client_id IN ({placeholders})
                       AND status = 'paid'
-                      AND currency = 'RUB'
                     ''',
                     tuple(without_tag),
                 )
@@ -400,7 +404,6 @@ def get_all_tag_stats_full() -> list[dict[str, int | str]]:
                     FROM billing_payments
                     WHERE client_id IN ({placeholders})
                       AND status = 'paid'
-                      AND currency = 'RUB'
                     ''',
                     tuple(without_tag),
                     key='s',

@@ -578,6 +578,12 @@ class BillingService:
             or billing_repo.get_payment_by_payment_method_id(purchase.original_transaction_id)
         )
         if existing_payment is None:
+            await self._notifier.notify_app_store_unknown_transaction(
+                event=notification_type,
+                product_id=purchase.product_id,
+                transaction_id=purchase.transaction_id,
+                original_transaction_id=purchase.original_transaction_id,
+            )
             return {
                 'status': 'ignored',
                 'event': notification_type,

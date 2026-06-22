@@ -102,6 +102,7 @@ async def botstats(message: Message) -> None:
     users = int(stats['users'])
     free_users = int(stats['free_users'])
     paid_users = int(stats['paid_users'])
+    paid_payments = int(stats.get('paid_payments', paid_users))
     active_subs = int(stats['active_subs'])
     week_subs = int(stats['week_subs'])
     month_subs = int(stats['month_subs'])
@@ -120,6 +121,7 @@ async def botstats(message: Message) -> None:
         f'👥 Всего клиентов: {users}',
         f'🎁 Генерировали без оплаты: {free_users}',
         f'💳 Оплативших: {paid_users}',
+        f'🧾 Покупок/продлений: {paid_payments}',
         f'🧾 Всего задач генерации: {generations}',
         f'✅ Успешных задач: {success} ({success_rate:.2f}%)',
         f'🔥 Активных подписок: {active_subs}',

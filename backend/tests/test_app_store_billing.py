@@ -31,6 +31,7 @@ class DisabledGooglePlayGateway:
 class CapturingNotifier:
     def __init__(self) -> None:
         self.payment_successes: list[tuple[str, str, str]] = []
+        self.unknown_app_store_notifications: list[dict[str, str]] = []
 
     async def notify_payment_success(
         self,
@@ -39,6 +40,23 @@ class CapturingNotifier:
         provider: str = 'YooKassa',
     ) -> None:
         self.payment_successes.append((client_id, plan_title, provider))
+
+    async def notify_app_store_unknown_transaction(
+        self,
+        *,
+        event: str,
+        product_id: str,
+        transaction_id: str,
+        original_transaction_id: str,
+    ) -> None:
+        self.unknown_app_store_notifications.append(
+            {
+                'event': event,
+                'product_id': product_id,
+                'transaction_id': transaction_id,
+                'original_transaction_id': original_transaction_id,
+            }
+        )
 
 
 class MismatchedAppStoreGateway:
@@ -269,6 +287,31 @@ class AppStoreBillingTests(unittest.IsolatedAsyncioTestCase):
             )
 
         self.assertEqual(str(ctx.exception), 'App Store Billing is not configured')
+
+    async def test_unknown_app_store_notification_notifies_admins(self) -> None:
+        signed_payload = _app_store_notification_payload(
+            notification_type='DID_RENEW',
+            product_id='slide_ai_week',
+            transaction_id='200000000000099',
+            original_transaction_id='200000000000088',
+            expires_at=datetime.now(UTC) + timedelta(days=7),
+        )
+
+        result = await self.service.handle_app_store_notification(signed_payload)
+
+        self.assertEqual(result['status'], 'ignored')
+        self.assertEqual(result['reason'], 'unknown_original_transaction')
+        self.assertEqual(
+            self.notifier.unknown_app_store_notifications,
+            [
+                {
+                    'event': 'DID_RENEW',
+                    'product_id': 'slide_ai_week',
+                    'transaction_id': '200000000000099',
+                    'original_transaction_id': '200000000000088',
+                }
+            ],
+        )
 
 
 def _app_store_notification_payload(

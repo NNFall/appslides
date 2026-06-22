@@ -130,6 +130,23 @@ class AdminNotifier:
             f"{_bold('Plan:')} {html.escape(plan_title)}"
         )
 
+    async def notify_app_store_unknown_transaction(
+        self,
+        *,
+        event: str,
+        product_id: str,
+        transaction_id: str,
+        original_transaction_id: str,
+    ) -> None:
+        await self.notify(
+            f"{_bold('⚠️ App Store webhook without client')}\n"
+            f"{_bold('Event:')} {html.escape(event)}\n"
+            f"{_bold('Product:')} {html.escape(product_id or '-')}\n"
+            f"{_bold('Transaction ID:')} {_code(transaction_id or '-')}\n"
+            f"{_bold('Original ID:')} {_code(original_transaction_id or '-')}\n"
+            "Purchase was not credited because the app did not verify it with the backend."
+        )
+
     async def notify_subscription_canceled(self, client_id: str) -> None:
         await self.notify(
             f"{_bold('❌ Subscription canceled')}\n"
